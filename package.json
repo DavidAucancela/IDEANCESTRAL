@@ -1,0 +1,18 @@
+{
+  "name": "catalogo-artesanias",
+  "version": "1.0.0",
+  "description": "Catálogo de artesanías - Frontend Vue + Backend Node.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": ["artesanias", "catalogo", "vue", "postgresql"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
