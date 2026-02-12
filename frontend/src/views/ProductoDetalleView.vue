@@ -373,9 +373,9 @@ export default {
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo-icon {
   display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; background: var(--color-primary);
-  color: var(--color-white); border-radius: 8px;
-  font-family: var(--font-serif); font-weight: 700; font-size: 14px;
+  width: 28px; height: 28px; background: var(--color-primary);
+  color: var(--color-white); border-radius: 6px;
+  font-family: var(--font-serif); font-weight: 700; font-size: 12px;
 }
 .logo-text {
   font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--color-primary);

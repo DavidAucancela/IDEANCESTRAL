@@ -9,6 +9,7 @@ import productosRoutes from './routes/productos.js';
 import categoriasRoutes from './routes/categorias.js';
 import imagenesRoutes from './routes/imagenes.js';
 import authRoutes from './routes/auth.js';
+import promocionesRoutes from './routes/promociones.js';
 
 dotenv.config();
 
@@ -66,6 +67,7 @@ app.use('/api/productos', productosRoutes);
 app.use('/api/categorias', categoriasRoutes);
 app.use('/api/imagenes', imagenesRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/promociones', promocionesRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

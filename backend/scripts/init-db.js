@@ -44,10 +44,10 @@ async function initDatabase() {
     console.log(`   Host: ${process.env.DB_HOST || 'localhost'}`);
     console.log(`   Puerto: ${process.env.DB_PORT || 5432}`);
     console.log(`   Usuario: ${process.env.DB_USER || 'postgres'}`);
-    console.log(`   Base de datos: ${process.env.DB_NAME || 'catalogo_artesanias'}\n`);
+    console.log(`   Base de datos: ${process.env.DB_NAME || 'IdeaAncestralDB'}\n`);
 
     // Crear base de datos si no existe
-    const dbName = process.env.DB_NAME || 'catalogo_artesanias';
+    const dbName = process.env.DB_NAME || 'IdeaAncestralDB';
     const checkDbQuery = `SELECT 1 FROM pg_database WHERE datname = $1`;
     const dbExists = await pool.query(checkDbQuery, [dbName]);
 

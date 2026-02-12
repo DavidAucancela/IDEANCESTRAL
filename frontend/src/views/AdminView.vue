@@ -49,6 +49,12 @@
             >
               Categorías
             </button>
+            <button 
+              @click="tabActual = 'promociones'"
+              :class="['tab-btn', { active: tabActual === 'promociones' }]"
+            >
+              Promociones
+            </button>
           </div>
 
           <!-- Tab Productos -->
@@ -117,6 +123,31 @@
                 <div class="categoria-actions">
                   <button @click="abrirModalCategoria(categoria)" class="btn btn-secondary">Editar</button>
                   <button @click="eliminarCategoria(categoria.id)" class="btn btn-danger">Eliminar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Promociones -->
+          <div v-if="tabActual === 'promociones'" class="tab-content">
+            <div class="section-header">
+              <h2>Gestión de Promociones</h2>
+              <button @click="abrirModalPromocion(null)" class="btn btn-primary">
+                + Nueva Promoción
+              </button>
+            </div>
+
+            <div v-if="loadingPromociones" class="loading">Cargando promociones...</div>
+            <div v-else class="promociones-grid">
+              <div v-for="promo in promociones" :key="promo.id" class="promo-card-admin">
+                <img :src="obtenerUrlPromocion(promo.imagen_url)" :alt="promo.nombre" class="promo-card-img" />
+                <div class="promo-card-info">
+                  <h3>{{ promo.nombre }}</h3>
+                  <span class="promo-badge">{{ promo.temporada }}</span>
+                  <div class="promo-card-actions">
+                    <button @click="abrirModalPromocion(promo)" class="btn btn-secondary">Editar</button>
+                    <button @click="eliminarPromocion(promo.id)" class="btn btn-danger">Eliminar</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -214,6 +245,58 @@
       </div>
     </div>
 
+    <!-- Modal Promoción -->
+    <div v-if="mostrarModalPromocion" class="modal-overlay" @click="cerrarModalPromocion">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ promocionEditar ? 'Editar Promoción' : 'Nueva Promoción' }}</h3>
+          <button @click="cerrarModalPromocion" class="btn-close">×</button>
+        </div>
+        <form @submit.prevent="guardarPromocion" class="modal-body">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input v-model="formPromocion.nombre" type="text" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Temporada *</label>
+              <input v-model="formPromocion.temporada" type="text" required placeholder="Ej: Diciembre" />
+            </div>
+            <div class="form-group">
+              <label>Tema (para estilos)</label>
+              <select v-model="formPromocion.tema">
+                <option value="navidad">Navidad</option>
+                <option value="madre">Día de la Madre</option>
+                <option value="cultural">Cultural</option>
+                <option value="inti">Inti Raymi</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>URL de imagen</label>
+            <input v-model="formPromocion.imagen_url" type="text" placeholder="/imagenes/promo1.jpg" />
+          </div>
+          <div class="form-group">
+            <label>Orden</label>
+            <input v-model.number="formPromocion.orden" type="number" min="0" />
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input v-model="formPromocion.activa" type="checkbox" />
+              Activa
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="cerrarModalPromocion" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" class="btn btn-primary" :disabled="guardando">
+              {{ guardando ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal Categoría -->
     <div v-if="mostrarModalCategoria" class="modal-overlay" @click="cerrarModalCategoria">
       <div class="modal-content" @click.stop>
@@ -266,13 +349,17 @@ export default {
     const tabActual = ref('productos')
     const productos = ref([])
     const categorias = ref([])
+    const promociones = ref([])
     const loadingProductos = ref(false)
     const loadingCategorias = ref(false)
+    const loadingPromociones = ref(false)
     
     const mostrarModalProducto = ref(false)
     const mostrarModalCategoria = ref(false)
+    const mostrarModalPromocion = ref(false)
     const productoEditar = ref(null)
     const categoriaEditar = ref(null)
+    const promocionEditar = ref(null)
     const imagenesProducto = ref([])
     const guardando = ref(false)
     
@@ -295,6 +382,15 @@ export default {
     const formCategoria = reactive({
       nombre: '',
       descripcion: '',
+      activa: true
+    })
+
+    const formPromocion = reactive({
+      nombre: '',
+      temporada: '',
+      tema: 'general',
+      imagen_url: '',
+      orden: 0,
       activa: true
     })
 
@@ -361,9 +457,25 @@ export default {
       }
     }
 
+    const cargarPromociones = async () => {
+      try {
+        loadingPromociones.value = true
+        const response = await axios.get(`${API_URL}/promociones`, {
+          params: { incluir_inactivas: true }
+        })
+        promociones.value = response.data || []
+      } catch (error) {
+        console.error('Error cargando promociones:', error)
+        promociones.value = []
+      } finally {
+        loadingPromociones.value = false
+      }
+    }
+
     const cargarDatos = () => {
       cargarProductos()
       cargarCategorias()
+      cargarPromociones()
     }
 
     const abrirModalProducto = (producto) => {
@@ -529,6 +641,70 @@ export default {
       }
     }
 
+    const abrirModalPromocion = (promo) => {
+      promocionEditar.value = promo
+      if (promo) {
+        Object.assign(formPromocion, {
+          nombre: promo.nombre,
+          temporada: promo.temporada,
+          tema: promo.tema || 'general',
+          imagen_url: promo.imagen_url || '',
+          orden: promo.orden ?? 0,
+          activa: promo.activa ?? true
+        })
+      } else {
+        Object.assign(formPromocion, {
+          nombre: '',
+          temporada: '',
+          tema: 'general',
+          imagen_url: '',
+          orden: 0,
+          activa: true
+        })
+      }
+      mostrarModalPromocion.value = true
+    }
+
+    const cerrarModalPromocion = () => {
+      mostrarModalPromocion.value = false
+      promocionEditar.value = null
+    }
+
+    const guardarPromocion = async () => {
+      try {
+        guardando.value = true
+        if (promocionEditar.value) {
+          await axios.put(`${API_URL}/promociones/${promocionEditar.value.id}`, formPromocion)
+        } else {
+          await axios.post(`${API_URL}/promociones`, formPromocion)
+        }
+        await cargarPromociones()
+        cerrarModalPromocion()
+      } catch (error) {
+        console.error('Error guardando promoción:', error)
+        alert('Error al guardar promoción')
+      } finally {
+        guardando.value = false
+      }
+    }
+
+    const eliminarPromocion = async (id) => {
+      if (!confirm('¿Está seguro de eliminar esta promoción?')) return
+      try {
+        await axios.delete(`${API_URL}/promociones/${id}`)
+        await cargarPromociones()
+      } catch (error) {
+        console.error('Error eliminando promoción:', error)
+        alert('Error al eliminar promoción')
+      }
+    }
+
+    const obtenerUrlPromocion = (url) => {
+      if (!url) return '/imagenes/logo-principal.jpg'
+      if (url.startsWith('http')) return url
+      return `${API_URL.replace('/api', '')}${url}`
+    }
+
     const obtenerImagenPrincipal = (producto) => {
       if (producto.imagenes && producto.imagenes.length > 0) {
         const principal = producto.imagenes.find(img => img.es_principal)
@@ -581,6 +757,16 @@ export default {
       cerrarModalCategoria,
       guardarCategoria,
       eliminarCategoria,
+      promociones,
+      loadingPromociones,
+      mostrarModalPromocion,
+      promocionEditar,
+      formPromocion,
+      abrirModalPromocion,
+      cerrarModalPromocion,
+      guardarPromocion,
+      eliminarPromocion,
+      obtenerUrlPromocion,
       obtenerImagenPrincipal,
       obtenerUrlImagen
     }
@@ -774,6 +960,50 @@ tbody tr:hover {
 }
 
 .categoria-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Promociones Grid */
+.promociones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.promo-card-admin {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.promo-card-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.promo-card-info {
+  padding: 1rem;
+}
+
+.promo-card-info h3 {
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.promo-card-info .promo-badge {
+  display: inline-block;
+  background: var(--color-secondary);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.promo-card-actions {
   display: flex;
   gap: 0.5rem;
 }

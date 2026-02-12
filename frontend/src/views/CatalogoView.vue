@@ -95,109 +95,20 @@
         <div class="section-header">
           <span class="section-label">Nuestras colecciones</span>
           <h2>Explora por Categoria</h2>
-          <p>Descubre la diversidad de nuestras artesanias organizadas por tipo</p>
-          <div class="search-bar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input 
-              v-model="busquedaTexto" 
-              type="search" 
-              placeholder="Buscar productos..." 
-              class="search-input"
-              aria-label="Buscar productos"
-            />
-          </div>
+          <p>Haz clic en una categoria para ver sus productos con precios e informacion</p>
         </div>
         <div class="categorias-nav-grid">
-          <button 
-            v-for="cat in categoriasData" 
+          <router-link 
+            v-for="cat in categoriasParaMostrar" 
             :key="cat.id"
+            :to="`/categoria/${cat.id}`"
             class="categoria-nav-card"
-            @click="scrollTo('cat-' + cat.id)"
           >
             <div class="cat-nav-img">
-              <img :src="cat.portada" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
+              <img :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
             </div>
             <h3>{{ cat.nombre }}</h3>
-            <span class="cat-nav-count">{{ cat.productos.length }} productos</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Secciones de Categoria -->
-    <section 
-      v-for="(cat, catIndex) in categoriasData" 
-      :key="cat.id"
-      :id="'cat-' + cat.id"
-      class="categoria-section"
-      :class="{ 'bg-alt': catIndex % 2 === 1 }"
-    >
-      <div class="container">
-        <div class="categoria-header">
-          <div class="categoria-header-text">
-            <span class="section-label">{{ cat.etiqueta }}</span>
-            <h2>{{ cat.nombre }}</h2>
-            <p>{{ cat.descripcion }}</p>
-          </div>
-          <div class="categoria-header-deco"></div>
-        </div>
-
-        <div class="productos-grid">
-          <div 
-            v-for="(producto, index) in productosVisibles(cat)" 
-            :key="(producto.id || cat.id) + '-' + index"
-            class="producto-card"
-            :style="{ animationDelay: `${index * 0.08}s` }"
-          >
-            <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
-              <img 
-                :src="producto.imagen" 
-                :alt="producto.nombre"
-                @error="handleImageError"
-                loading="lazy"
-              />
-            </router-link>
-            <div v-else class="producto-image">
-              <img 
-                :src="producto.imagen" 
-                :alt="producto.nombre"
-                @error="handleImageError"
-                loading="lazy"
-              />
-            </div>
-            <div class="producto-info">
-              <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-nombre-link">
-                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
-              </router-link>
-              <h3 v-else class="producto-nombre">{{ producto.nombre }}</h3>
-              <p v-if="producto.material" class="producto-material">{{ producto.material }}</p>
-              <a 
-                :href="whatsappProducto(producto.nombre)" 
-                target="_blank" 
-                class="btn-consultar"
-              >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Consultar
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="categoria-actions">
-          <button 
-            v-if="filtrarProductos(cat.productos).length > 3" 
-            @click="toggleExpand(cat.id)" 
-            class="btn btn-ver-todos"
-          >
-            <template v-if="expandidas[cat.id]">
-              Ver menos
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
-            </template>
-            <template v-else>
-              Ver todos ({{ filtrarProductos(cat.productos).length }})
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-            </template>
-          </button>
+          </router-link>
         </div>
       </div>
     </section>
@@ -208,51 +119,23 @@
         <div class="section-header">
           <span class="section-label">Ofertas especiales</span>
           <h2>Promociones por Temporada</h2>
-          <p>Descuentos especiales en fechas festivas y temporadas culturales</p>
         </div>
 
-        <div class="promos-grid">
-          <div 
+        <div class="promos-grid-horizontal">
+          <a 
             v-for="promo in promociones" 
             :key="promo.id"
-            class="promo-card"
+            :href="whatsappPromo(promo.nombre)"
+            target="_blank"
+            class="promo-card-horizontal"
             :class="'promo-' + promo.tema"
           >
             <div class="promo-image">
               <img :src="promo.imagen" :alt="promo.nombre" loading="lazy" @error="handleImageError" />
               <span class="promo-badge">{{ promo.temporada }}</span>
             </div>
-            <div class="promo-content">
-              <h3>{{ promo.nombre }}</h3>
-              <p class="promo-desc">{{ promo.descripcion }}</p>
-              <div class="promo-incluye">
-                <strong>Incluye:</strong>
-                <ul>
-                  <li v-for="(item, i) in promo.contenido" :key="i">{{ item }}</li>
-                </ul>
-              </div>
-              <a :href="whatsappPromo(promo.nombre)" target="_blank" class="btn btn-whatsapp btn-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Consultar promocion
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="promos-download">
-          <div class="download-card">
-            <div class="download-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-            </div>
-            <div class="download-text">
-              <h3>Catalogo completo de promociones</h3>
-              <p>Descarga nuestro catalogo con todas las promociones vigentes en formato PDF</p>
-            </div>
-            <button @click="descargarCatalogoPDF" class="btn btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar PDF
-            </button>
-          </div>
+            <h3>{{ promo.nombre }}</h3>
+          </a>
         </div>
       </div>
     </section>
@@ -417,7 +300,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
@@ -431,130 +314,61 @@ export default {
     const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
     const menuOpen = ref(false)
     const isScrolled = ref(false)
-    const busquedaTexto = ref('')
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const whatsappGeneral = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer mas sobre sus artesanias.')}`
 
-    // Estado de expansion de categorias
-    const expandidas = reactive({})
-
-    // Datos de categorias con productos locales (fallback)
-    const categoriasData = ref([
-      {
-        id: 'madera',
-        nombre: 'Madera',
-        etiqueta: 'Coleccion',
-        portada: '/imagenes/sol madera.jpg',
-        descripcion: 'Piezas unicas talladas y pintadas a mano en madera de cedro y otros materiales nobles. Cada obra refleja la maestria artesanal ecuatoriana transmitida de generacion en generacion.',
-        productos: [
-          { nombre: 'Sol decorativo de madera', material: 'Madera de cedro pintada a mano', imagen: '/imagenes/sol madera.jpg' },
-          { nombre: 'Marco de madera tallada', material: 'Madera de cedro', imagen: '/imagenes/marco madera.jpg' },
-          { nombre: 'Arbol de cuarzos', material: 'Madera y cuarzo natural', imagen: '/imagenes/arbol de cuarzos.jpg' },
-          { nombre: 'Cuadro paisaje pintado a mano', material: 'Madera y pintura artesanal', imagen: '/imagenes/cuadro paisaje grande.jpg' },
-          { nombre: 'Cuadros decorativos variados', material: 'Madera pintada a mano', imagen: '/imagenes/cuadros varios.jpg' },
-          { nombre: 'Caja de te artesanal', material: 'Madera tallada y pintada', imagen: '/imagenes/caja de te.jpeg' },
-          { nombre: 'Cucharas talladas a mano', material: 'Madera de cedro', imagen: '/imagenes/cucharas PRINCIPAL.jpg' },
-        ]
-      },
-      {
-        id: 'ceramica',
-        nombre: 'Ceramica',
-        etiqueta: 'Coleccion',
-        portada: '/imagenes/vasos.jpg',
-        descripcion: 'Piezas de ceramica modeladas y pintadas a mano, inspiradas en la cosmovisión andina y la naturaleza ecuatoriana. Cada pieza es funcional y decorativa.',
-        productos: [
-          { nombre: 'Tazas de ceramica pintadas', material: 'Ceramica esmaltada a mano', imagen: '/imagenes/vasos.jpg' },
-          { nombre: 'Caballo botero', material: 'Ceramica pintada a mano', imagen: '/imagenes/caballo.jpg' },
-          { nombre: 'Muneca de ceramica', material: 'Ceramica artesanal', imagen: '/imagenes/muñeca cermica.jpg' },
-          { nombre: 'Portallave de piedra', material: 'Piedra tallada y pintada', imagen: '/imagenes/portallaves piedra.jpg' },
-        ]
-      },
-      {
-        id: 'mascaras',
-        nombre: 'Mascaras',
-        etiqueta: 'Coleccion',
-        portada: '/imagenes/diablo PRINCIPAL.jpg',
-        descripcion: 'Mascaras tradicionales que representan personajes de las festividades ecuatorianas. El Diablo Huma, simbolo de la fiesta del Inti Raymi, es nuestra pieza mas emblematica.',
-        productos: [
-          { nombre: 'Mascara Diablo Huma', material: 'Madera de cedro tallada', imagen: '/imagenes/masc1.jpg' },
-          { nombre: 'Mascara de ciervo', material: 'Madera tallada y pintada', imagen: '/imagenes/masc2.jpg' },
-          { nombre: 'Mascara larga decorativa', material: 'Madera de cedro', imagen: '/imagenes/masc3 larga.jpg' },
-          { nombre: 'Diablo Huma grande', material: 'Madera tallada a mano', imagen: '/imagenes/diablo PRINCIPAL.jpg' },
-          { nombre: 'Diablo Huma clasica', material: 'Madera pintada a mano', imagen: '/imagenes/diablo PRINCIPAL2.jpg' },
-          { nombre: 'Diablo Huma tradicional', material: 'Madera de cedro', imagen: '/imagenes/diablo-PRINCIPAL3.jpg' },
-          { nombre: 'Cuadro Diablo Huma', material: 'Madera y pintura artesanal', imagen: '/imagenes/cuadro diablohuma.jpg' },
-          { nombre: 'Mascara religiosa', material: 'Madera tallada', imagen: '/imagenes/mascara-Jesus.jpg' },
-          { nombre: 'Mascaras pequenas decorativas', material: 'Madera pintada', imagen: '/imagenes/mascaras pequeñas.jpg' },
-          { nombre: 'Diablos variados', material: 'Madera tallada y pintada', imagen: '/imagenes/didablos-varios.jpg' },
-        ]
-      },
-      {
-        id: 'nacimientos',
-        nombre: 'Nacimientos',
-        etiqueta: 'Coleccion',
-        portada: '/imagenes/nac1.jpg',
-        descripcion: 'Nacimientos artesanales elaborados con distintas tecnicas y materiales. Perfectos para decorar en epoca navidena, cada set es una obra de arte miniatura.',
-        productos: [
-          { nombre: 'Nacimiento con base de madera', material: 'Ceramica y madera', imagen: '/imagenes/nac1.jpg' },
-          { nombre: 'Nacimiento tejido', material: 'Fibras naturales tejidas a mano', imagen: '/imagenes/nac2.jpg' },
-          { nombre: 'Nacimiento clasico', material: 'Ceramica pintada a mano', imagen: '/imagenes/nac3.jpg' },
-          { nombre: 'Nacimiento pequeno', material: 'Ceramica miniatura', imagen: '/imagenes/nac4 pequeño.jpg' },
-        ]
-      },
-      {
-        id: 'otros',
-        nombre: 'Otros',
-        etiqueta: 'Coleccion',
-        portada: '/imagenes/pulseras_varias.jpg',
-        descripcion: 'Una seleccion diversa de artesanias que incluye joyeria, accesorios y piezas decorativas. Cada articulo es un recuerdo unico de la cultura ecuatoriana.',
-        productos: [
-          { nombre: 'Pulseras artesanales', material: 'Materiales naturales variados', imagen: '/imagenes/pulseras_varias.jpg' },
-          { nombre: 'Destapadores artesanales', material: 'Metal y madera', imagen: '/imagenes/destapadores.jpg' },
-          { nombre: 'Mitad del Mundo miniatura', material: 'Ceramica y piedra', imagen: '/imagenes/mitad del mundo PRINCIPAL.jpg' },
-        ]
+    // Categorias desde API (para cards de navegacion)
+    const categoriasParaMostrar = ref([])
+    const categoriasPorNombreImagen = {
+      'Madera': '/imagenes/sol madera.jpg',
+      'Cerámica': '/imagenes/vasos.jpg',
+      'Ceramica': '/imagenes/vasos.jpg',
+      'Mascaras': '/imagenes/diablo PRINCIPAL.jpg',
+      'Nacimientos': '/imagenes/nac1.jpg',
+      'Otros': '/imagenes/pulseras_varias.jpg',
+      'Tejidos': '/imagenes/logo-principal.jpg'
+    }
+    const imagenCategoria = (cat) => {
+      if (cat.imagen_url) {
+        return cat.imagen_url.startsWith('http') ? cat.imagen_url : `${API_URL.replace('/api', '')}${cat.imagen_url}`
       }
-    ])
+      return categoriasPorNombreImagen[cat.nombre] || '/imagenes/logo-principal.jpg'
+    }
 
-    // Datos de promociones
-    const promociones = [
-      {
-        id: 'navidad',
-        nombre: 'Navidad y Fin de Ano',
-        temporada: 'Diciembre',
-        tema: 'navidad',
-        descripcion: 'Regalos especiales hechos a mano para celebrar la Navidad con tus seres queridos. Cada pieza lleva el calor de la tradicion ecuatoriana.',
-        imagen: '/imagenes/promo1.jpg',
-        contenido: ['Nacimiento de ceramica pintado a mano', 'Cuadro decorativo pintado a mano', 'Caja de te de madera tallada']
-      },
-      {
-        id: 'madre',
-        nombre: 'Dia de la Madre',
-        temporada: 'Mayo',
-        tema: 'madre',
-        descripcion: 'Celebra a mama con un regalo unico y significativo. Piezas seleccionadas con carino para las madres mas especiales.',
-        imagen: '/imagenes/promo2.jpg',
-        contenido: ['Taza de ceramica pintada a mano', 'Pulsera artesanal de materiales naturales', 'Cuadro decorativo pequeno']
-      },
-      {
-        id: 'cultural',
-        nombre: 'Fiestas de Quito',
-        temporada: 'Diciembre',
-        tema: 'cultural',
-        descripcion: 'Celebra las Fiestas de Quito con artesanias que representan la identidad cultural de nuestra ciudad. Recuerdos autenticos de la capital.',
-        imagen: '/imagenes/promo3.jpg',
-        contenido: ['Mascara Diablo Huma decorativa', 'Destapador artesanal', 'Mitad del Mundo miniatura']
-      },
-      {
-        id: 'inti',
-        nombre: 'Inti Raymi - Fiesta del Sol',
-        temporada: 'Junio',
-        tema: 'inti',
-        descripcion: 'Honramos la celebracion ancestral del solsticio con piezas que evocan la cosmovision andina y la riqueza cultural de nuestros pueblos.',
-        imagen: '/imagenes/promo4.jpg',
-        contenido: ['Sol decorativo de madera', 'Arbol de cuarzos con base de madera', 'Pulsera de piedras naturales']
+    // Cargar categorias desde API
+    const cargarCategorias = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/categorias`)
+        categoriasParaMostrar.value = res.data || []
+      } catch {
+        categoriasParaMostrar.value = []
       }
+    }
+
+    // Promociones desde API (con fallback local)
+    const promociones = ref([])
+    const promocionesFallback = [
+      { id: 'navidad', nombre: 'Navidad y Fin de Año', temporada: 'Diciembre', tema: 'navidad', imagen: '/imagenes/promo1.jpg' },
+      { id: 'madre', nombre: 'Día de la Madre', temporada: 'Mayo', tema: 'madre', imagen: '/imagenes/promo2.jpg' },
+      { id: 'cultural', nombre: 'Fiestas de Quito', temporada: 'Diciembre', tema: 'cultural', imagen: '/imagenes/promo3.jpg' },
+      { id: 'inti', nombre: 'Inti Raymi - Fiesta del Sol', temporada: 'Junio', tema: 'inti', imagen: '/imagenes/promo4.jpg' }
     ]
+    const cargarPromociones = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/promociones`)
+        promociones.value = (res.data || []).map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          temporada: p.temporada,
+          tema: p.tema || 'general',
+          imagen: p.imagen_url ? (p.imagen_url.startsWith('http') ? p.imagen_url : `${API_URL.replace('/api', '')}${p.imagen_url}`) : '/imagenes/logo-principal.jpg'
+        }))
+        if (promociones.value.length === 0) promociones.value = promocionesFallback
+      } catch {
+        promociones.value = promocionesFallback
+      }
+    }
 
     // Banner con imagenes flotantes
     const bannerImagesSrc = [
@@ -576,69 +390,6 @@ export default {
         animationDelay: `-${Math.random() * 18}s`,
         transform: `rotate(${Math.round(-12 + Math.random() * 24)}deg)`
       }))
-    }
-
-    // Cargar productos del API y fusionar con datos locales
-    const cargarProductosAPI = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/productos`)
-        const apiProductos = res.data.productos || res.data
-        if (apiProductos && apiProductos.length > 0) {
-          const mapaCategorias = {
-            'Madera': 'madera',
-            'Ceramica': 'ceramica',
-            'Mascaras': 'mascaras',
-            'Nacimientos': 'nacimientos',
-            'Otros': 'otros'
-          }
-          categoriasData.value.forEach(cat => {
-            const apiItems = apiProductos
-              .filter(p => {
-                const catNombre = p.categoria_nombre || ''
-                return mapaCategorias[catNombre] === cat.id
-              })
-              .map(p => ({
-                id: p.id,
-                nombre: p.nombre,
-                material: p.material || '',
-                imagen: obtenerImagenAPI(p),
-                precio: p.precio
-              }))
-            if (apiItems.length > 0) {
-              cat.productos = apiItems
-            }
-          })
-        }
-      } catch (error) {
-        // Usar datos locales como fallback
-      }
-    }
-
-    const obtenerImagenAPI = (producto) => {
-      if (producto.imagenes && producto.imagenes.length > 0) {
-        const principal = producto.imagenes.find(img => img.es_principal)
-        const img = principal || producto.imagenes[0]
-        return `${API_URL.replace('/api', '')}${img.url}`
-      }
-      return '/imagenes/logo-principal.jpg'
-    }
-
-    // Funciones de UI
-    const filtrarProductos = (productos) => {
-      const txt = (busquedaTexto.value || '').trim().toLowerCase()
-      if (!txt) return productos
-      return productos.filter(p => 
-        (p.nombre || '').toLowerCase().includes(txt) ||
-        (p.material || '').toLowerCase().includes(txt)
-      )
-    }
-    const productosVisibles = (cat) => {
-      const productos = filtrarProductos(cat.productos)
-      return expandidas[cat.id] ? productos : productos.slice(0, 3)
-    }
-
-    const toggleExpand = (catId) => {
-      expandidas[catId] = !expandidas[catId]
     }
 
     const handleScroll = () => {
@@ -672,67 +423,6 @@ export default {
       return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, me interesa la promocion: ${nombre}. ¿Esta disponible?`)}`
     }
 
-    // Generar PDF de promociones
-    const descargarCatalogoPDF = () => {
-      const win = window.open('', '_blank')
-      if (!win) {
-        alert('Por favor permite las ventanas emergentes para descargar el PDF.')
-        return
-      }
-
-      let promoHtml = ''
-      promociones.forEach(promo => {
-        promoHtml += `
-          <div class="promo">
-            <div class="promo-badge">${promo.temporada}</div>
-            <h2>${promo.nombre}</h2>
-            <p>${promo.descripcion}</p>
-            <p class="incluye"><strong>Incluye:</strong></p>
-            <ul>${promo.contenido.map(i => `<li>${i}</li>`).join('')}</ul>
-          </div>`
-      })
-
-      win.document.write(`<!DOCTYPE html><html><head>
-        <title>Catalogo de Promociones - Ideancestral</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Georgia, 'Times New Roman', serif; padding: 2.5rem; color: #333; max-width: 800px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #D4A76A; }
-          .header h1 { color: #7B3F00; font-size: 2rem; margin-bottom: 0.25rem; }
-          .header p { color: #888; font-size: 0.95rem; }
-          .promo { margin-bottom: 1.5rem; padding: 1.5rem; border: 1px solid #EDEAE6; border-radius: 8px; page-break-inside: avoid; }
-          .promo h2 { color: #7B3F00; font-size: 1.3rem; margin: 0.5rem 0; }
-          .promo p { margin: 0.5rem 0; line-height: 1.6; color: #555; }
-          .promo-badge { display: inline-block; background: #C4853A; color: white; padding: 3px 12px; border-radius: 4px; font-size: 0.8rem; font-family: Arial, sans-serif; }
-          .incluye { color: #333 !important; margin-top: 0.75rem !important; }
-          .promo ul { padding-left: 1.5rem; margin-top: 0.25rem; }
-          .promo li { margin: 0.25rem 0; color: #555; line-height: 1.5; }
-          .contacto { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #D4A76A; }
-          .contacto p { margin: 0.25rem 0; color: #555; font-size: 0.9rem; }
-          .contacto strong { color: #7B3F00; }
-          .footer-pdf { text-align: center; margin-top: 1.5rem; color: #aaa; font-size: 0.8rem; }
-          .btn-print { display: block; margin: 2rem auto 0; padding: 14px 32px; background: #7B3F00; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-family: Arial, sans-serif; }
-          .btn-print:hover { background: #5C2E00; }
-          @media print { .btn-print { display: none; } }
-        </style>
-      </head><body>
-        <div class="header">
-          <h1>Ideancestral</h1>
-          <p>Catalogo de Promociones por Temporada</p>
-        </div>
-        ${promoHtml}
-        <div class="contacto">
-          <p><strong>Contactanos</strong></p>
-          <p>WhatsApp: +593 998 956 361 | Tel: (02) 2227781</p>
-          <p>Email: mary_cecy_ma@hotmail.com</p>
-          <p>Mercado Artesanal La Mariscal - Quito, Ecuador</p>
-        </div>
-        <p class="footer-pdf">Ideancestral &copy; ${new Date().getFullYear()} - Todos los derechos reservados</p>
-        <button class="btn-print" onclick="window.print()">Imprimir / Guardar como PDF</button>
-      </body></html>`)
-      win.document.close()
-    }
-
     // Long press para acceso admin
     let longPressTimer = null
 
@@ -751,7 +441,8 @@ export default {
 
     onMounted(() => {
       initBannerImages()
-      cargarProductosAPI()
+      cargarCategorias()
+      cargarPromociones()
       window.addEventListener('scroll', handleScroll)
     })
 
@@ -764,20 +455,15 @@ export default {
       menuOpen,
       isScrolled,
       whatsappGeneral,
-      categoriasData,
+      categoriasParaMostrar,
+      imagenCategoria,
       promociones,
       bannerImages,
-      expandidas,
-      productosVisibles,
-      toggleExpand,
       handleImageError,
       scrollTo,
       toggleMenu,
-      busquedaTexto,
-      filtrarProductos,
       whatsappProducto,
       whatsappPromo,
-      descargarCatalogoPDF,
       iniciarLongPress,
       cancelarLongPress,
       carrito,
@@ -844,14 +530,14 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   background: var(--color-primary);
   color: var(--color-white);
-  border-radius: 8px;
+  border-radius: 6px;
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
@@ -1169,6 +855,9 @@ export default {
   transition: var(--transition);
   padding: 0;
   font-family: var(--font-sans);
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .categoria-nav-card:hover {
@@ -1200,14 +889,7 @@ export default {
   font-weight: 600;
 }
 
-.cat-nav-count {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  padding-bottom: 1rem;
-}
-
-/* ===== CATEGORIA SECTION ===== */
+/* ===== CATEGORIA SECTION (removido - productos se muestran en /categoria/:id) ===== */
 .categoria-section {
   padding: 5rem 0;
 }
@@ -1325,23 +1007,11 @@ export default {
   line-height: 1.5;
 }
 
-.btn-consultar {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0.5rem 1rem;
-  background: #E8FAF0;
-  color: #128C7E;
-  border-radius: 100px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.btn-consultar:hover {
-  background: #25D366;
-  color: var(--color-white);
-  transform: translateY(-1px);
+.producto-precio {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-top: 0.5rem;
 }
 
 /* ===== CATEGORIA ACTIONS ===== */
@@ -1377,52 +1047,54 @@ export default {
   background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-warm) 100%);
 }
 
-.promos-grid {
+.promos-grid-horizontal {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
 }
 
-.promo-card {
+.promo-card-horizontal {
   background: var(--color-white);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
   transition: var(--transition);
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.promo-card:hover {
+.promo-card-horizontal:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
-.promo-image {
+.promo-card-horizontal .promo-image {
   position: relative;
-  height: 220px;
+  height: 180px;
   overflow: hidden;
 }
 
-.promo-image img {
+.promo-card-horizontal .promo-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
 
-.promo-card:hover .promo-image img {
+.promo-card-horizontal:hover .promo-image img {
   transform: scale(1.05);
 }
 
 .promo-badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 0.4rem 1rem;
+  top: 12px;
+  left: 12px;
+  padding: 0.35rem 0.85rem;
   background: var(--color-secondary);
   color: var(--color-white);
   border-radius: 100px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -1433,101 +1105,13 @@ export default {
 .promo-cultural .promo-badge { background: #7B3F00; }
 .promo-inti .promo-badge { background: #E67E22; }
 
-.promo-content {
-  padding: 1.75rem;
-}
-
-.promo-content h3 {
-  font-size: 1.2rem;
+.promo-card-horizontal h3 {
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.75rem;
-}
-
-.promo-desc {
-  font-size: 0.92rem;
-  color: var(--color-text-light);
-  line-height: 1.7;
-  margin-bottom: 1rem;
-}
-
-.promo-incluye {
-  margin-bottom: 1.25rem;
-}
-
-.promo-incluye strong {
-  font-size: 0.85rem;
-  color: var(--color-text);
-  display: block;
-  margin-bottom: 0.4rem;
-}
-
-.promo-incluye ul {
-  list-style: none;
-  padding: 0;
-}
-
-.promo-incluye li {
-  position: relative;
-  padding-left: 1.25rem;
-  font-size: 0.88rem;
-  color: var(--color-text-light);
-  margin: 0.3rem 0;
-  line-height: 1.5;
-}
-
-.promo-incluye li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 8px;
-  width: 6px;
-  height: 6px;
-  background: var(--color-accent);
-  border-radius: 50%;
-}
-
-/* ===== DOWNLOAD CARD ===== */
-.promos-download {
-  margin-top: 1rem;
-}
-
-.download-card {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  padding: 2rem 2.5rem;
-  background: var(--color-white);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px dashed var(--color-accent);
-}
-
-.download-icon {
-  flex-shrink: 0;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-warm);
-  color: var(--color-primary);
-  border-radius: 12px;
-}
-
-.download-text {
-  flex: 1;
-}
-
-.download-text h3 {
-  font-size: 1.1rem;
-  color: var(--color-text);
-  margin-bottom: 0.25rem;
-}
-
-.download-text p {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ===== NOSOTROS ===== */
@@ -1561,15 +1145,16 @@ export default {
 
 .info-icon {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-primary);
   color: var(--color-white);
-  border-radius: 10px;
+  border-radius: 8px;
 }
+.info-icon svg { width: 16px; height: 16px; }
 
 .info-card strong {
   display: block;
@@ -1808,14 +1393,7 @@ export default {
 
   .producto-image { height: 220px; }
 
-  .promos-grid { grid-template-columns: 1fr; }
-
-  .download-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.25rem;
-    padding: 2rem 1.5rem;
-  }
+  .promos-grid-horizontal { grid-template-columns: repeat(2, 1fr); }
 
   .nosotros-grid { grid-template-columns: 1fr; }
   .nosotros-mapa { height: 300px; }
@@ -1840,7 +1418,8 @@ export default {
   .productos-grid { grid-template-columns: 1fr; }
   .producto-image { height: 260px; }
 
-  .promo-image { height: 180px; }
+  .promos-grid-horizontal { grid-template-columns: 1fr; }
+  .promo-card-horizontal .promo-image { height: 200px; }
 
   .nosotros-social { flex-direction: column; }
   .footer-links-grid { grid-template-columns: 1fr; }
