@@ -1,12 +1,26 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import pool from '../database/connection.js';
 
 const router = express.Router();
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET === 'secret_key' || JWT_SECRET.length < 32) {
+  console.warn('⚠️  ADVERTENCIA: JWT_SECRET debe ser configurado con un valor seguro (min. 32 caracteres)');
+}
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5,
+  message: { error: 'Demasiados intentos de inicio de sesión. Intente más tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // POST /api/auth/login - Iniciar sesión
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { usuario, password } = req.body;
 
@@ -32,7 +46,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: admin.id, usuario: admin.usuario },
-      process.env.JWT_SECRET || 'secret_key',
+      JWT_SECRET || 'secret_key',
       { expiresIn: '24h' }
     );
 
@@ -50,8 +64,13 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/register - Registrar nuevo administrador (solo para desarrollo)
-router.post('/register', async (req, res) => {
+// POST /api/auth/register - Registrar nuevo administrador (solo desarrollo, deshabilitado en producción)
+router.post('/register', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'El registro está deshabilitado en producción' });
+  }
+  next();
+}, async (req, res) => {
   try {
     const { usuario, email, password } = req.body;
 
@@ -79,23 +98,5 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ error: 'Error al registrar administrador' });
   }
 });
-
-// Middleware de autenticación (opcional, para proteger rutas)
-export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Token no proporcionado' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Token inválido' });
-    }
-    req.user = user;
-    next();
-  });
-};
 
 export default router;

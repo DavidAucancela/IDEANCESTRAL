@@ -13,9 +13,8 @@ const router = createRouter({
     },
     {
       path: '/producto/:id',
-      name: 'producto-detalle',
-      component: ProductoDetalleView,
-      props: true
+      name: 'producto',
+      component: ProductoDetalleView
     },
     {
       path: '/admin',

@@ -337,7 +337,7 @@ export default {
       try {
         loadingProductos.value = true
         const response = await axios.get(`${API_URL}/productos`, {
-          params: { publicado: undefined } // Obtener todos
+          params: { incluir_ocultos: true } // Todos los productos para admin
         })
         productos.value = response.data
       } catch (error) {

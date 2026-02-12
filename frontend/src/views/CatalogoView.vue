@@ -5,20 +5,28 @@
       <nav class="nav">
         <div class="nav-container">
           <router-link to="/" class="logo">
-            <span class="logo-icon">IA</span>
+            <span 
+              class="logo-icon"
+              @mousedown.prevent="iniciarLongPress"
+              @mouseup="cancelarLongPress"
+              @mouseleave="cancelarLongPress"
+              @touchstart.prevent="iniciarLongPress"
+              @touchend="cancelarLongPress"
+              @touchcancel="cancelarLongPress"
+            >IA</span>
             <span class="logo-text">Ideancestral</span>
           </router-link>
           <ul class="nav-links" :class="{ open: menuOpen }">
             <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-            <li><a href="#catalogo" @click.prevent="scrollTo('catalogo')">Catálogo</a></li>
+            <li><a href="#categorias" @click.prevent="scrollTo('categorias')">Categorias</a></li>
+            <li><a href="#promociones" @click.prevent="scrollTo('promociones')">Promociones</a></li>
             <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Nosotros</a></li>
             <li>
-              <a :href="whatsappGeneral" target="_blank" class="nav-whatsapp">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                WhatsApp
-              </a>
+              <button class="cart-toggle" @click="toggleCarrito" title="Carrito">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
+              </button>
             </li>
-            <li><router-link to="/admin" @click="menuOpen = false" class="nav-admin">Admin</router-link></li>
           </ul>
           <button class="menu-toggle" @click="toggleMenu" :class="{ active: menuOpen }">
             <span></span>
@@ -36,26 +44,25 @@
         <div class="hero-text">
           <h1 class="hero-title">
             <span class="hero-title-small">Bienvenido a</span>
-            Idea Ancestral
+            Ideancestral
           </h1>
           <p class="hero-description">
-            Un lugar donde se entrelazan la creatividad y la tradición. 
-            Desde tejidos únicos hasta cerámicas delicadas, cada artículo 
-            cuenta una historia única y refleja la rica herencia cultural.
+            Difundimos la riqueza cultural y artesanal de Ecuador, exhibiendo productos elaborados con tecnicas tradicionales y materiales nobles. Cada pieza es unica, hecha a mano con amor y tradicion.
           </p>
           <div class="hero-actions">
-            <a href="#catalogo" @click.prevent="scrollTo('catalogo')" class="btn btn-primary btn-lg">
-              Ver Catálogo
+            <a href="#categorias" @click.prevent="scrollTo('categorias')" class="btn btn-primary btn-lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              Explorar Catalogo
             </a>
             <a :href="whatsappGeneral" target="_blank" class="btn btn-whatsapp btn-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Contáctanos
+              Contactanos
             </a>
           </div>
         </div>
         <div class="hero-image-wrapper">
           <div class="hero-image-frame">
-            <img src="/imagenes/logo-principal.jpg" alt="Artesanías Idea Ancestral" />
+            <img src="/imagenes/logo-principal.jpg" alt="Artesanias Idea Ancestral" />
           </div>
         </div>
       </div>
@@ -64,119 +71,210 @@
     <!-- Banner Central -->
     <section class="banner-central">
       <div class="banner-bg-images">
-        <div class="banner-bg-img" style="background-image: url('/imagenes/masc1.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/nac2.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/vasos.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/caballo.jpg')"></div>
+        <div 
+          v-for="(img, i) in bannerImages" 
+          :key="i" 
+          class="banner-bg-img"
+          :class="`drift-${(i % 4) + 1}`"
+          :style="img"
+        ></div>
       </div>
       <div class="banner-overlay"></div>
       <div class="banner-content">
-        <p class="banner-pre">Artesanías hechas a mano</p>
-        <h1 class="banner-title-cursive">catálogo</h1>
-        <h2 class="banner-title-main">ARTESANAL</h2>
+        <p class="banner-pre">Artesanias hechas a mano</p>
+        <h2 class="banner-title-main">ARTESANIAS</h2>
         <div class="banner-divider"></div>
-        <p class="banner-subtitle">-Siempre Santander-</p>
-        <p class="banner-tagline">Productos 100% hechos a mano</p>
+        <p class="banner-subtitle">-Mary Cecy-</p>
+        <p class="banner-tagline">Productos 100% hechos a mano, de Ecuador para el mundo</p>
       </div>
     </section>
 
-    <!-- Categorías -->
-    <section id="categorias" class="categorias-section">
+    <!-- Navegacion de Categorias -->
+    <section id="categorias" class="categorias-nav-section">
       <div class="container">
         <div class="section-header">
-          <h2>Explora por Categoría</h2>
-          <p>Descubre nuestras colecciones artesanales</p>
+          <span class="section-label">Nuestras colecciones</span>
+          <h2>Explora por Categoria</h2>
+          <p>Descubre la diversidad de nuestras artesanias organizadas por tipo</p>
+          <div class="search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input 
+              v-model="busquedaTexto" 
+              type="search" 
+              placeholder="Buscar productos..." 
+              class="search-input"
+              aria-label="Buscar productos"
+            />
+          </div>
         </div>
-        <div class="categorias-filters">
+        <div class="categorias-nav-grid">
           <button 
-            @click="filtrarPorCategoria(null)"
-            :class="['filter-chip', { active: categoriaFiltro === null }]"
+            v-for="cat in categoriasData" 
+            :key="cat.id"
+            class="categoria-nav-card"
+            @click="scrollTo('cat-' + cat.id)"
           >
-            Todos
-          </button>
-          <button 
-            v-for="categoria in categorias" 
-            :key="categoria.id"
-            @click="filtrarPorCategoria(categoria.id)"
-            :class="['filter-chip', { active: categoriaFiltro === categoria.id }]"
-          >
-            {{ categoria.nombre }}
+            <div class="cat-nav-img">
+              <img :src="cat.portada" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
+            </div>
+            <h3>{{ cat.nombre }}</h3>
+            <span class="cat-nav-count">{{ cat.productos.length }} productos</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Catálogo -->
-    <section id="catalogo" class="catalogo-section">
+    <!-- Secciones de Categoria -->
+    <section 
+      v-for="(cat, catIndex) in categoriasData" 
+      :key="cat.id"
+      :id="'cat-' + cat.id"
+      class="categoria-section"
+      :class="{ 'bg-alt': catIndex % 2 === 1 }"
+    >
       <div class="container">
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando productos...</p>
-        </div>
-        
-        <div v-else-if="productos.length === 0" class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <p>No hay productos disponibles en esta categoría</p>
-          <button @click="filtrarPorCategoria(null)" class="btn btn-secondary">Ver todos</button>
+        <div class="categoria-header">
+          <div class="categoria-header-text">
+            <span class="section-label">{{ cat.etiqueta }}</span>
+            <h2>{{ cat.nombre }}</h2>
+            <p>{{ cat.descripcion }}</p>
+          </div>
+          <div class="categoria-header-deco"></div>
         </div>
 
-        <div v-else class="productos-grid">
+        <div class="productos-grid">
           <div 
-            v-for="(producto, index) in productos" 
-            :key="producto.id"
+            v-for="(producto, index) in productosVisibles(cat)" 
+            :key="(producto.id || cat.id) + '-' + index"
             class="producto-card"
-            :style="{ animationDelay: `${index * 0.05}s` }"
-            @click="verDetalle(producto.id)"
+            :style="{ animationDelay: `${index * 0.08}s` }"
           >
-            <div class="producto-image">
+            <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
               <img 
-                :src="obtenerImagenPrincipal(producto)" 
+                :src="producto.imagen" 
                 :alt="producto.nombre"
                 @error="handleImageError"
                 loading="lazy"
               />
-              <div class="producto-image-overlay">
-                <span class="ver-detalle-btn">Ver Detalle</span>
-              </div>
-              <div v-if="producto.destacado" class="badge-destacado">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Destacado
-              </div>
+            </router-link>
+            <div v-else class="producto-image">
+              <img 
+                :src="producto.imagen" 
+                :alt="producto.nombre"
+                @error="handleImageError"
+                loading="lazy"
+              />
             </div>
             <div class="producto-info">
-              <span class="producto-categoria-tag">{{ producto.categoria_nombre || 'Artesanía' }}</span>
-              <h3 class="producto-nombre">{{ producto.nombre }}</h3>
-              <div class="producto-meta">
-                <span v-if="producto.material" class="meta-item">{{ producto.material }}</span>
-              </div>
-              <div class="producto-footer">
-                <span class="producto-precio">${{ Number(producto.precio).toFixed(2) }}</span>
-                <span class="producto-ver">
-                  Ver
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </span>
-              </div>
+              <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-nombre-link">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+              </router-link>
+              <h3 v-else class="producto-nombre">{{ producto.nombre }}</h3>
+              <p v-if="producto.material" class="producto-material">{{ producto.material }}</p>
+              <a 
+                :href="whatsappProducto(producto.nombre)" 
+                target="_blank" 
+                class="btn-consultar"
+              >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Consultar
+              </a>
             </div>
+          </div>
+        </div>
+
+        <div class="categoria-actions">
+          <button 
+            v-if="filtrarProductos(cat.productos).length > 3" 
+            @click="toggleExpand(cat.id)" 
+            class="btn btn-ver-todos"
+          >
+            <template v-if="expandidas[cat.id]">
+              Ver menos
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+            </template>
+            <template v-else>
+              Ver todos ({{ filtrarProductos(cat.productos).length }})
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </template>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Promociones por Temporada -->
+    <section id="promociones" class="promociones-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Ofertas especiales</span>
+          <h2>Promociones por Temporada</h2>
+          <p>Descuentos especiales en fechas festivas y temporadas culturales</p>
+        </div>
+
+        <div class="promos-grid">
+          <div 
+            v-for="promo in promociones" 
+            :key="promo.id"
+            class="promo-card"
+            :class="'promo-' + promo.tema"
+          >
+            <div class="promo-image">
+              <img :src="promo.imagen" :alt="promo.nombre" loading="lazy" @error="handleImageError" />
+              <span class="promo-badge">{{ promo.temporada }}</span>
+            </div>
+            <div class="promo-content">
+              <h3>{{ promo.nombre }}</h3>
+              <p class="promo-desc">{{ promo.descripcion }}</p>
+              <div class="promo-incluye">
+                <strong>Incluye:</strong>
+                <ul>
+                  <li v-for="(item, i) in promo.contenido" :key="i">{{ item }}</li>
+                </ul>
+              </div>
+              <a :href="whatsappPromo(promo.nombre)" target="_blank" class="btn btn-whatsapp btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Consultar promocion
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="promos-download">
+          <div class="download-card">
+            <div class="download-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+            </div>
+            <div class="download-text">
+              <h3>Catalogo completo de promociones</h3>
+              <p>Descarga nuestro catalogo con todas las promociones vigentes en formato PDF</p>
+            </div>
+            <button @click="descargarCatalogoPDF" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar PDF
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Nosotros / Ubicación -->
+    <!-- Nosotros / Ubicacion -->
     <section id="nosotros" class="nosotros-section">
       <div class="container">
+        <div class="section-header">
+          <span class="section-label">Visitanos</span>
+          <h2>Encuentranos</h2>
+          <p>Ven a conocer nuestras artesanias en persona</p>
+        </div>
         <div class="nosotros-grid">
           <div class="nosotros-info">
-            <h2>Encuéntranos</h2>
-            <p class="nosotros-desc">Visítanos en nuestro local y descubre más artesanías únicas hechas con amor y tradición.</p>
             <div class="info-cards">
               <div class="info-card">
                 <div class="info-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
                 <div>
-                  <strong>Ubicación</strong>
-                  <p>Jorge Washington y Juan León Mera</p>
+                  <strong>Ubicacion</strong>
+                  <p>Jorge Washington y Juan Leon Mera</p>
                   <p>"MERCADO ARTESANAL - LA MARISCAL"</p>
                   <p>Quito, Ecuador</p>
                 </div>
@@ -186,7 +284,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                 </div>
                 <div>
-                  <strong>Teléfono</strong>
+                  <strong>Telefono</strong>
                   <p>(02) 2227781</p>
                   <p>+593 998 956 361</p>
                 </div>
@@ -216,12 +314,17 @@
               </a>
             </div>
           </div>
-          <div class="nosotros-visual">
-            <div class="image-mosaic">
-              <img src="/imagenes/logo-principal.jpg" alt="Idea Ancestral" class="mosaic-main" />
-              <img src="/imagenes/masc1.jpg" alt="Artesanía" class="mosaic-small mosaic-1" />
-              <img src="/imagenes/sol madera.jpg" alt="Artesanía" class="mosaic-small mosaic-2" />
-            </div>
+          <div class="nosotros-mapa">
+            <iframe 
+              src="https://maps.google.com/maps?q=Mercado+Artesanal+La+Mariscal,+Jorge+Washington+y+Juan+Leon+Mera,+Quito,+Ecuador&t=&z=16&ie=UTF8&iwloc=&output=embed"
+              width="100%" 
+              height="100%" 
+              style="border:0; border-radius: var(--radius-md);" 
+              allowfullscreen="" 
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Ubicacion Mercado Artesanal La Mariscal"
+            ></iframe>
           </div>
         </div>
       </div>
@@ -236,15 +339,16 @@
               <span class="logo-icon">IA</span>
               <span class="logo-text">Ideancestral</span>
             </div>
-            <p>Artesanías hechas a mano con amor y tradición desde Ecuador.</p>
+            <p>Artesanias hechas a mano con amor y tradicion desde Ecuador.</p>
           </div>
           <div class="footer-links-grid">
             <div>
-              <h4>Navegación</h4>
+              <h4>Navegacion</h4>
               <ul>
                 <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-                <li><a href="#catalogo" @click.prevent="scrollTo('catalogo')">Catálogo</a></li>
-                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Ubicación</a></li>
+                <li><a href="#categorias" @click.prevent="scrollTo('categorias')">Categorias</a></li>
+                <li><a href="#promociones" @click.prevent="scrollTo('promociones')">Promociones</a></li>
+                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Nosotros</a></li>
               </ul>
             </div>
             <div>
@@ -263,17 +367,60 @@
       </div>
     </footer>
 
+    <!-- Carrito Sidebar -->
+    <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
+    <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
+      <div class="carrito-header">
+        <h3>Mi Carrito <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
+        <button class="carrito-close" @click="toggleCarrito">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div v-if="carrito.length === 0" class="carrito-empty">
+        <p>Tu carrito está vacío</p>
+        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">Explorar productos</router-link>
+      </div>
+      <div v-else class="carrito-body">
+        <div class="carrito-items">
+          <div v-for="item in carrito" :key="item.id" class="carrito-item">
+            <img :src="item.imagen" :alt="item.nombre" class="carrito-item-img" @error="handleImageError" />
+            <div class="carrito-item-info">
+              <h4>{{ item.nombre }}</h4>
+              <span class="carrito-item-precio">${{ item.precio.toFixed(2) }}</span>
+              <div class="carrito-item-qty">
+                <button @click="actualizarCantidad(item.id, item.cantidad - 1)">−</button>
+                <span>{{ item.cantidad }}</span>
+                <button @click="actualizarCantidad(item.id, item.cantidad + 1)">+</button>
+              </div>
+            </div>
+            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)">×</button>
+          </div>
+        </div>
+        <div class="carrito-footer">
+          <div class="carrito-total">
+            <span>Total</span>
+            <strong>${{ carritoTotal.toFixed(2) }}</strong>
+          </div>
+          <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
+            Enviar pedido por WhatsApp
+          </button>
+          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">Vaciar carrito</button>
+        </div>
+      </div>
+    </aside>
+
     <!-- WhatsApp floating button -->
-    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float">
+    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float" title="Escribenos por WhatsApp">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useCarrito } from '../composables/useCarrito'
 
 const WHATSAPP_NUMBER = '593998956361'
 
@@ -281,54 +428,193 @@ export default {
   name: 'CatalogoView',
   setup() {
     const router = useRouter()
-    const productos = ref([])
-    const categorias = ref([])
-    const loading = ref(true)
-    const categoriaFiltro = ref(null)
+    const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
     const menuOpen = ref(false)
     const isScrolled = ref(false)
+    const busquedaTexto = ref('')
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const whatsappGeneral = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer mas sobre sus artesanias.')}`
 
-    const whatsappGeneral = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer más sobre sus artesanías.')}`
+    // Estado de expansion de categorias
+    const expandidas = reactive({})
 
-    const productosFiltrados = computed(() => {
-      if (!categoriaFiltro.value) return productos.value
-      return productos.value.filter(p => p.categoria_id === categoriaFiltro.value)
-    })
+    // Datos de categorias con productos locales (fallback)
+    const categoriasData = ref([
+      {
+        id: 'madera',
+        nombre: 'Madera',
+        etiqueta: 'Coleccion',
+        portada: '/imagenes/sol madera.jpg',
+        descripcion: 'Piezas unicas talladas y pintadas a mano en madera de cedro y otros materiales nobles. Cada obra refleja la maestria artesanal ecuatoriana transmitida de generacion en generacion.',
+        productos: [
+          { nombre: 'Sol decorativo de madera', material: 'Madera de cedro pintada a mano', imagen: '/imagenes/sol madera.jpg' },
+          { nombre: 'Marco de madera tallada', material: 'Madera de cedro', imagen: '/imagenes/marco madera.jpg' },
+          { nombre: 'Arbol de cuarzos', material: 'Madera y cuarzo natural', imagen: '/imagenes/arbol de cuarzos.jpg' },
+          { nombre: 'Cuadro paisaje pintado a mano', material: 'Madera y pintura artesanal', imagen: '/imagenes/cuadro paisaje grande.jpg' },
+          { nombre: 'Cuadros decorativos variados', material: 'Madera pintada a mano', imagen: '/imagenes/cuadros varios.jpg' },
+          { nombre: 'Caja de te artesanal', material: 'Madera tallada y pintada', imagen: '/imagenes/caja de te.jpeg' },
+          { nombre: 'Cucharas talladas a mano', material: 'Madera de cedro', imagen: '/imagenes/cucharas PRINCIPAL.jpg' },
+        ]
+      },
+      {
+        id: 'ceramica',
+        nombre: 'Ceramica',
+        etiqueta: 'Coleccion',
+        portada: '/imagenes/vasos.jpg',
+        descripcion: 'Piezas de ceramica modeladas y pintadas a mano, inspiradas en la cosmovisión andina y la naturaleza ecuatoriana. Cada pieza es funcional y decorativa.',
+        productos: [
+          { nombre: 'Tazas de ceramica pintadas', material: 'Ceramica esmaltada a mano', imagen: '/imagenes/vasos.jpg' },
+          { nombre: 'Caballo botero', material: 'Ceramica pintada a mano', imagen: '/imagenes/caballo.jpg' },
+          { nombre: 'Muneca de ceramica', material: 'Ceramica artesanal', imagen: '/imagenes/muñeca cermica.jpg' },
+          { nombre: 'Portallave de piedra', material: 'Piedra tallada y pintada', imagen: '/imagenes/portallaves piedra.jpg' },
+        ]
+      },
+      {
+        id: 'mascaras',
+        nombre: 'Mascaras',
+        etiqueta: 'Coleccion',
+        portada: '/imagenes/diablo PRINCIPAL.jpg',
+        descripcion: 'Mascaras tradicionales que representan personajes de las festividades ecuatorianas. El Diablo Huma, simbolo de la fiesta del Inti Raymi, es nuestra pieza mas emblematica.',
+        productos: [
+          { nombre: 'Mascara Diablo Huma', material: 'Madera de cedro tallada', imagen: '/imagenes/masc1.jpg' },
+          { nombre: 'Mascara de ciervo', material: 'Madera tallada y pintada', imagen: '/imagenes/masc2.jpg' },
+          { nombre: 'Mascara larga decorativa', material: 'Madera de cedro', imagen: '/imagenes/masc3 larga.jpg' },
+          { nombre: 'Diablo Huma grande', material: 'Madera tallada a mano', imagen: '/imagenes/diablo PRINCIPAL.jpg' },
+          { nombre: 'Diablo Huma clasica', material: 'Madera pintada a mano', imagen: '/imagenes/diablo PRINCIPAL2.jpg' },
+          { nombre: 'Diablo Huma tradicional', material: 'Madera de cedro', imagen: '/imagenes/diablo-PRINCIPAL3.jpg' },
+          { nombre: 'Cuadro Diablo Huma', material: 'Madera y pintura artesanal', imagen: '/imagenes/cuadro diablohuma.jpg' },
+          { nombre: 'Mascara religiosa', material: 'Madera tallada', imagen: '/imagenes/mascara-Jesus.jpg' },
+          { nombre: 'Mascaras pequenas decorativas', material: 'Madera pintada', imagen: '/imagenes/mascaras pequeñas.jpg' },
+          { nombre: 'Diablos variados', material: 'Madera tallada y pintada', imagen: '/imagenes/didablos-varios.jpg' },
+        ]
+      },
+      {
+        id: 'nacimientos',
+        nombre: 'Nacimientos',
+        etiqueta: 'Coleccion',
+        portada: '/imagenes/nac1.jpg',
+        descripcion: 'Nacimientos artesanales elaborados con distintas tecnicas y materiales. Perfectos para decorar en epoca navidena, cada set es una obra de arte miniatura.',
+        productos: [
+          { nombre: 'Nacimiento con base de madera', material: 'Ceramica y madera', imagen: '/imagenes/nac1.jpg' },
+          { nombre: 'Nacimiento tejido', material: 'Fibras naturales tejidas a mano', imagen: '/imagenes/nac2.jpg' },
+          { nombre: 'Nacimiento clasico', material: 'Ceramica pintada a mano', imagen: '/imagenes/nac3.jpg' },
+          { nombre: 'Nacimiento pequeno', material: 'Ceramica miniatura', imagen: '/imagenes/nac4 pequeño.jpg' },
+        ]
+      },
+      {
+        id: 'otros',
+        nombre: 'Otros',
+        etiqueta: 'Coleccion',
+        portada: '/imagenes/pulseras_varias.jpg',
+        descripcion: 'Una seleccion diversa de artesanias que incluye joyeria, accesorios y piezas decorativas. Cada articulo es un recuerdo unico de la cultura ecuatoriana.',
+        productos: [
+          { nombre: 'Pulseras artesanales', material: 'Materiales naturales variados', imagen: '/imagenes/pulseras_varias.jpg' },
+          { nombre: 'Destapadores artesanales', material: 'Metal y madera', imagen: '/imagenes/destapadores.jpg' },
+          { nombre: 'Mitad del Mundo miniatura', material: 'Ceramica y piedra', imagen: '/imagenes/mitad del mundo PRINCIPAL.jpg' },
+        ]
+      }
+    ])
 
-    const handleScroll = () => {
-      isScrolled.value = window.scrollY > 50
+    // Datos de promociones
+    const promociones = [
+      {
+        id: 'navidad',
+        nombre: 'Navidad y Fin de Ano',
+        temporada: 'Diciembre',
+        tema: 'navidad',
+        descripcion: 'Regalos especiales hechos a mano para celebrar la Navidad con tus seres queridos. Cada pieza lleva el calor de la tradicion ecuatoriana.',
+        imagen: '/imagenes/promo1.jpg',
+        contenido: ['Nacimiento de ceramica pintado a mano', 'Cuadro decorativo pintado a mano', 'Caja de te de madera tallada']
+      },
+      {
+        id: 'madre',
+        nombre: 'Dia de la Madre',
+        temporada: 'Mayo',
+        tema: 'madre',
+        descripcion: 'Celebra a mama con un regalo unico y significativo. Piezas seleccionadas con carino para las madres mas especiales.',
+        imagen: '/imagenes/promo2.jpg',
+        contenido: ['Taza de ceramica pintada a mano', 'Pulsera artesanal de materiales naturales', 'Cuadro decorativo pequeno']
+      },
+      {
+        id: 'cultural',
+        nombre: 'Fiestas de Quito',
+        temporada: 'Diciembre',
+        tema: 'cultural',
+        descripcion: 'Celebra las Fiestas de Quito con artesanias que representan la identidad cultural de nuestra ciudad. Recuerdos autenticos de la capital.',
+        imagen: '/imagenes/promo3.jpg',
+        contenido: ['Mascara Diablo Huma decorativa', 'Destapador artesanal', 'Mitad del Mundo miniatura']
+      },
+      {
+        id: 'inti',
+        nombre: 'Inti Raymi - Fiesta del Sol',
+        temporada: 'Junio',
+        tema: 'inti',
+        descripcion: 'Honramos la celebracion ancestral del solsticio con piezas que evocan la cosmovision andina y la riqueza cultural de nuestros pueblos.',
+        imagen: '/imagenes/promo4.jpg',
+        contenido: ['Sol decorativo de madera', 'Arbol de cuarzos con base de madera', 'Pulsera de piedras naturales']
+      }
+    ]
+
+    // Banner con imagenes flotantes
+    const bannerImagesSrc = [
+      '/imagenes/masc1.jpg', '/imagenes/nac2.jpg',
+      '/imagenes/vasos.jpg', '/imagenes/caballo.jpg'
+    ]
+    const bannerImages = ref([])
+
+    const initBannerImages = () => {
+      const srcs = [...bannerImagesSrc, ...bannerImagesSrc, ...bannerImagesSrc]
+        .sort(() => Math.random() - 0.5)
+      bannerImages.value = srcs.map((src, i) => ({
+        backgroundImage: `url('${src}')`,
+        left: `${(i % 4) * 25 + (Math.random() * 10 - 5)}%`,
+        top: `${Math.floor(i / 4) * 30 + (Math.random() * 15 - 7)}%`,
+        width: `${240 + Math.random() * 160}px`,
+        height: `${190 + Math.random() * 130}px`,
+        animationDuration: `${18 + Math.random() * 14}s`,
+        animationDelay: `-${Math.random() * 18}s`,
+        transform: `rotate(${Math.round(-12 + Math.random() * 24)}deg)`
+      }))
     }
 
-    const obtenerProductos = async () => {
+    // Cargar productos del API y fusionar con datos locales
+    const cargarProductosAPI = async () => {
       try {
-        loading.value = true
-        const params = categoriaFiltro.value ? { categoria_id: categoriaFiltro.value } : {}
-        const response = await axios.get(`${API_URL}/productos`, { params })
-        productos.value = response.data
+        const res = await axios.get(`${API_URL}/productos`)
+        const apiProductos = res.data.productos || res.data
+        if (apiProductos && apiProductos.length > 0) {
+          const mapaCategorias = {
+            'Madera': 'madera',
+            'Ceramica': 'ceramica',
+            'Mascaras': 'mascaras',
+            'Nacimientos': 'nacimientos',
+            'Otros': 'otros'
+          }
+          categoriasData.value.forEach(cat => {
+            const apiItems = apiProductos
+              .filter(p => {
+                const catNombre = p.categoria_nombre || ''
+                return mapaCategorias[catNombre] === cat.id
+              })
+              .map(p => ({
+                id: p.id,
+                nombre: p.nombre,
+                material: p.material || '',
+                imagen: obtenerImagenAPI(p),
+                precio: p.precio
+              }))
+            if (apiItems.length > 0) {
+              cat.productos = apiItems
+            }
+          })
+        }
       } catch (error) {
-        console.error('Error obteniendo productos:', error)
-      } finally {
-        loading.value = false
+        // Usar datos locales como fallback
       }
     }
 
-    const obtenerCategorias = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/categorias`)
-        categorias.value = response.data
-      } catch (error) {
-        console.error('Error obteniendo categorías:', error)
-      }
-    }
-
-    const filtrarPorCategoria = (categoriaId) => {
-      categoriaFiltro.value = categoriaId
-      obtenerProductos()
-    }
-
-    const obtenerImagenPrincipal = (producto) => {
+    const obtenerImagenAPI = (producto) => {
       if (producto.imagenes && producto.imagenes.length > 0) {
         const principal = producto.imagenes.find(img => img.es_principal)
         const img = principal || producto.imagenes[0]
@@ -337,18 +623,38 @@ export default {
       return '/imagenes/logo-principal.jpg'
     }
 
-    const handleImageError = (event) => {
-      event.target.src = '/imagenes/logo-principal.jpg'
+    // Funciones de UI
+    const filtrarProductos = (productos) => {
+      const txt = (busquedaTexto.value || '').trim().toLowerCase()
+      if (!txt) return productos
+      return productos.filter(p => 
+        (p.nombre || '').toLowerCase().includes(txt) ||
+        (p.material || '').toLowerCase().includes(txt)
+      )
+    }
+    const productosVisibles = (cat) => {
+      const productos = filtrarProductos(cat.productos)
+      return expandidas[cat.id] ? productos : productos.slice(0, 3)
     }
 
-    const verDetalle = (productoId) => {
-      router.push(`/producto/${productoId}`)
+    const toggleExpand = (catId) => {
+      expandidas[catId] = !expandidas[catId]
+    }
+
+    const handleScroll = () => {
+      isScrolled.value = window.scrollY > 50
+    }
+
+    const handleImageError = (event) => {
+      event.target.src = '/imagenes/logo-principal.jpg'
     }
 
     const scrollTo = (elementId) => {
       const element = document.getElementById(elementId)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
+        const offset = 80
+        const y = element.getBoundingClientRect().top + window.pageYOffset - offset
+        window.scrollTo({ top: y, behavior: 'smooth' })
       }
       menuOpen.value = false
     }
@@ -357,39 +663,148 @@ export default {
       menuOpen.value = !menuOpen.value
     }
 
+    // WhatsApp helpers
+    const whatsappProducto = (nombre) => {
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, me interesa el producto: ${nombre}. ¿Podrian darme mas informacion?`)}`
+    }
+
+    const whatsappPromo = (nombre) => {
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, me interesa la promocion: ${nombre}. ¿Esta disponible?`)}`
+    }
+
+    // Generar PDF de promociones
+    const descargarCatalogoPDF = () => {
+      const win = window.open('', '_blank')
+      if (!win) {
+        alert('Por favor permite las ventanas emergentes para descargar el PDF.')
+        return
+      }
+
+      let promoHtml = ''
+      promociones.forEach(promo => {
+        promoHtml += `
+          <div class="promo">
+            <div class="promo-badge">${promo.temporada}</div>
+            <h2>${promo.nombre}</h2>
+            <p>${promo.descripcion}</p>
+            <p class="incluye"><strong>Incluye:</strong></p>
+            <ul>${promo.contenido.map(i => `<li>${i}</li>`).join('')}</ul>
+          </div>`
+      })
+
+      win.document.write(`<!DOCTYPE html><html><head>
+        <title>Catalogo de Promociones - Ideancestral</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Georgia, 'Times New Roman', serif; padding: 2.5rem; color: #333; max-width: 800px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #D4A76A; }
+          .header h1 { color: #7B3F00; font-size: 2rem; margin-bottom: 0.25rem; }
+          .header p { color: #888; font-size: 0.95rem; }
+          .promo { margin-bottom: 1.5rem; padding: 1.5rem; border: 1px solid #EDEAE6; border-radius: 8px; page-break-inside: avoid; }
+          .promo h2 { color: #7B3F00; font-size: 1.3rem; margin: 0.5rem 0; }
+          .promo p { margin: 0.5rem 0; line-height: 1.6; color: #555; }
+          .promo-badge { display: inline-block; background: #C4853A; color: white; padding: 3px 12px; border-radius: 4px; font-size: 0.8rem; font-family: Arial, sans-serif; }
+          .incluye { color: #333 !important; margin-top: 0.75rem !important; }
+          .promo ul { padding-left: 1.5rem; margin-top: 0.25rem; }
+          .promo li { margin: 0.25rem 0; color: #555; line-height: 1.5; }
+          .contacto { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #D4A76A; }
+          .contacto p { margin: 0.25rem 0; color: #555; font-size: 0.9rem; }
+          .contacto strong { color: #7B3F00; }
+          .footer-pdf { text-align: center; margin-top: 1.5rem; color: #aaa; font-size: 0.8rem; }
+          .btn-print { display: block; margin: 2rem auto 0; padding: 14px 32px; background: #7B3F00; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-family: Arial, sans-serif; }
+          .btn-print:hover { background: #5C2E00; }
+          @media print { .btn-print { display: none; } }
+        </style>
+      </head><body>
+        <div class="header">
+          <h1>Ideancestral</h1>
+          <p>Catalogo de Promociones por Temporada</p>
+        </div>
+        ${promoHtml}
+        <div class="contacto">
+          <p><strong>Contactanos</strong></p>
+          <p>WhatsApp: +593 998 956 361 | Tel: (02) 2227781</p>
+          <p>Email: mary_cecy_ma@hotmail.com</p>
+          <p>Mercado Artesanal La Mariscal - Quito, Ecuador</p>
+        </div>
+        <p class="footer-pdf">Ideancestral &copy; ${new Date().getFullYear()} - Todos los derechos reservados</p>
+        <button class="btn-print" onclick="window.print()">Imprimir / Guardar como PDF</button>
+      </body></html>`)
+      win.document.close()
+    }
+
+    // Long press para acceso admin
+    let longPressTimer = null
+
+    const iniciarLongPress = () => {
+      longPressTimer = setTimeout(() => {
+        router.push('/admin')
+      }, 5000)
+    }
+
+    const cancelarLongPress = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer)
+        longPressTimer = null
+      }
+    }
+
     onMounted(() => {
-      obtenerCategorias()
-      obtenerProductos()
+      initBannerImages()
+      cargarProductosAPI()
       window.addEventListener('scroll', handleScroll)
     })
 
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll)
+      cancelarLongPress()
     })
 
     return {
-      productos: productosFiltrados,
-      categorias,
-      loading,
-      categoriaFiltro,
       menuOpen,
       isScrolled,
       whatsappGeneral,
-      filtrarPorCategoria,
-      obtenerImagenPrincipal,
+      categoriasData,
+      promociones,
+      bannerImages,
+      expandidas,
+      productosVisibles,
+      toggleExpand,
       handleImageError,
-      verDetalle,
       scrollTo,
-      toggleMenu
+      toggleMenu,
+      busquedaTexto,
+      filtrarProductos,
+      whatsappProducto,
+      whatsappPromo,
+      descargarCatalogoPDF,
+      iniciarLongPress,
+      cancelarLongPress,
+      carrito,
+      carritoAbierto,
+      carritoCount,
+      carritoTotal,
+      toggleCarrito,
+      actualizarCantidad,
+      quitarDelCarrito,
+      vaciarCarrito,
+      enviarPedidoWhatsApp
     }
   }
 }
 </script>
 
 <style scoped>
+/* ===== BASE ===== */
 .catalogo-view {
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 /* ===== HEADER ===== */
@@ -437,6 +852,9 @@ export default {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
 
 .logo-text {
@@ -449,7 +867,7 @@ export default {
 .nav-links {
   display: flex;
   list-style: none;
-  gap: 0.5rem;
+  gap: 0.25rem;
   align-items: center;
 }
 
@@ -465,18 +883,6 @@ export default {
 .nav-links a:hover {
   color: var(--color-primary);
   background: var(--color-bg-warm);
-}
-
-.nav-whatsapp {
-  display: flex !important;
-  align-items: center;
-  gap: 6px;
-  color: #25D366 !important;
-}
-
-.nav-admin {
-  color: var(--color-text-muted) !important;
-  font-size: 0.85rem !important;
 }
 
 .menu-toggle {
@@ -550,7 +956,7 @@ export default {
 }
 
 .hero-description {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1.9;
   color: var(--color-text-light);
   margin-bottom: 2.5rem;
@@ -568,6 +974,11 @@ export default {
   font-size: 16px;
 }
 
+.btn-sm {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
 .hero-image-wrapper {
   display: flex;
   justify-content: center;
@@ -575,8 +986,8 @@ export default {
 
 .hero-image-frame {
   position: relative;
-  width: 420px;
-  height: 420px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
@@ -599,16 +1010,28 @@ export default {
 
 .banner-bg-images {
   position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  inset: -60px;
 }
 
 .banner-bg-img {
+  position: absolute;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.3);
+  filter: brightness(0.35);
+  border-radius: 10px;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
+
+.drift-1 { animation-name: drift1; }
+.drift-2 { animation-name: drift2; }
+.drift-3 { animation-name: drift3; }
+.drift-4 { animation-name: drift4; }
+
+@keyframes drift1 { 0%, 100% { translate: 0 0; } 50% { translate: 40px -30px; } }
+@keyframes drift2 { 0%, 100% { translate: 0 0; } 50% { translate: -35px 25px; } }
+@keyframes drift3 { 0%, 100% { translate: 0 0; } 33% { translate: 25px 30px; } 66% { translate: -30px -20px; } }
+@keyframes drift4 { 0%, 100% { translate: 0 0; } 50% { translate: -25px -35px; } }
 
 .banner-overlay {
   position: absolute;
@@ -629,15 +1052,6 @@ export default {
   text-transform: uppercase;
   color: var(--color-accent);
   margin-bottom: 1rem;
-}
-
-.banner-title-cursive {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 4rem;
-  color: var(--color-accent-light);
-  margin-bottom: 0.25rem;
-  font-weight: 400;
 }
 
 .banner-title-main {
@@ -672,68 +1086,179 @@ export default {
   margin-top: 1rem;
 }
 
-/* ===== CATEGORÍAS ===== */
-.categorias-section {
-  padding: 3rem 0 1rem;
+/* ===== SECTION HEADER (reutilizable) ===== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 400px;
+  margin: 1.5rem auto 0;
+  padding: 0.6rem 1rem;
+  background: var(--color-white);
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+.search-bar:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(123, 63, 0, 0.1);
+}
+.search-bar svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+}
+.search-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--color-secondary);
+  margin-bottom: 0.75rem;
 }
 
 .section-header h2 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .section-header p {
   color: var(--color-text-muted);
-  font-size: 1rem;
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
 }
 
-.categorias-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
+/* ===== CATEGORIAS NAV ===== */
+.categorias-nav-section {
+  padding: 5rem 0 3rem;
 }
 
-.filter-chip {
-  padding: 0.6rem 1.4rem;
-  border: 1.5px solid var(--color-gray-light);
+.categorias-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+
+.categoria-nav-card {
   background: var(--color-white);
-  color: var(--color-text);
-  border-radius: 100px;
+  border: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  font-family: var(--font-sans);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  padding: 0;
+  font-family: var(--font-sans);
 }
 
-.filter-chip:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+.categoria-nav-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
 }
 
-.filter-chip.active {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-white);
+.cat-nav-img {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
 }
 
-/* ===== CATÁLOGO ===== */
-.catalogo-section {
-  padding: 2rem 0 5rem;
-  min-height: 60vh;
+.cat-nav-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
+.categoria-nav-card:hover .cat-nav-img img {
+  transform: scale(1.08);
+}
+
+.categoria-nav-card h3 {
+  font-size: 1rem;
+  color: var(--color-text);
+  margin: 1rem 0 0.25rem;
+  font-weight: 600;
+}
+
+.cat-nav-count {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding-bottom: 1rem;
+}
+
+/* ===== CATEGORIA SECTION ===== */
+.categoria-section {
+  padding: 5rem 0;
+}
+
+.categoria-section.bg-alt {
+  background: var(--color-bg-warm);
+}
+
+.categoria-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.categoria-header-text {
+  max-width: 600px;
+}
+
+.categoria-header-text .section-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.categoria-header-text h2 {
+  font-size: 2rem;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+}
+
+.categoria-header-text p {
+  color: var(--color-text-light);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.categoria-header-deco {
+  flex-shrink: 0;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(to right, var(--color-accent), transparent);
+  margin-top: 1.5rem;
+}
+
+/* ===== PRODUCTOS GRID ===== */
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
 .producto-card {
@@ -742,20 +1267,19 @@ export default {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
-  cursor: pointer;
   animation: fadeInUp 0.5s ease forwards;
   opacity: 0;
 }
 
 .producto-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
 .producto-image {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 300px;
   overflow: hidden;
   background-color: var(--color-gray-light);
 }
@@ -768,148 +1292,247 @@ export default {
 }
 
 .producto-card:hover .producto-image img {
-  transform: scale(1.08);
-}
-
-.producto-image-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.producto-card:hover .producto-image-overlay {
-  opacity: 1;
-}
-
-.ver-detalle-btn {
-  padding: 0.6rem 1.5rem;
-  background: var(--color-white);
-  color: var(--color-text);
-  border-radius: 100px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.badge-destacado {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: linear-gradient(135deg, #D4A76A, #C4853A);
-  color: var(--color-white);
-  padding: 0.35rem 0.9rem;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: scale(1.05);
 }
 
 .producto-info {
-  padding: 1.25rem 1.5rem 1.5rem;
+  padding: 1.5rem;
 }
 
-.producto-categoria-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--color-secondary);
+.producto-nombre-link {
+  text-decoration: none;
+  color: inherit;
 }
-
+.producto-nombre-link:hover .producto-nombre {
+  color: var(--color-primary);
+}
+.producto-image a {
+  display: block;
+  height: 100%;
+}
 .producto-nombre {
-  font-size: 1.15rem;
-  margin: 0.4rem 0 0.6rem;
+  font-size: 1.1rem;
   color: var(--color-text);
   font-weight: 600;
   line-height: 1.4;
+  margin-bottom: 0.5rem;
 }
 
-.producto-meta {
-  margin-bottom: 1rem;
-}
-
-.meta-item {
-  font-size: 0.85rem;
+.producto-material {
+  font-size: 0.88rem;
   color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
 }
 
-.producto-footer {
-  display: flex;
-  justify-content: space-between;
+.btn-consultar {
+  display: inline-flex;
   align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-gray-light);
-}
-
-.producto-precio {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.producto-ver {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
+  gap: 6px;
+  padding: 0.5rem 1rem;
+  background: #E8FAF0;
+  color: #128C7E;
+  border-radius: 100px;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--color-primary);
   transition: var(--transition);
 }
 
-.producto-card:hover .producto-ver {
+.btn-consultar:hover {
+  background: #25D366;
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+
+/* ===== CATEGORIA ACTIONS ===== */
+.categoria-actions {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+.btn-ver-todos {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
+  padding: 0.85rem 2rem;
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 100px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-/* Loading / Empty */
-.loading-state {
-  text-align: center;
+.btn-ver-todos:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* ===== PROMOCIONES ===== */
+.promociones-section {
   padding: 5rem 0;
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-warm) 100%);
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-gray-light);
-  border-top-color: var(--color-primary);
+.promos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.promo-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.promo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.promo-image {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+
+.promo-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.promo-card:hover .promo-image img {
+  transform: scale(1.05);
+}
+
+.promo-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 0.4rem 1rem;
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.promo-navidad .promo-badge { background: #C0392B; }
+.promo-madre .promo-badge { background: #E91E63; }
+.promo-cultural .promo-badge { background: #7B3F00; }
+.promo-inti .promo-badge { background: #E67E22; }
+
+.promo-content {
+  padding: 1.75rem;
+}
+
+.promo-content h3 {
+  font-size: 1.2rem;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+}
+
+.promo-desc {
+  font-size: 0.92rem;
+  color: var(--color-text-light);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.promo-incluye {
+  margin-bottom: 1.25rem;
+}
+
+.promo-incluye strong {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.promo-incluye ul {
+  list-style: none;
+  padding: 0;
+}
+
+.promo-incluye li {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.88rem;
+  color: var(--color-text-light);
+  margin: 0.3rem 0;
+  line-height: 1.5;
+}
+
+.promo-incluye li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
   border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-state p, .empty-state p {
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 5rem 0;
-  color: var(--color-text-muted);
-}
-
-.empty-state svg {
-  margin: 0 auto 1rem;
-}
-
-.empty-state .btn {
+/* ===== DOWNLOAD CARD ===== */
+.promos-download {
   margin-top: 1rem;
+}
+
+.download-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem 2.5rem;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px dashed var(--color-accent);
+}
+
+.download-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-warm);
+  color: var(--color-primary);
+  border-radius: 12px;
+}
+
+.download-text {
+  flex: 1;
+}
+
+.download-text h3 {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.download-text p {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 /* ===== NOSOTROS ===== */
 .nosotros-section {
-  padding: 6rem 0;
+  padding: 5rem 0;
   background: var(--color-white);
 }
 
@@ -917,20 +1540,7 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: center;
-}
-
-.nosotros-info h2 {
-  font-size: 2.5rem;
-  color: var(--color-text);
-  margin-bottom: 1rem;
-}
-
-.nosotros-desc {
-  color: var(--color-text-light);
-  font-size: 1.05rem;
-  line-height: 1.8;
-  margin-bottom: 2rem;
+  align-items: start;
 }
 
 .info-cards {
@@ -944,7 +1554,7 @@ export default {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  padding: 1rem;
+  padding: 1.25rem;
   background: var(--color-bg);
   border-radius: var(--radius-md);
 }
@@ -1007,41 +1617,18 @@ export default {
   background: #D1F5E0;
 }
 
-.nosotros-visual {
-  position: relative;
-}
-
-.image-mosaic {
-  position: relative;
-  height: 500px;
-}
-
-.mosaic-main {
-  width: 85%;
-  height: 400px;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
+.nosotros-mapa {
+  width: 100%;
+  height: 450px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
 
-.mosaic-small {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  border: 4px solid var(--color-white);
-  box-shadow: var(--shadow-md);
-}
-
-.mosaic-1 {
-  bottom: 0;
-  right: 0;
-}
-
-.mosaic-2 {
-  bottom: 80px;
-  right: 120px;
+.nosotros-mapa iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ===== FOOTER ===== */
@@ -1064,6 +1651,12 @@ export default {
 
 .footer-brand .logo-text {
   color: var(--color-white);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .footer-brand > p {
@@ -1133,12 +1726,33 @@ export default {
   box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
 }
 
+/* ===== LOADING / EMPTY ===== */
+.loading-state {
+  text-align: center;
+  padding: 5rem 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-gray-light);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .hero-title { font-size: 2.8rem; }
-  .hero-image-frame { width: 350px; height: 350px; }
+  .hero-image-frame { width: 340px; height: 340px; }
   .banner-title-main { font-size: 3.5rem; }
-  .banner-title-cursive { font-size: 3rem; }
+  .categorias-nav-grid { grid-template-columns: repeat(3, 1fr); }
+  .productos-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -1175,26 +1789,43 @@ export default {
   .hero-title { font-size: 2.2rem; }
   .hero-description { margin: 0 auto 2rem; }
   .hero-actions { justify-content: center; }
-
   .hero-image-frame { width: 260px; height: 260px; margin: 0 auto; }
 
-  .banner-title-cursive { font-size: 2.5rem; }
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
   .banner-subtitle { font-size: 1.2rem; }
   .banner-central { padding: 4rem 20px; }
 
-  .nosotros-grid { grid-template-columns: 1fr; }
-  .image-mosaic { height: 350px; }
-  .mosaic-main { width: 100%; height: 300px; }
-  .mosaic-small { width: 120px; height: 120px; }
-  .mosaic-2 { right: 60px; bottom: 30px; }
+  .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .categoria-nav-card:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
 
-  .footer-top { grid-template-columns: 1fr; gap: 2rem; }
+  .categoria-header { flex-direction: column; }
+  .categoria-header-deco { display: none; }
 
   .productos-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
   }
+
+  .producto-image { height: 220px; }
+
+  .promos-grid { grid-template-columns: 1fr; }
+
+  .download-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.25rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .nosotros-grid { grid-template-columns: 1fr; }
+  .nosotros-mapa { height: 300px; }
+
+  .section-header h2 { font-size: 1.8rem; }
+  .categoria-section { padding: 3.5rem 0; }
+  .categorias-nav-section { padding: 3.5rem 0 2rem; }
+  .promociones-section { padding: 3.5rem 0; }
+
+  .footer-top { grid-template-columns: 1fr; gap: 2rem; }
 }
 
 @media (max-width: 480px) {
@@ -1202,8 +1833,212 @@ export default {
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; }
   .banner-title-main { font-size: 2rem; }
+
+  .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .categoria-nav-card:last-child { grid-column: span 2; max-width: 100%; }
+
   .productos-grid { grid-template-columns: 1fr; }
+  .producto-image { height: 260px; }
+
+  .promo-image { height: 180px; }
+
   .nosotros-social { flex-direction: column; }
   .footer-links-grid { grid-template-columns: 1fr; }
+  .nosotros-mapa { height: 250px; }
+}
+
+/* Carrito */
+.cart-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+.cart-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-bg-warm);
+}
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--color-secondary);
+  color: var(--color-white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carrito-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.carrito-overlay.visible { opacity: 1; visibility: visible; }
+
+.carrito-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--color-white);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.carrito-sidebar.open { transform: translateX(0); }
+
+.carrito-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-header h3 { font-size: 1.1rem; color: var(--color-text); margin: 0; }
+.carrito-count { font-weight: 400; color: var(--color-text-muted); font-size: 0.9rem; }
+.carrito-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+.carrito-close:hover { background: var(--color-bg); color: var(--color-text); }
+
+.carrito-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--color-text-muted);
+}
+.carrito-empty p { font-size: 1.05rem; font-weight: 600; color: var(--color-text-light); margin: 0; }
+
+.carrito-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.carrito-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+
+.carrito-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-item:last-child { border-bottom: none; }
+.carrito-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.carrito-item-info { flex: 1; min-width: 0; }
+.carrito-item-info h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.carrito-item-precio { font-size: 0.85rem; color: var(--color-primary); font-weight: 600; }
+.carrito-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.carrito-item-qty button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--color-gray-light);
+  background: var(--color-white);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+.carrito-item-qty button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.carrito-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: var(--transition);
+  font-size: 1.2rem;
+}
+.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+
+.carrito-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-gray-light);
+  background: var(--color-bg);
+}
+.carrito-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.carrito-total span { color: var(--color-text-light); }
+.carrito-total strong { font-size: 1.4rem; color: var(--color-primary); }
+.carrito-btn-pedido {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+}
+.carrito-btn-vaciar { width: 100%; margin-top: 0.5rem; padding: 0.6rem; font-size: 0.85rem; }
+
+@media (max-width: 768px) {
+  .carrito-sidebar { width: 100%; max-width: 100vw; }
 }
 </style>
