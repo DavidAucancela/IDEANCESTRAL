@@ -7,9 +7,6 @@ import pool from '../database/connection.js';
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET === 'secret_key' || JWT_SECRET.length < 32) {
-  console.warn('⚠️  ADVERTENCIA: JWT_SECRET debe ser configurado con un valor seguro (min. 32 caracteres)');
-}
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -46,7 +43,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const token = jwt.sign(
       { id: admin.id, usuario: admin.usuario },
-      JWT_SECRET || 'secret_key',
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 

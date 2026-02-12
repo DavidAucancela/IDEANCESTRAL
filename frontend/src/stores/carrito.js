@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useLanguageStore } from './language'
 import { ref, computed, watch } from 'vue'
 
 const STORAGE_KEY = 'ideancestral_carrito'
@@ -63,11 +64,12 @@ export const useCarritoStore = defineStore('carrito', () => {
 
   const WHATSAPP_NUMBER = '593998956361'
   const enviarPedidoWhatsApp = () => {
-    let mensaje = 'Hola, me gustaría hacer el siguiente pedido:\n\n'
+    const { t } = useLanguageStore()
+    let mensaje = t('whatsapp.pedido') + '\n\n'
     items.value.forEach(item => {
       mensaje += `• ${item.nombre} x${item.cantidad} - $${(item.precio * item.cantidad).toFixed(2)}\n`
     })
-    mensaje += `\nTotal: $${carritoTotal.value.toFixed(2)}`
+    mensaje += `\n${t('whatsapp.total')} $${carritoTotal.value.toFixed(2)}`
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`
     window.open(url, '_blank')
   }

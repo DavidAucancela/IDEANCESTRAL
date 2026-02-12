@@ -9,12 +9,16 @@
             <span class="logo-text">Ideancestral</span>
           </router-link>
           <ul class="nav-links" :class="{ open: menuOpen }">
-            <li><router-link to="/">Inicio</router-link></li>
-            <li><router-link to="/#categorias">Categorías</router-link></li>
-            <li><router-link to="/#promociones">Promociones</router-link></li>
-            <li><router-link to="/#nosotros">Nosotros</router-link></li>
+            <li><router-link to="/">{{ t('nav.inicio') }}</router-link></li>
+            <li><router-link to="/#categorias">{{ t('nav.categorias') }}</router-link></li>
+            <li><router-link to="/#promociones">{{ t('nav.promociones') }}</router-link></li>
+            <li><router-link to="/#nosotros">{{ t('nav.nosotros') }}</router-link></li>
+            <li class="nav-utilities">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </li>
             <li>
-              <button class="cart-toggle" @click="toggleCarrito" title="Carrito">
+              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
                 <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
               </button>
@@ -33,9 +37,9 @@
       <div class="container">
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <router-link to="/">Inicio</router-link>
+          <router-link to="/">{{ t('nav.inicio') }}</router-link>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-          <span class="current">{{ categoria?.nombre || 'Categoría' }}</span>
+          <span class="current">{{ categoria?.nombre || t('categories.categoria') }}</span>
         </div>
 
         <!-- Categoria header -->
@@ -52,7 +56,7 @@
         <!-- Loading -->
         <div v-if="loading" class="loading-state">
           <div class="spinner"></div>
-          <p>Cargando productos...</p>
+          <p>{{ t('categoryView.cargando') }}</p>
         </div>
 
         <!-- Productos grid -->
@@ -62,9 +66,9 @@
             <input 
               v-model="busquedaTexto" 
               type="search" 
-              placeholder="Buscar en esta categoría..." 
+              :placeholder="t('categoryView.buscar')" 
               class="search-input"
-              aria-label="Buscar productos"
+              :aria-label="t('categoryView.buscar')"
             />
           </div>
 
@@ -95,8 +99,8 @@
           </div>
 
           <div v-if="!loading && productosFiltrados.length === 0" class="empty-state">
-            <p>No hay productos en esta categoría.</p>
-            <router-link to="/" class="btn btn-primary">Volver al catálogo</router-link>
+            <p>{{ t('categoryView.noProductos') }}</p>
+            <router-link to="/" class="btn btn-primary">{{ t('categoryView.volverCatalogo') }}</router-link>
           </div>
         </div>
       </div>
@@ -106,14 +110,14 @@
     <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
     <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
       <div class="carrito-header">
-        <h3>Mi Carrito <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
+        <h3>{{ t('cart.miCarrito') }} <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
         <button class="carrito-close" @click="toggleCarrito">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div v-if="carrito.length === 0" class="carrito-empty">
-        <p>Tu carrito está vacío</p>
-        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">Explorar productos</router-link>
+        <p>{{ t('cart.vacio') }}</p>
+        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">{{ t('cart.explorar') }}</router-link>
       </div>
       <div v-else class="carrito-body">
         <div class="carrito-items">
@@ -133,13 +137,13 @@
         </div>
         <div class="carrito-footer">
           <div class="carrito-total">
-            <span>Total</span>
+            <span>{{ t('cart.total') }}</span>
             <strong>${{ carritoTotal.toFixed(2) }}</strong>
           </div>
           <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
-            Enviar pedido por WhatsApp
+            {{ t('cart.enviarWhatsApp') }}
           </button>
-          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">Vaciar carrito</button>
+          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">{{ t('cart.vaciar') }}</button>
         </div>
       </div>
     </aside>
@@ -151,6 +155,9 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
+import { useLanguageStore } from '../stores/language'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const DEFAULT_IMAGENES = {
   'Madera': '/imagenes/sol madera.jpg',
@@ -164,9 +171,11 @@ const DEFAULT_IMAGENES = {
 
 export default {
   name: 'CategoriaView',
+  components: { ThemeToggle, LanguageSwitcher },
   setup() {
     const route = useRoute()
     const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
+    const { t } = useLanguageStore()
     
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const categoria = ref(null)
@@ -240,6 +249,7 @@ export default {
     onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 
     return {
+      t,
       categoria,
       productos,
       loading,
@@ -272,11 +282,11 @@ export default {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.85);
+  background: var(--color-header-bg);
   backdrop-filter: blur(12px);
   transition: var(--transition);
 }
-.header.scrolled { background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
+.header.scrolled { background: var(--color-header-bg-scrolled); box-shadow: var(--shadow-sm); }
 
 .nav-container {
   max-width: 1280px;
@@ -315,6 +325,8 @@ export default {
   transition: var(--transition);
 }
 .nav-links a:hover { color: var(--color-primary); background: var(--color-bg-warm); }
+
+.nav-utilities { display: flex; align-items: center; gap: 0.5rem; }
 
 .menu-toggle {
   display: none;
@@ -401,13 +413,13 @@ export default {
   max-width: 400px;
   margin-bottom: 1.5rem;
   padding: 0.6rem 1rem;
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1.5px solid var(--color-gray-light);
   border-radius: var(--radius-md);
 }
 .search-bar:focus-within { border-color: var(--color-primary); }
 .search-bar svg { color: var(--color-text-muted); flex-shrink: 0; }
-.search-input { flex: 1; border: none; outline: none; font-size: 0.95rem; background: transparent; }
+.search-input { flex: 1; border: none; outline: none; font-size: 0.95rem; background: transparent; color: var(--color-text); }
 
 .productos-grid {
   display: grid;
@@ -416,7 +428,7 @@ export default {
 }
 
 .producto-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -461,28 +473,17 @@ export default {
 .empty-state { text-align: center; padding: 3rem 0; }
 .empty-state p { margin-bottom: 1rem; color: var(--color-text-light); }
 
-/* Carrito (copiado de CatalogoView) */
+/* Carrito */
 .carrito-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1100;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 1100; opacity: 0; visibility: hidden; transition: all 0.3s ease;
 }
 .carrito-overlay.visible { opacity: 1; visibility: visible; }
 
 .carrito-sidebar {
-  position: fixed;
-  top: 0; right: 0;
-  width: 380px;
-  max-width: 90vw;
-  height: 100vh;
-  background: var(--color-white);
-  z-index: 1200;
-  display: flex;
-  flex-direction: column;
+  position: fixed; top: 0; right: 0; width: 380px; max-width: 90vw;
+  height: 100vh; background: var(--color-surface); z-index: 1200;
+  display: flex; flex-direction: column;
   box-shadow: -4px 0 30px rgba(0,0,0,0.15);
   transform: translateX(100%);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -490,30 +491,23 @@ export default {
 .carrito-sidebar.open { transform: translateX(0); }
 
 .carrito-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-gray-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-gray-light);
 }
 .carrito-header h3 { font-size: 1rem; margin: 0; }
+.carrito-count { font-weight: 400; color: var(--color-text-muted); font-size: 0.9rem; }
 .carrito-close {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: 50%;
+  color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
 }
 .carrito-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; }
 .carrito-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .carrito-items { flex: 1; overflow-y: auto; padding: 1rem; }
 .carrito-item {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--color-gray-light);
+  display: flex; gap: 1rem; align-items: center;
+  padding: 1rem 0; border-bottom: 1px solid var(--color-gray-light);
 }
 .carrito-item-img { width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
 .carrito-item-info { flex: 1; min-width: 0; }
@@ -524,25 +518,20 @@ export default {
   width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   border: 1.5px solid var(--color-gray-light);
-  background: var(--color-white);
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1rem;
+  background: var(--color-surface); border-radius: 50%;
+  cursor: pointer; font-size: 1rem; color: var(--color-text);
 }
 .carrito-item-remove {
   width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: 50%;
+  color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
   transition: var(--transition);
 }
 .carrito-item-remove:hover { background: #FEE; color: #C0392B; }
 
 .carrito-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--color-gray-light);
+  padding: 1rem 1.25rem; border-top: 1px solid var(--color-gray-light);
   background: var(--color-bg);
 }
 .carrito-total { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 1rem; }
@@ -552,17 +541,10 @@ export default {
 
 @media (max-width: 768px) {
   .nav-links {
-    position: fixed;
-    top: 0; right: 0;
-    width: 280px;
-    height: 100vh;
-    background: var(--color-white);
-    flex-direction: column;
-    padding: 5rem 2rem 2rem;
-    box-shadow: var(--shadow-xl);
-    transform: translateX(100%);
-    transition: transform 0.35s ease;
-    z-index: 1000;
+    position: fixed; top: 0; right: 0; width: 280px; height: 100vh;
+    background: var(--color-surface); flex-direction: column;
+    padding: 5rem 2rem 2rem; box-shadow: var(--shadow-xl);
+    transform: translateX(100%); transition: transform 0.35s ease; z-index: 1000;
   }
   .nav-links.open { transform: translateX(0); }
   .menu-toggle { display: flex; }

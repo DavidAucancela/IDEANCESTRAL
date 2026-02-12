@@ -10,9 +10,11 @@
           </router-link>
           <div class="nav-right">
             <ul class="nav-links">
-              <li><router-link to="/">Catálogo</router-link></li>
+              <li><router-link to="/">{{ t('nav.catalogo') }}</router-link></li>
             </ul>
-            <button class="cart-toggle" @click="toggleCarrito" title="Carrito de compras">
+            <ThemeToggle />
+            <LanguageSwitcher />
+            <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
               <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
             </button>
@@ -24,7 +26,7 @@
     <!-- Loading -->
     <div v-if="loading" class="state-container">
       <div class="spinner"></div>
-      <p>Cargando producto...</p>
+      <p>{{ t('product.cargando') }}</p>
     </div>
 
     <!-- Producto -->
@@ -32,7 +34,7 @@
       <div class="container">
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <router-link to="/">Inicio</router-link>
+          <router-link to="/">{{ t('nav.inicio') }}</router-link>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           <span v-if="producto.categoria_nombre">{{ producto.categoria_nombre }}</span>
           <svg v-if="producto.categoria_nombre" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
@@ -50,7 +52,7 @@
               />
               <div v-if="producto.destacado" class="badge-destacado">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Destacado
+                {{ t('product.destacado') }}
               </div>
             </div>
             <div v-if="imagenes.length > 1" class="galeria-thumbs">
@@ -75,20 +77,20 @@
             </div>
 
             <div class="info-descripcion">
-              <p>{{ producto.descripcion || 'Artesanía elaborada a mano con técnicas tradicionales.' }}</p>
+              <p>{{ producto.descripcion || t('product.descripcionDefault') }}</p>
             </div>
 
             <div class="info-specs">
               <div v-if="producto.material" class="spec-row">
-                <span class="spec-label">Material</span>
+                <span class="spec-label">{{ t('product.material') }}</span>
                 <span class="spec-value">{{ producto.material }}</span>
               </div>
               <div v-if="producto.peso" class="spec-row">
-                <span class="spec-label">Peso</span>
+                <span class="spec-label">{{ t('product.peso') }}</span>
                 <span class="spec-value">{{ producto.peso }}</span>
               </div>
               <div v-if="producto.categoria_nombre" class="spec-row">
-                <span class="spec-label">Categoría</span>
+                <span class="spec-label">{{ t('product.categoria') }}</span>
                 <span class="spec-value">{{ producto.categoria_nombre }}</span>
               </div>
             </div>
@@ -97,10 +99,10 @@
             <div class="info-actions">
               <button class="btn btn-primary btn-full btn-agregar" @click="handleAgregarAlCarrito">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-                {{ productoEnCarrito ? 'Agregado al carrito' : 'Agregar al carrito' }}
+                {{ productoEnCarrito ? t('cart.agregado') : t('cart.agregar') }}
               </button>
               <router-link to="/" class="btn btn-secondary btn-full">
-                Seguir Explorando
+                {{ t('product.seguirExplorando') }}
               </router-link>
             </div>
           </div>
@@ -109,7 +111,7 @@
         <!-- Relacionados -->
         <div v-if="productosRelacionados.length > 0" class="relacionados">
           <div class="section-header">
-            <h2>También te puede interesar</h2>
+            <h2>{{ t('product.relacionados') }}</h2>
           </div>
           <div class="relacionados-grid">
             <router-link
@@ -122,7 +124,7 @@
                 <img :src="obtenerImagenPrincipal(prod)" :alt="prod.nombre" />
               </div>
               <div class="rel-info">
-                <span class="rel-cat">{{ prod.categoria_nombre || 'Artesanía' }}</span>
+                <span class="rel-cat">{{ prod.categoria_nombre || t('product.artesania') }}</span>
                 <h4>{{ prod.nombre }}</h4>
                 <span class="rel-precio">${{ Number(prod.precio).toFixed(2) }}</span>
               </div>
@@ -135,8 +137,8 @@
     <!-- Error -->
     <div v-else class="state-container">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-      <p>Producto no encontrado</p>
-      <router-link to="/" class="btn btn-primary">Volver al Catálogo</router-link>
+      <p>{{ t('product.noEncontrado') }}</p>
+      <router-link to="/" class="btn btn-primary">{{ t('product.volverCatalogo') }}</router-link>
     </div>
 
     <!-- Carrito Sidebar -->
@@ -145,7 +147,7 @@
       <div class="carrito-header">
         <h3>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-          Mi Carrito
+          {{ t('cart.miCarrito') }}
           <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span>
         </h3>
         <button class="carrito-close" @click="toggleCarrito">
@@ -154,8 +156,8 @@
       </div>
       <div v-if="carrito.length === 0" class="carrito-empty">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-        <p>Tu carrito está vacío</p>
-        <span>Agrega productos desde el catálogo</span>
+        <p>{{ t('cart.vacio') }}</p>
+        <span>{{ t('cart.agrega') }}</span>
       </div>
       <div v-else class="carrito-body">
         <div class="carrito-items">
@@ -174,22 +176,22 @@
                 </button>
               </div>
             </div>
-            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)" title="Quitar">
+            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)" :title="t('cart.quitar')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
             </button>
           </div>
         </div>
         <div class="carrito-footer">
           <div class="carrito-total">
-            <span>Total</span>
+            <span>{{ t('cart.total') }}</span>
             <strong>${{ carritoTotal.toFixed(2) }}</strong>
           </div>
           <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Enviar pedido por WhatsApp
+            {{ t('cart.enviarWhatsApp') }}
           </button>
           <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">
-            Vaciar carrito
+            {{ t('cart.vaciar') }}
           </button>
         </div>
       </div>
@@ -203,9 +205,13 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
 import { useToast } from '../composables/useToast'
+import { useLanguageStore } from '../stores/language'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 export default {
   name: 'ProductoDetalleView',
+  components: { ThemeToggle, LanguageSwitcher },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -215,6 +221,7 @@ export default {
     const indexImagenActual = ref(0)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const { t } = useLanguageStore()
 
     // Carrito (composable compartido)
     const {
@@ -239,7 +246,7 @@ export default {
         precio: producto.value.precio,
         imagen: imagenActual.value
       })
-      toastSuccess('Producto agregado al carrito')
+      toastSuccess(t('toast.productoAgregado'))
     }
 
     const imagenes = computed(() => {
@@ -315,6 +322,7 @@ export default {
     })
 
     return {
+      t,
       producto,
       productosRelacionados,
       loading,
@@ -356,7 +364,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.95);
+  background: var(--color-header-bg-scrolled);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
 }
@@ -381,7 +389,7 @@ export default {
   font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--color-primary);
 }
 .nav-right {
-  display: flex; align-items: center; gap: 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
 }
 .nav-links {
   display: flex; list-style: none; gap: 1rem;
@@ -574,7 +582,7 @@ export default {
 }
 
 .rel-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -631,7 +639,7 @@ export default {
 
 .carrito-sidebar {
   position: fixed; top: 0; right: 0; width: 400px; max-width: 90vw;
-  height: 100vh; background: var(--color-white); z-index: 1200;
+  height: 100vh; background: var(--color-surface); z-index: 1200;
   display: flex; flex-direction: column;
   box-shadow: -4px 0 30px rgba(0,0,0,0.15);
   transform: translateX(100%);
@@ -689,7 +697,7 @@ export default {
 .carrito-item-qty button {
   display: flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border: 1.5px solid var(--color-gray-light);
-  background: var(--color-white); border-radius: 50%; cursor: pointer;
+  background: var(--color-surface); border-radius: 50%; cursor: pointer;
   color: var(--color-text); transition: var(--transition);
 }
 .carrito-item-qty button:hover { border-color: var(--color-primary); color: var(--color-primary); }
@@ -733,10 +741,8 @@ export default {
   .relacionados-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
-}
-
-@media (max-width: 768px) {
   .carrito-sidebar { width: 100%; max-width: 100vw; }
+  .nav-right { gap: 0.5rem; }
 }
 
 @media (max-width: 480px) {

@@ -17,12 +17,16 @@
             <span class="logo-text">Ideancestral</span>
           </router-link>
           <ul class="nav-links" :class="{ open: menuOpen }">
-            <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-            <li><a href="#categorias" @click.prevent="scrollTo('categorias')">Categorias</a></li>
-            <li><a href="#promociones" @click.prevent="scrollTo('promociones')">Promociones</a></li>
-            <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Nosotros</a></li>
+            <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
+            <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
+            <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
+            <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
+            <li class="nav-utilities">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </li>
             <li>
-              <button class="cart-toggle" @click="toggleCarrito" title="Carrito">
+              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
                 <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
               </button>
@@ -43,20 +47,20 @@
       <div class="hero-content">
         <div class="hero-text">
           <h1 class="hero-title">
-            <span class="hero-title-small">Bienvenido a</span>
+            <span class="hero-title-small">{{ t('hero.bienvenido') }}</span>
             Ideancestral
           </h1>
           <p class="hero-description">
-            Difundimos la riqueza cultural y artesanal de Ecuador, exhibiendo productos elaborados con tecnicas tradicionales y materiales nobles. Cada pieza es unica, hecha a mano con amor y tradicion.
+            {{ t('hero.descripcion') }}
           </p>
           <div class="hero-actions">
             <a href="#categorias" @click.prevent="scrollTo('categorias')" class="btn btn-primary btn-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              Explorar Catalogo
+              {{ t('hero.explorar') }}
             </a>
             <a :href="whatsappGeneral" target="_blank" class="btn btn-whatsapp btn-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Contactanos
+              {{ t('hero.contactanos') }}
             </a>
           </div>
         </div>
@@ -81,11 +85,11 @@
       </div>
       <div class="banner-overlay"></div>
       <div class="banner-content">
-        <p class="banner-pre">Artesanias hechas a mano</p>
-        <h2 class="banner-title-main">ARTESANIAS</h2>
+        <p class="banner-pre">{{ t('banner.pre') }}</p>
+        <h2 class="banner-title-main">{{ t('banner.titulo') }}</h2>
         <div class="banner-divider"></div>
         <p class="banner-subtitle">-Mary Cecy-</p>
-        <p class="banner-tagline">Productos 100% hechos a mano, de Ecuador para el mundo</p>
+        <p class="banner-tagline">{{ t('banner.tagline') }}</p>
       </div>
     </section>
 
@@ -93,9 +97,9 @@
     <section id="categorias" class="categorias-nav-section">
       <div class="container">
         <div class="section-header">
-          <span class="section-label">Nuestras colecciones</span>
-          <h2>Explora por Categoria</h2>
-          <p>Haz clic en una categoria para ver sus productos con precios e informacion</p>
+          <span class="section-label">{{ t('categories.label') }}</span>
+          <h2>{{ t('categories.title') }}</h2>
+          <p>{{ t('categories.subtitle') }}</p>
         </div>
         <div class="categorias-nav-grid">
           <router-link 
@@ -117,8 +121,8 @@
     <section id="promociones" class="promociones-section">
       <div class="container">
         <div class="section-header">
-          <span class="section-label">Ofertas especiales</span>
-          <h2>Promociones por Temporada</h2>
+          <span class="section-label">{{ t('promos.label') }}</span>
+          <h2>{{ t('promos.title') }}</h2>
         </div>
 
         <div class="promos-grid-horizontal">
@@ -144,9 +148,9 @@
     <section id="nosotros" class="nosotros-section">
       <div class="container">
         <div class="section-header">
-          <span class="section-label">Visitanos</span>
-          <h2>Encuentranos</h2>
-          <p>Ven a conocer nuestras artesanias en persona</p>
+          <span class="section-label">{{ t('about.label') }}</span>
+          <h2>{{ t('about.title') }}</h2>
+          <p>{{ t('about.subtitle') }}</p>
         </div>
         <div class="nosotros-grid">
           <div class="nosotros-info">
@@ -156,7 +160,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
                 <div>
-                  <strong>Ubicacion</strong>
+                  <strong>{{ t('about.ubicacion') }}</strong>
                   <p>Jorge Washington y Juan Leon Mera</p>
                   <p>"MERCADO ARTESANAL - LA MARISCAL"</p>
                   <p>Quito, Ecuador</p>
@@ -167,7 +171,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                 </div>
                 <div>
-                  <strong>Telefono</strong>
+                  <strong>{{ t('about.telefono') }}</strong>
                   <p>(02) 2227781</p>
                   <p>+593 998 956 361</p>
                 </div>
@@ -177,7 +181,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>
                 </div>
                 <div>
-                  <strong>Email</strong>
+                  <strong>{{ t('about.email') }}</strong>
                   <p>mary_cecy_ma@hotmail.com</p>
                 </div>
               </div>
@@ -206,7 +210,7 @@
               allowfullscreen="" 
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
-              title="Ubicacion Mercado Artesanal La Mariscal"
+              :title="t('about.ubicacion')"
             ></iframe>
           </div>
         </div>
@@ -222,20 +226,20 @@
               <span class="logo-icon">IA</span>
               <span class="logo-text">Ideancestral</span>
             </div>
-            <p>Artesanias hechas a mano con amor y tradicion desde Ecuador.</p>
+            <p>{{ t('footer.slogan') }}</p>
           </div>
           <div class="footer-links-grid">
             <div>
-              <h4>Navegacion</h4>
+              <h4>{{ t('footer.navegacion') }}</h4>
               <ul>
-                <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-                <li><a href="#categorias" @click.prevent="scrollTo('categorias')">Categorias</a></li>
-                <li><a href="#promociones" @click.prevent="scrollTo('promociones')">Promociones</a></li>
-                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Nosotros</a></li>
+                <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
+                <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
+                <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
+                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
               </ul>
             </div>
             <div>
-              <h4>Contacto</h4>
+              <h4>{{ t('footer.contacto') }}</h4>
               <ul>
                 <li>(02) 2227781</li>
                 <li>+593 998 956 361</li>
@@ -245,7 +249,7 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>Idea Ancestral &copy; {{ new Date().getFullYear() }}. Todos los derechos reservados.</p>
+          <p>Idea Ancestral &copy; {{ new Date().getFullYear() }}. {{ t('footer.derechos') }}</p>
         </div>
       </div>
     </footer>
@@ -254,14 +258,14 @@
     <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
     <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
       <div class="carrito-header">
-        <h3>Mi Carrito <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
+        <h3>{{ t('cart.miCarrito') }} <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
         <button class="carrito-close" @click="toggleCarrito">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div v-if="carrito.length === 0" class="carrito-empty">
-        <p>Tu carrito está vacío</p>
-        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">Explorar productos</router-link>
+        <p>{{ t('cart.vacio') }}</p>
+        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">{{ t('cart.explorar') }}</router-link>
       </div>
       <div v-else class="carrito-body">
         <div class="carrito-items">
@@ -281,42 +285,47 @@
         </div>
         <div class="carrito-footer">
           <div class="carrito-total">
-            <span>Total</span>
+            <span>{{ t('cart.total') }}</span>
             <strong>${{ carritoTotal.toFixed(2) }}</strong>
           </div>
           <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
-            Enviar pedido por WhatsApp
+            {{ t('cart.enviarWhatsApp') }}
           </button>
-          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">Vaciar carrito</button>
+          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">{{ t('cart.vaciar') }}</button>
         </div>
       </div>
     </aside>
 
     <!-- WhatsApp floating button -->
-    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float" title="Escribenos por WhatsApp">
+    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float" :title="t('whatsapp.escribenos')">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
+import { useLanguageStore } from '../stores/language'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const WHATSAPP_NUMBER = '593998956361'
 
 export default {
   name: 'CatalogoView',
+  components: { ThemeToggle, LanguageSwitcher },
   setup() {
     const router = useRouter()
     const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
+    const { t } = useLanguageStore()
     const menuOpen = ref(false)
     const isScrolled = ref(false)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
-    const whatsappGeneral = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer mas sobre sus artesanias.')}`
+    const whatsappGeneral = computed(() => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoGeneral'))}`)
 
     // Categorias desde API (para cards de navegacion)
     const categoriasParaMostrar = ref([])
@@ -416,11 +425,11 @@ export default {
 
     // WhatsApp helpers
     const whatsappProducto = (nombre) => {
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, me interesa el producto: ${nombre}. ¿Podrian darme mas informacion?`)}`
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoProducto', { nombre }))}`
     }
 
     const whatsappPromo = (nombre) => {
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hola, me interesa la promocion: ${nombre}. ¿Esta disponible?`)}`
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoPromo', { nombre }))}`
     }
 
     // Long press para acceso admin
@@ -452,6 +461,7 @@ export default {
     })
 
     return {
+      t,
       menuOpen,
       isScrolled,
       whatsappGeneral,
@@ -500,14 +510,14 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.85);
+  background: var(--color-header-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: var(--transition);
 }
 
 .header.scrolled {
-  background: rgba(255,255,255,0.95);
+  background: var(--color-header-bg-scrolled);
   box-shadow: var(--shadow-sm);
 }
 
@@ -571,6 +581,12 @@ export default {
   background: var(--color-bg-warm);
 }
 
+.nav-utilities {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .menu-toggle {
   display: none;
   flex-direction: column;
@@ -601,7 +617,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 120px 24px 80px;
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 50%, #EDE0D4 100%);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 50%, var(--color-bg-warm) 100%);
   overflow: hidden;
 }
 
@@ -677,7 +693,7 @@ export default {
   border-radius: 50%;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 6px solid rgba(255,255,255,0.8);
+  border: 6px solid var(--color-frame-border);
 }
 
 .hero-image-frame img {
@@ -780,7 +796,7 @@ export default {
   max-width: 400px;
   margin: 1.5rem auto 0;
   padding: 0.6rem 1rem;
-  background: var(--color-white);
+  background: var(--color-surface);
   border: 1.5px solid var(--color-gray-light);
   border-radius: var(--radius-md);
   transition: var(--transition);
@@ -799,6 +815,7 @@ export default {
   outline: none;
   font-size: 0.95rem;
   background: transparent;
+  color: var(--color-text);
 }
 .search-input::placeholder {
   color: var(--color-text-muted);
@@ -845,7 +862,7 @@ export default {
 }
 
 .categoria-nav-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border: none;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -889,7 +906,7 @@ export default {
   font-weight: 600;
 }
 
-/* ===== CATEGORIA SECTION (removido - productos se muestran en /categoria/:id) ===== */
+/* ===== CATEGORIA SECTION ===== */
 .categoria-section {
   padding: 5rem 0;
 }
@@ -944,7 +961,7 @@ export default {
 }
 
 .producto-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -1054,7 +1071,7 @@ export default {
 }
 
 .promo-card-horizontal {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -1117,7 +1134,7 @@ export default {
 /* ===== NOSOTROS ===== */
 .nosotros-section {
   padding: 5rem 0;
-  background: var(--color-white);
+  background: var(--color-surface);
 }
 
 .nosotros-grid {
@@ -1235,7 +1252,7 @@ export default {
 }
 
 .footer-brand .logo-text {
-  color: var(--color-white);
+  color: #FFFFFF;
 }
 
 .footer-logo {
@@ -1257,7 +1274,7 @@ export default {
 }
 
 .footer-links-grid h4 {
-  color: var(--color-white);
+  color: #FFFFFF;
   margin-bottom: 1rem;
   font-size: 1rem;
 }
@@ -1347,7 +1364,7 @@ export default {
     right: 0;
     width: 280px;
     height: 100vh;
-    background: var(--color-white);
+    background: var(--color-surface);
     flex-direction: column;
     padding: 5rem 2rem 2rem;
     box-shadow: var(--shadow-xl);
@@ -1480,7 +1497,7 @@ export default {
   width: 400px;
   max-width: 90vw;
   height: 100vh;
-  background: var(--color-white);
+  background: var(--color-surface);
   z-index: 1200;
   display: flex;
   flex-direction: column;
@@ -1568,7 +1585,7 @@ export default {
   width: 26px;
   height: 26px;
   border: 1.5px solid var(--color-gray-light);
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: 50%;
   cursor: pointer;
   color: var(--color-text);

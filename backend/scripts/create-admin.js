@@ -6,6 +6,27 @@ dotenv.config();
 
 const { Pool } = pkg;
 
+// Credenciales desde variables de entorno (NO usar valores por defecto inseguros)
+const usuario = process.env.ADMIN_USER || 'admin';
+const email = process.env.ADMIN_EMAIL || 'admin@ideancestral.com';
+const password = process.env.ADMIN_PASSWORD;
+
+if (!password || password.length < 8) {
+  console.error('❌ Error: ADMIN_PASSWORD debe configurarse en .env con mínimo 8 caracteres');
+  console.error('\n📝 Ejemplo:');
+  console.error('   ADMIN_USER=admin');
+  console.error('   ADMIN_EMAIL=admin@ideancestral.com');
+  console.error('   ADMIN_PASSWORD=TuContraseñaSegura123\n');
+  process.exit(1);
+}
+
+// Rechazar contraseñas débiles
+const WEAK_PASSWORDS = ['admin123', 'admin', 'password', '12345678', 'password123'];
+if (WEAK_PASSWORDS.includes(password.toLowerCase())) {
+  console.error('❌ Error: ADMIN_PASSWORD no puede ser una contraseña débil (admin123, password, etc.)');
+  process.exit(1);
+}
+
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
@@ -15,14 +36,9 @@ const pool = new Pool({
 });
 
 async function createAdmin() {
-  const usuario = 'admin';
-  const email = 'admin@ideancestral.com';
-  const password = 'admin123';
-
   try {
     const hash = await bcrypt.hash(password, 10);
 
-    // Intentar insertar
     try {
       const result = await pool.query(
         'INSERT INTO administradores (usuario, email, password_hash) VALUES ($1, $2, $3) RETURNING id, usuario, email',
@@ -32,12 +48,11 @@ async function createAdmin() {
       console.log(result.rows[0]);
     } catch (e) {
       if (e.code === '23505') {
-        // Ya existe, actualizar password
         await pool.query(
           'UPDATE administradores SET password_hash = $1 WHERE usuario = $2',
           [hash, usuario]
         );
-        console.log('Usuario admin ya existia. Password actualizado.');
+        console.log('Usuario admin ya existía. Contraseña actualizada.');
       } else {
         throw e;
       }
@@ -45,7 +60,7 @@ async function createAdmin() {
 
     console.log('\n--- CREDENCIALES ---');
     console.log('Usuario: ' + usuario);
-    console.log('Password: ' + password);
+    console.log('Contraseña: (configurada en .env)');
     console.log('URL: http://localhost:5173/admin');
     console.log('--------------------');
   } catch (error) {

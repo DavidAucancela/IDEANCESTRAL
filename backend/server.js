@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import pino from 'pino';
+import pool from './database/connection.js';
 import productosRoutes from './routes/productos.js';
 import categoriasRoutes from './routes/categorias.js';
 import imagenesRoutes from './routes/imagenes.js';
@@ -24,11 +27,23 @@ const logger = pino({
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'secret_key' || process.env.JWT_SECRET.length < 32) {
-  logger.warn('JWT_SECRET debe ser configurado con un valor seguro (min. 32 caracteres). Ver backend/.env.example');
+// --- VALIDACIÓN CRÍTICA: JWT_SECRET ---
+const JWT_SECRET = process.env.JWT_SECRET;
+const weakSecrets = ['secret_key', 'cambiar_esto_por', 'cambiar_por_secreto', 'CONFIGURA_CON', 'GENERA_CON'];
+const isWeakSecret = !JWT_SECRET || JWT_SECRET.length < 32 || weakSecrets.some(w => (JWT_SECRET || '').includes(w));
+if (isWeakSecret) {
+  logger.fatal('JWT_SECRET debe ser un secreto seguro (min. 32 caracteres). Ejecuta: openssl rand -base64 32');
+  process.exit(1);
 }
 
-// CORS - en desarrollo permitir varios puertos de Vite
+// --- VALIDACIÓN CRÍTICA: DB_PASSWORD ---
+const WEAK_DB_PASSWORDS = ['admin', 'postgres', 'password', '123456', 'root'];
+if (WEAK_DB_PASSWORDS.includes((process.env.DB_PASSWORD || '').toLowerCase())) {
+  logger.fatal('DB_PASSWORD no puede ser una contraseña débil (admin, postgres, etc.). Configura una contraseña segura en backend/.env');
+  process.exit(1);
+}
+
+// CORS - orígenes permitidos
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
   .map(u => u.trim());
@@ -39,6 +54,34 @@ if (process.env.NODE_ENV !== 'production') {
     if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
   }
 }
+
+// --- HELMET: headers de seguridad ---
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false
+}));
+
+// --- RATE LIMITING global ---
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { error: 'Demasiadas solicitudes. Intente más tarde.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use(globalLimiter);
+
+// --- Protección CSRF: validación de Origin para operaciones de escritura ---
+const csrfOriginCheck = (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const origin = req.get('Origin');
+  if (!origin) return next();
+  if (!allowedOrigins.includes(origin)) {
+    return res.status(403).json({ error: 'Origen no permitido' });
+  }
+  next();
+};
+app.use(csrfOriginCheck);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -53,8 +96,26 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos (imágenes)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// --- /uploads protegido: solo archivos registrados en BD ---
+app.use('/uploads', async (req, res, next) => {
+  const urlPath = '/uploads' + (req.path === '/' ? '' : req.path);
+  try {
+    const [img, promo, cat] = await Promise.all([
+      pool.query('SELECT 1 FROM imagenes_productos WHERE url = $1', [urlPath]),
+      pool.query('SELECT 1 FROM promociones WHERE imagen_url = $1', [urlPath]),
+      pool.query('SELECT 1 FROM categorias WHERE imagen_url = $1', [urlPath])
+    ]);
+    if (img.rows.length > 0 || promo.rows.length > 0 || cat.rows.length > 0) {
+      const filePath = path.join(__dirname, 'uploads', path.basename(urlPath));
+      if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+      }
+    }
+  } catch (e) {
+    logger.error({ err: e }, 'Error validando upload');
+  }
+  res.status(404).json({ error: 'No encontrado' });
+});
 
 // Servir imágenes del frontend (public/imagenes)
 const imagenesDir = path.join(__dirname, '..', 'frontend', 'public', 'imagenes');
@@ -78,7 +139,7 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
   logger.error({ err, url: req.url }, err.message);
   const status = err.statusCode || 500;
-  res.status(status).json({ 
+  res.status(status).json({
     error: err.message || 'Error interno del servidor',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
