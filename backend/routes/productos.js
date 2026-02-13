@@ -1,59 +1,93 @@
 import express from 'express';
+import { z } from 'zod';
 import pool from '../database/connection.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/productos - Obtener todos los productos (solo publicados para visitantes)
+const productoSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  precio: z.number().positive(),
+  descripcion: z.string().optional(),
+  material: z.string().max(200).optional(),
+  peso: z.string().max(50).optional(),
+  categoria_id: z.number().int().positive().optional().nullable(),
+  publicado: z.boolean().optional(),
+  destacado: z.boolean().optional()
+});
+
+// GET /api/productos - Obtener productos (paginación, búsqueda, filtros, ordenamiento)
 router.get('/', async (req, res) => {
   try {
-    const { categoria_id, destacado, publicado } = req.query;
-    let query = `
-      SELECT 
-        p.*,
-        c.nombre as categoria_nombre,
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', i.id,
-              'url', i.url,
-              'orden', i.orden,
-              'es_principal', i.es_principal
-            ) ORDER BY i.orden, i.es_principal DESC
-          )
-          FROM imagenes_productos i
-          WHERE i.producto_id = p.id
-        ) as imagenes
-      FROM productos p
-      LEFT JOIN categorias c ON p.categoria_id = c.id
-      WHERE 1=1
-    `;
-    
+    const { categoria_id, destacado, publicado, buscar, ordenar, page = 1, limit = 12, incluir_ocultos } = req.query;
+    const limitNum = incluir_ocultos === 'true' ? 9999 : Math.min(50, Math.max(1, parseInt(limit) || 12));
+    const pageNum = incluir_ocultos === 'true' ? 1 : Math.max(1, parseInt(page) || 1);
+    const offset = (pageNum - 1) * limitNum;
+
+    let whereClause = ' WHERE 1=1';
     const params = [];
     let paramCount = 1;
 
-    if (publicado !== undefined) {
-      query += ` AND p.publicado = $${paramCount}`;
+    if (incluir_ocultos === 'true') {
+    } else if (publicado !== undefined) {
+      whereClause += ` AND p.publicado = $${paramCount}`;
       params.push(publicado === 'true');
       paramCount++;
     } else {
-      // Por defecto solo mostrar publicados
-      query += ` AND p.publicado = true`;
+      whereClause += ' AND p.publicado = true';
     }
 
     if (categoria_id) {
-      query += ` AND p.categoria_id = $${paramCount}`;
+      whereClause += ` AND p.categoria_id = $${paramCount}`;
       params.push(categoria_id);
       paramCount++;
     }
 
     if (destacado === 'true') {
-      query += ` AND p.destacado = true`;
+      whereClause += ' AND p.destacado = true';
     }
 
-    query += ` ORDER BY p.destacado DESC, p.created_at DESC`;
+    if (buscar && buscar.trim()) {
+      whereClause += ` AND (p.nombre ILIKE $${paramCount} OR p.descripcion ILIKE $${paramCount} OR p.material ILIKE $${paramCount})`;
+      params.push(`%${buscar.trim()}%`);
+      paramCount++;
+    }
 
-    const result = await pool.query(query, params);
-    res.json(result.rows);
+    const ordenValido = { precio_asc: 'p.precio ASC', precio_desc: 'p.precio DESC', nombre: 'p.nombre ASC', reciente: 'p.created_at DESC' };
+    const orderBy = ordenValido[ordenar] || 'p.destacado DESC, p.created_at DESC';
+
+    const countParams = [...params];
+    params.push(limitNum, offset);
+
+    const baseFrom = `FROM productos p LEFT JOIN categorias c ON p.categoria_id = c.id`;
+    const mainQuery = `
+      SELECT p.*, c.nombre as categoria_nombre,
+        (SELECT json_agg(json_build_object('id', i.id, 'url', i.url, 'orden', i.orden, 'es_principal', i.es_principal) ORDER BY i.orden, i.es_principal DESC)
+         FROM imagenes_productos i WHERE i.producto_id = p.id) as imagenes
+      ${baseFrom} ${whereClause} ORDER BY ${orderBy} LIMIT $${paramCount} OFFSET $${paramCount + 1}
+    `;
+    const countQuery = `SELECT COUNT(*)::int as total ${baseFrom} ${whereClause}`;
+
+    const [result, countResult] = await Promise.all([
+      pool.query(mainQuery, params),
+      pool.query(countQuery, countParams)
+    ]);
+
+    const total = countResult.rows[0]?.total ?? 0;
+
+    if (incluir_ocultos === 'true') {
+      res.json(result.rows);
+    } else {
+      res.json({
+        productos: result.rows,
+        paginacion: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPaginas: Math.ceil(total / limitNum)
+        }
+      });
+    }
   } catch (error) {
     console.error('Error obteniendo productos:', error);
     res.status(500).json({ error: 'Error al obtener productos' });
@@ -98,19 +132,23 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/productos - Crear nuevo producto (requiere autenticación)
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado } = req.body;
-
-    if (!nombre || !precio) {
-      return res.status(400).json({ error: 'Nombre y precio son requeridos' });
+    const parsed = productoSchema.safeParse({
+      ...req.body,
+      precio: typeof req.body.precio === 'string' ? parseFloat(req.body.precio) : req.body.precio,
+      categoria_id: req.body.categoria_id ? parseInt(req.body.categoria_id) : null
+    });
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
     }
+    const { nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado } = parsed.data;
 
     const result = await pool.query(`
       INSERT INTO productos (nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
-    `, [nombre, descripcion, precio, material, peso, categoria_id || null, publicado !== undefined ? publicado : true, destacado || false]);
+    `, [nombre, descripcion ?? null, precio, material ?? null, peso ?? null, categoria_id || null, publicado ?? true, destacado ?? false]);
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -120,7 +158,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/productos/:id - Actualizar producto (requiere autenticación)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado } = req.body;
@@ -152,7 +190,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/productos/:id - Eliminar producto (requiere autenticación)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM productos WHERE id = $1 RETURNING *', [id]);

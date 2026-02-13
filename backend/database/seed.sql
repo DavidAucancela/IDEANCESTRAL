@@ -2,6 +2,7 @@
 -- Limpiar datos previos para re-seed limpio
 DELETE FROM imagenes_productos;
 DELETE FROM productos;
+DELETE FROM promociones;
 
 -- Insertar productos de ejemplo
 INSERT INTO productos (id, nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado) VALUES
@@ -99,3 +100,10 @@ INSERT INTO imagenes_productos (producto_id, url, orden, es_principal) VALUES
 -- Caja de Té (id: 18)
 (18, '/imagenes/caja de te.jpeg', 0, true)
 ON CONFLICT DO NOTHING;
+
+-- Insertar promociones por temporada
+INSERT INTO promociones (nombre, temporada, tema, imagen_url, orden, activa) VALUES
+('Navidad y Fin de Año', 'Diciembre', 'navidad', '/imagenes/promo1.jpg', 1, true),
+('Día de la Madre', 'Mayo', 'madre', '/imagenes/promo2.jpg', 2, true),
+('Fiestas de Quito', 'Diciembre', 'cultural', '/imagenes/promo3.jpg', 3, true),
+('Inti Raymi - Fiesta del Sol', 'Junio', 'inti', '/imagenes/promo4.jpg', 4, true);

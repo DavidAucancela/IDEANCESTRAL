@@ -31,7 +31,9 @@ if (!fs.existsSync(envPath)) {
   // Verificar contenido
   const envContent = fs.readFileSync(envPath, 'utf8');
   
-  if (envContent.includes('tu_password') || envContent.includes('tu_secret_key')) {
+  if (envContent.includes('tu_password') || envContent.includes('tu_secret_key') || 
+      envContent.includes('cambiar_esto_por') || envContent.includes('CONFIGURA_CON') || envContent.includes('GENERA_CON') ||
+      (envContent.includes('JWT_SECRET') && envContent.includes('cambiar'))) {
     console.log('⚠️  ADVERTENCIA: El archivo .env tiene valores por defecto\n');
     console.log('📝 Por favor edita backend/.env y configura:');
     console.log('   - DB_PASSWORD: Tu contraseña real de PostgreSQL');

@@ -8,9 +8,17 @@
             <span class="logo-icon">IA</span>
             <span class="logo-text">Ideancestral</span>
           </router-link>
-          <ul class="nav-links">
-            <li><router-link to="/">Catálogo</router-link></li>
-          </ul>
+          <div class="nav-right">
+            <ul class="nav-links">
+              <li><router-link to="/">{{ t('nav.catalogo') }}</router-link></li>
+            </ul>
+            <ThemeToggle />
+            <LanguageSwitcher />
+            <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+              <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
+            </button>
+          </div>
         </div>
       </nav>
     </header>
@@ -18,7 +26,7 @@
     <!-- Loading -->
     <div v-if="loading" class="state-container">
       <div class="spinner"></div>
-      <p>Cargando producto...</p>
+      <p>{{ t('product.cargando') }}</p>
     </div>
 
     <!-- Producto -->
@@ -26,7 +34,7 @@
       <div class="container">
         <!-- Breadcrumb -->
         <div class="breadcrumb">
-          <router-link to="/">Inicio</router-link>
+          <router-link to="/">{{ t('nav.inicio') }}</router-link>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           <span v-if="producto.categoria_nombre">{{ producto.categoria_nombre }}</span>
           <svg v-if="producto.categoria_nombre" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
@@ -44,7 +52,7 @@
               />
               <div v-if="producto.destacado" class="badge-destacado">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Destacado
+                {{ t('product.destacado') }}
               </div>
             </div>
             <div v-if="imagenes.length > 1" class="galeria-thumbs">
@@ -69,32 +77,32 @@
             </div>
 
             <div class="info-descripcion">
-              <p>{{ producto.descripcion || 'Artesanía elaborada a mano con técnicas tradicionales.' }}</p>
+              <p>{{ producto.descripcion || t('product.descripcionDefault') }}</p>
             </div>
 
             <div class="info-specs">
               <div v-if="producto.material" class="spec-row">
-                <span class="spec-label">Material</span>
+                <span class="spec-label">{{ t('product.material') }}</span>
                 <span class="spec-value">{{ producto.material }}</span>
               </div>
               <div v-if="producto.peso" class="spec-row">
-                <span class="spec-label">Peso</span>
+                <span class="spec-label">{{ t('product.peso') }}</span>
                 <span class="spec-value">{{ producto.peso }}</span>
               </div>
               <div v-if="producto.categoria_nombre" class="spec-row">
-                <span class="spec-label">Categoría</span>
+                <span class="spec-label">{{ t('product.categoria') }}</span>
                 <span class="spec-value">{{ producto.categoria_nombre }}</span>
               </div>
             </div>
 
-            <!-- Botón WhatsApp -->
+            <!-- Botón Agregar al carrito -->
             <div class="info-actions">
-              <a :href="whatsappProducto" target="_blank" class="btn btn-whatsapp btn-full">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Consultar por WhatsApp
-              </a>
+              <button class="btn btn-primary btn-full btn-agregar" @click="handleAgregarAlCarrito">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                {{ productoEnCarrito ? t('cart.agregado') : t('cart.agregar') }}
+              </button>
               <router-link to="/" class="btn btn-secondary btn-full">
-                Seguir Explorando
+                {{ t('product.seguirExplorando') }}
               </router-link>
             </div>
           </div>
@@ -103,7 +111,7 @@
         <!-- Relacionados -->
         <div v-if="productosRelacionados.length > 0" class="relacionados">
           <div class="section-header">
-            <h2>También te puede interesar</h2>
+            <h2>{{ t('product.relacionados') }}</h2>
           </div>
           <div class="relacionados-grid">
             <router-link
@@ -116,7 +124,7 @@
                 <img :src="obtenerImagenPrincipal(prod)" :alt="prod.nombre" />
               </div>
               <div class="rel-info">
-                <span class="rel-cat">{{ prod.categoria_nombre || 'Artesanía' }}</span>
+                <span class="rel-cat">{{ prod.categoria_nombre || t('product.artesania') }}</span>
                 <h4>{{ prod.nombre }}</h4>
                 <span class="rel-precio">${{ Number(prod.precio).toFixed(2) }}</span>
               </div>
@@ -129,14 +137,65 @@
     <!-- Error -->
     <div v-else class="state-container">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
-      <p>Producto no encontrado</p>
-      <router-link to="/" class="btn btn-primary">Volver al Catálogo</router-link>
+      <p>{{ t('product.noEncontrado') }}</p>
+      <router-link to="/" class="btn btn-primary">{{ t('product.volverCatalogo') }}</router-link>
     </div>
 
-    <!-- WhatsApp floating -->
-    <a :href="whatsappProducto" target="_blank" class="whatsapp-float">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-    </a>
+    <!-- Carrito Sidebar -->
+    <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
+    <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
+      <div class="carrito-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          {{ t('cart.miCarrito') }}
+          <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span>
+        </h3>
+        <button class="carrito-close" @click="toggleCarrito">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div v-if="carrito.length === 0" class="carrito-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        <p>{{ t('cart.vacio') }}</p>
+        <span>{{ t('cart.agrega') }}</span>
+      </div>
+      <div v-else class="carrito-body">
+        <div class="carrito-items">
+          <div v-for="item in carrito" :key="item.id" class="carrito-item">
+            <img :src="item.imagen" :alt="item.nombre" class="carrito-item-img" @error="handleImageError" />
+            <div class="carrito-item-info">
+              <h4>{{ item.nombre }}</h4>
+              <span class="carrito-item-precio">${{ item.precio.toFixed(2) }}</span>
+              <div class="carrito-item-qty">
+                <button @click="actualizarCantidad(item.id, item.cantidad - 1)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span>{{ item.cantidad }}</span>
+                <button @click="actualizarCantidad(item.id, item.cantidad + 1)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)" :title="t('cart.quitar')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="carrito-footer">
+          <div class="carrito-total">
+            <span>{{ t('cart.total') }}</span>
+            <strong>${{ carritoTotal.toFixed(2) }}</strong>
+          </div>
+          <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            {{ t('cart.enviarWhatsApp') }}
+          </button>
+          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">
+            {{ t('cart.vaciar') }}
+          </button>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
@@ -144,11 +203,15 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-
-const WHATSAPP_NUMBER = '593998956361'
+import { useCarrito } from '../composables/useCarrito'
+import { useToast } from '../composables/useToast'
+import { useLanguageStore } from '../stores/language'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 export default {
   name: 'ProductoDetalleView',
+  components: { ThemeToggle, LanguageSwitcher },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -158,15 +221,33 @@ export default {
     const indexImagenActual = ref(0)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const { t } = useLanguageStore()
 
-    // WhatsApp link dinámico con info del producto
-    const whatsappProducto = computed(() => {
-      if (!producto.value) {
-        return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer más sobre sus artesanías.')}`
-      }
-      const msg = `Hola, me interesa el producto: *${producto.value.nombre}* (Precio: $${producto.value.precio}). ¿Está disponible?`
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
+    // Carrito (composable compartido)
+    const {
+      carrito, carritoAbierto, carritoCount, carritoTotal,
+      agregarAlCarrito, quitarDelCarrito, actualizarCantidad,
+      vaciarCarrito, toggleCarrito, enviarPedidoWhatsApp
+    } = useCarrito()
+    const { success: toastSuccess } = useToast()
+
+    // Verificar si el producto actual ya está en el carrito
+    const productoEnCarrito = computed(() => {
+      if (!producto.value) return false
+      return carrito.value.some(item => item.id === producto.value.id)
     })
+
+    // Agregar producto actual al carrito
+    const handleAgregarAlCarrito = () => {
+      if (!producto.value) return
+      agregarAlCarrito({
+        id: producto.value.id,
+        nombre: producto.value.nombre,
+        precio: producto.value.precio,
+        imagen: imagenActual.value
+      })
+      toastSuccess(t('toast.productoAgregado'))
+    }
 
     const imagenes = computed(() => {
       if (!producto.value || !producto.value.imagenes) return []
@@ -193,7 +274,8 @@ export default {
           const resp = await axios.get(`${API_URL}/productos`, {
             params: { categoria_id: producto.value.categoria_id }
           })
-          productosRelacionados.value = resp.data
+          const prods = resp.data.productos || resp.data
+          productosRelacionados.value = (Array.isArray(prods) ? prods : [])
             .filter(p => p.id !== producto.value.id)
             .slice(0, 4)
         } else {
@@ -240,17 +322,29 @@ export default {
     })
 
     return {
+      t,
       producto,
       productosRelacionados,
       loading,
       imagenes,
       imagenActual,
       indexImagenActual,
-      whatsappProducto,
       cambiarImagen,
       obtenerUrlImagen,
       obtenerImagenPrincipal,
-      handleImageError
+      handleImageError,
+      // Carrito
+      carrito,
+      carritoAbierto,
+      carritoCount,
+      carritoTotal,
+      productoEnCarrito,
+      handleAgregarAlCarrito,
+      quitarDelCarrito,
+      actualizarCantidad,
+      vaciarCarrito,
+      toggleCarrito,
+      enviarPedidoWhatsApp
     }
   }
 }
@@ -270,7 +364,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.95);
+  background: var(--color-header-bg-scrolled);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
 }
@@ -287,12 +381,15 @@ export default {
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo-icon {
   display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; background: var(--color-primary);
-  color: var(--color-white); border-radius: 8px;
-  font-family: var(--font-serif); font-weight: 700; font-size: 14px;
+  width: 28px; height: 28px; background: var(--color-primary);
+  color: var(--color-white); border-radius: 6px;
+  font-family: var(--font-serif); font-weight: 700; font-size: 12px;
 }
 .logo-text {
   font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--color-primary);
+}
+.nav-right {
+  display: flex; align-items: center; gap: 0.75rem;
 }
 .nav-links {
   display: flex; list-style: none; gap: 1rem;
@@ -302,6 +399,24 @@ export default {
   padding: 0.5rem 1rem; border-radius: var(--radius-sm); transition: var(--transition);
 }
 .nav-links a:hover { color: var(--color-primary); background: var(--color-bg-warm); }
+
+.cart-toggle {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; background: none;
+  border: 1.5px solid var(--color-gray-light); border-radius: 50%;
+  cursor: pointer; color: var(--color-text); transition: var(--transition);
+}
+.cart-toggle:hover {
+  border-color: var(--color-primary); color: var(--color-primary);
+  background: var(--color-bg-warm);
+}
+.cart-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 18px; height: 18px; background: var(--color-secondary);
+  color: var(--color-white); font-size: 0.7rem; font-weight: 700;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
 
 /* States */
 .state-container {
@@ -467,7 +582,7 @@ export default {
 }
 
 .rel-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -508,15 +623,112 @@ export default {
   font-size: 1.1rem; font-weight: 700; color: var(--color-primary);
 }
 
-/* WhatsApp Float */
-.whatsapp-float {
-  position: fixed; bottom: 24px; right: 24px;
-  width: 60px; height: 60px; background: #25D366;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  color: white; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
-  z-index: 999; transition: var(--transition);
+/* Botón Agregar */
+.btn-agregar {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 1rem; font-size: 1rem; font-weight: 600;
+  transition: var(--transition);
 }
-.whatsapp-float:hover { transform: scale(1.1); box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6); }
+
+/* Carrito Sidebar */
+.carrito-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 1100; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+}
+.carrito-overlay.visible { opacity: 1; visibility: visible; }
+
+.carrito-sidebar {
+  position: fixed; top: 0; right: 0; width: 400px; max-width: 90vw;
+  height: 100vh; background: var(--color-surface); z-index: 1200;
+  display: flex; flex-direction: column;
+  box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.carrito-sidebar.open { transform: translateX(0); }
+
+.carrito-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-header h3 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 1.1rem; color: var(--color-text); margin: 0;
+}
+.carrito-count { font-weight: 400; color: var(--color-text-muted); font-size: 0.9rem; }
+
+.carrito-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; background: none; border: none;
+  color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
+  transition: var(--transition);
+}
+.carrito-close:hover { background: var(--color-bg); color: var(--color-text); }
+
+.carrito-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.75rem;
+  color: var(--color-text-muted); padding: 2rem;
+}
+.carrito-empty p { font-size: 1.05rem; font-weight: 600; color: var(--color-text-light); margin: 0; }
+.carrito-empty span { font-size: 0.9rem; }
+
+.carrito-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.carrito-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+
+.carrito-item {
+  display: flex; gap: 1rem; align-items: center;
+  padding: 1rem 0; border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-item:last-child { border-bottom: none; }
+
+.carrito-item-img {
+  width: 60px; height: 60px; object-fit: cover;
+  border-radius: var(--radius-sm); flex-shrink: 0;
+}
+.carrito-item-info { flex: 1; min-width: 0; }
+.carrito-item-info h4 {
+  font-size: 0.9rem; font-weight: 600; color: var(--color-text);
+  margin: 0 0 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.carrito-item-precio { font-size: 0.85rem; color: var(--color-primary); font-weight: 600; }
+
+.carrito-item-qty { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
+.carrito-item-qty button {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border: 1.5px solid var(--color-gray-light);
+  background: var(--color-surface); border-radius: 50%; cursor: pointer;
+  color: var(--color-text); transition: var(--transition);
+}
+.carrito-item-qty button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.carrito-item-qty span { font-weight: 600; font-size: 0.9rem; min-width: 20px; text-align: center; }
+
+.carrito-item-remove {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; background: none; border: none;
+  color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
+  flex-shrink: 0; transition: var(--transition);
+}
+.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+
+.carrito-footer {
+  padding: 1.25rem 1.5rem; border-top: 1px solid var(--color-gray-light);
+  background: var(--color-bg);
+}
+.carrito-total {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.carrito-total span { color: var(--color-text-light); }
+.carrito-total strong { font-size: 1.4rem; color: var(--color-primary); }
+
+.carrito-btn-pedido {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 0.85rem; font-size: 0.95rem;
+}
+.carrito-btn-vaciar {
+  width: 100%; margin-top: 0.5rem; padding: 0.6rem; font-size: 0.85rem;
+}
 
 /* Responsive */
 @media (max-width: 968px) {
@@ -529,6 +741,8 @@ export default {
   .relacionados-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
+  .carrito-sidebar { width: 100%; max-width: 100vw; }
+  .nav-right { gap: 0.5rem; }
 }
 
 @media (max-width: 480px) {

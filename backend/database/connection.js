@@ -16,11 +16,19 @@ const poolConfig = {
   connectionTimeoutMillis: 2000,
 };
 
-// Solo agregar password si está definido y no está vacío
+// Solo agregar password si está definido y no está vacío - pendiente/inecesario implementar 
 const dbPassword = process.env.DB_PASSWORD;
 if (dbPassword && dbPassword.trim() !== '' && dbPassword !== 'tu_password' && dbPassword !== 'tu_password_aqui') {
   poolConfig.password = dbPassword;
 }
+
+// Validar que todas las variables requeridas existan
+const requiredEnvVars = ['DB_HOST', 'DB_NAME', 'DB_USER'];
+requiredEnvVars.forEach(varName => {
+  if (!process.env[varName]) {
+    throw new Error(`❌ Variable de entorno ${varName} no definida`);
+  }
+});
 
 const pool = new Pool(poolConfig);
 
