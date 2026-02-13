@@ -1,6 +1,8 @@
 services:
   db:
     image: postgres:16-alpine
+    ports:
+      - "5435:5432"
     environment:
       POSTGRES_DB: catalogo_artesanias
       POSTGRES_USER: postgres
@@ -35,7 +37,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-      - /app/node_modules
+      - backend_node_modules:/app/node_modules
 
   frontend:
     build:
@@ -49,3 +51,4 @@ services:
 
 volumes:
   pgdata:
+  backend_node_modules:

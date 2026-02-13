@@ -33,7 +33,7 @@
           <div class="admin-actions">
             <ThemeToggle />
             <LanguageSwitcher />
-            <span>{{ t('admin.bienvenido') }} {{ usuario.usuario }}</span>
+            <span>{{ t('admin.bienvenido') }} {{ usuario?.usuario || 'Admin' }}</span>
             <button @click="logout" class="btn btn-secondary">{{ t('admin.cerrarSesion') }}</button>
           </div>
         </div>
@@ -405,12 +405,22 @@ export default {
       activa: true
     })
 
-    // Configurar axios con token
-    const configurarAxios = () => {
+    // Configurar axios con token y verificar sesión
+    const configurarAxios = async () => {
       if (token.value) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-        isAuthenticated.value = true
-        cargarDatos()
+        try {
+          const response = await axios.get(`${API_URL}/auth/me`)
+          usuario.value = response.data.usuario
+          isAuthenticated.value = true
+          cargarDatos()
+        } catch (err) {
+          // Token inválido o expirado — limpiar sesión
+          token.value = null
+          localStorage.removeItem('admin_token')
+          delete axios.defaults.headers.common['Authorization']
+          isAuthenticated.value = false
+        }
       }
     }
 

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import pool from '../database/connection.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -58,6 +59,25 @@ router.post('/login', loginLimiter, async (req, res) => {
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
+  }
+});
+
+// GET /api/auth/me - Obtener usuario actual (verificar token)
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, usuario, email FROM administradores WHERE id = $1 AND activo = true',
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json({ usuario: result.rows[0] });
+  } catch (error) {
+    console.error('Error obteniendo usuario:', error);
+    res.status(500).json({ error: 'Error al obtener usuario' });
   }
 });
 

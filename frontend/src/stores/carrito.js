@@ -62,7 +62,7 @@ export const useCarritoStore = defineStore('carrito', () => {
     abierto.value = !abierto.value
   }
 
-  const WHATSAPP_NUMBER = '593998956361'
+  const WHATSAPP_NUMBER = '593987999136'
   const enviarPedidoWhatsApp = () => {
     const { t } = useLanguageStore()
     let mensaje = t('whatsapp.pedido') + '\n\n'
