@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../database/connection.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/categorias - Crear nueva categoría (requiere autenticación)
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { nombre, descripcion, imagen_url, activa } = req.body;
 
@@ -66,7 +67,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/categorias/:id - Actualizar categoría (requiere autenticación)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, imagen_url, activa } = req.body;
@@ -94,7 +95,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/categorias/:id - Eliminar categoría (requiere autenticación)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM categorias WHERE id = $1 RETURNING *', [id]);

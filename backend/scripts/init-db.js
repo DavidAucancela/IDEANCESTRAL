@@ -10,15 +10,15 @@ const { Pool } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Validar variables de entorno
-const dbPassword = process.env.DB_PASSWORD;
-if (dbPassword === 'tu_password' || dbPassword === 'tu_password_aqui') {
-  console.error('❌ Error: DB_PASSWORD no está configurada correctamente en el archivo .env');
+// Validar variables de entorno - contraseñas débiles
+const WEAK_PASSWORDS = ['admin', 'postgres', 'password', '123456', 'root', 'tu_password', 'tu_password_aqui'];
+const dbPassword = (process.env.DB_PASSWORD || '').trim();
+if (dbPassword && WEAK_PASSWORDS.includes(dbPassword.toLowerCase())) {
+  console.error('❌ Error: DB_PASSWORD no puede ser una contraseña débil (admin, postgres, etc.)');
   console.error('\n📝 Por favor:');
   console.error('   1. Edita backend/.env');
-  console.error('   2. Configura DB_PASSWORD con tu contraseña de PostgreSQL');
-  console.error('   3. Si PostgreSQL no tiene contraseña, deja: DB_PASSWORD=');
-  console.error('   4. Ejemplo: DB_PASSWORD=mi_password_postgres\n');
+  console.error('   2. Configura DB_PASSWORD con una contraseña segura');
+  console.error('   3. Ejemplo: DB_PASSWORD=MiCl4v3S3gur4_2024\n');
   process.exit(1);
 }
 

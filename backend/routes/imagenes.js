@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pool from '../database/connection.js';
 import fs from 'fs';
+import { authenticateToken } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +43,7 @@ const upload = multer({
 });
 
 // POST /api/imagenes - Subir imagen para un producto
-router.post('/', upload.single('imagen'), async (req, res) => {
+router.post('/', authenticateToken, upload.single('imagen'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
@@ -83,7 +84,7 @@ router.post('/', upload.single('imagen'), async (req, res) => {
 });
 
 // DELETE /api/imagenes/:id - Eliminar imagen
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -113,7 +114,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // PUT /api/imagenes/:id - Actualizar imagen (orden, es_principal)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { orden, es_principal } = req.body;

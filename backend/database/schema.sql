@@ -46,6 +46,22 @@ CREATE TABLE IF NOT EXISTS administradores (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabla de Promociones por Temporada
+CREATE TABLE IF NOT EXISTS promociones (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    temporada VARCHAR(50) NOT NULL,
+    tema VARCHAR(50) DEFAULT 'general',
+    imagen_url VARCHAR(255),
+    orden INTEGER DEFAULT 0,
+    activa BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_promociones_activa ON promociones(activa);
+CREATE INDEX IF NOT EXISTS idx_promociones_orden ON promociones(orden);
+
 -- Índices para mejorar rendimiento
 CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(categoria_id);
 CREATE INDEX IF NOT EXISTS idx_productos_publicado ON productos(publicado);

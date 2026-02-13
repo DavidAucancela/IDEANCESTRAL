@@ -40,22 +40,25 @@ psql -U postgres -d catalogo_artesanias -f backend/database/seed.sql
 
 ### 3. Configurar Variables de Entorno
 
-#### Backend
+#### Backend (obligatorio)
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-Edita `backend/.env`:
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=catalogo_artesanias
-DB_USER=postgres
-DB_PASSWORD=tu_password_postgres
-PORT=3000
-JWT_SECRET=mi_secret_key_super_segura_12345
+Edita `backend/.env` con valores seguros:
+
+```bash
+# Generar JWT_SECRET (ejecuta en terminal):
+openssl rand -base64 32
+
+# Generar contraseña segura para PostgreSQL y admin
 ```
+
+Variables requeridas:
+- `DB_PASSWORD`: Contraseña de PostgreSQL (no usar: admin, postgres, password)
+- `JWT_SECRET`: Mínimo 32 caracteres. Generar con: `openssl rand -base64 32`
+- `ADMIN_PASSWORD`: Para crear el primer admin con `node scripts/create-admin.js`
 
 #### Frontend
 ```bash
@@ -67,19 +70,25 @@ El archivo `.env` del frontend ya está configurado por defecto.
 
 ### 4. Crear Usuario Administrador
 
-Una vez que el backend esté corriendo, puedes crear un administrador:
+Configura en `backend/.env`:
+```env
+ADMIN_USER=admin
+ADMIN_EMAIL=admin@ideancestral.com
+ADMIN_PASSWORD=TuContraseñaSegura123
+```
 
+Luego ejecuta:
+```bash
+cd backend
+node scripts/create-admin.js
+```
+
+Alternativa (solo en desarrollo): registrar vía API:
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "usuario": "admin",
-    "email": "admin@ideancestral.com",
-    "password": "tu_password_seguro"
-  }'
+  -d '{"usuario": "admin", "email": "admin@ideancestral.com", "password": "tu_password_seguro"}'
 ```
-
-O desde el navegador usando Postman/Thunder Client.
 
 ### 5. Iniciar el Proyecto
 
@@ -130,6 +139,15 @@ backend/
 frontend/
 └── .env                    # Configuración (crear desde .env.example)
 ```
+
+## Ejecutar con Docker
+
+1. Copia el archivo de ejemplo: `cp .env.example .env`
+2. Edita `.env` en la raíz con valores seguros:
+   - `DB_PASSWORD`: contraseña para PostgreSQL
+   - `JWT_SECRET`: genera con `openssl rand -base64 32`
+3. Ejecuta: `docker-compose up --build`
+4. Accede en http://localhost:5173 (frontend con build de producción)
 
 ## Próximos Pasos
 

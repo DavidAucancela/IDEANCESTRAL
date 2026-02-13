@@ -5,20 +5,32 @@
       <nav class="nav">
         <div class="nav-container">
           <router-link to="/" class="logo">
-            <span class="logo-icon">IA</span>
+            <span 
+              class="logo-icon"
+              @mousedown.prevent="iniciarLongPress"
+              @mouseup="cancelarLongPress"
+              @mouseleave="cancelarLongPress"
+              @touchstart.prevent="iniciarLongPress"
+              @touchend="cancelarLongPress"
+              @touchcancel="cancelarLongPress"
+            >IA</span>
             <span class="logo-text">Ideancestral</span>
           </router-link>
           <ul class="nav-links" :class="{ open: menuOpen }">
-            <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-            <li><a href="#catalogo" @click.prevent="scrollTo('catalogo')">Catálogo</a></li>
-            <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Nosotros</a></li>
-            <li>
-              <a :href="whatsappGeneral" target="_blank" class="nav-whatsapp">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                WhatsApp
-              </a>
+            <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
+            <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
+            <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
+            <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
+            <li class="nav-utilities">
+              <ThemeToggle />
+              <LanguageSwitcher />
             </li>
-            <li><router-link to="/admin" @click="menuOpen = false" class="nav-admin">Admin</router-link></li>
+            <li>
+              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
+              </button>
+            </li>
           </ul>
           <button class="menu-toggle" @click="toggleMenu" :class="{ active: menuOpen }">
             <span></span>
@@ -35,27 +47,26 @@
       <div class="hero-content">
         <div class="hero-text">
           <h1 class="hero-title">
-            <span class="hero-title-small">Bienvenido a</span>
-            Idea Ancestral
+            <span class="hero-title-small">{{ t('hero.bienvenido') }}</span>
+            Ideancestral
           </h1>
           <p class="hero-description">
-            Un lugar donde se entrelazan la creatividad y la tradición. 
-            Desde tejidos únicos hasta cerámicas delicadas, cada artículo 
-            cuenta una historia única y refleja la rica herencia cultural.
+            {{ t('hero.descripcion') }}
           </p>
           <div class="hero-actions">
-            <a href="#catalogo" @click.prevent="scrollTo('catalogo')" class="btn btn-primary btn-lg">
-              Ver Catálogo
+            <a href="#categorias" @click.prevent="scrollTo('categorias')" class="btn btn-primary btn-lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              {{ t('hero.explorar') }}
             </a>
             <a :href="whatsappGeneral" target="_blank" class="btn btn-whatsapp btn-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Contáctanos
+              {{ t('hero.contactanos') }}
             </a>
           </div>
         </div>
         <div class="hero-image-wrapper">
           <div class="hero-image-frame">
-            <img src="/imagenes/logo-principal.jpg" alt="Artesanías Idea Ancestral" />
+            <img src="/imagenes/logo-principal.jpg" alt="Artesanias Idea Ancestral" />
           </div>
         </div>
       </div>
@@ -64,119 +75,93 @@
     <!-- Banner Central -->
     <section class="banner-central">
       <div class="banner-bg-images">
-        <div class="banner-bg-img" style="background-image: url('/imagenes/masc1.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/nac2.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/vasos.jpg')"></div>
-        <div class="banner-bg-img" style="background-image: url('/imagenes/caballo.jpg')"></div>
+        <div 
+          v-for="(img, i) in bannerImages" 
+          :key="i" 
+          class="banner-bg-img"
+          :class="`drift-${(i % 4) + 1}`"
+          :style="img"
+        ></div>
       </div>
       <div class="banner-overlay"></div>
       <div class="banner-content">
-        <p class="banner-pre">Artesanías hechas a mano</p>
-        <h1 class="banner-title-cursive">catálogo</h1>
-        <h2 class="banner-title-main">ARTESANAL</h2>
+        <p class="banner-pre">{{ t('banner.pre') }}</p>
+        <h2 class="banner-title-main">{{ t('banner.titulo') }}</h2>
         <div class="banner-divider"></div>
-        <p class="banner-subtitle">-Siempre Santander-</p>
-        <p class="banner-tagline">Productos 100% hechos a mano</p>
+        <p class="banner-subtitle">-Mary Cecy-</p>
+        <p class="banner-tagline">{{ t('banner.tagline') }}</p>
       </div>
     </section>
 
-    <!-- Categorías -->
-    <section id="categorias" class="categorias-section">
+    <!-- Navegacion de Categorias -->
+    <section id="categorias" class="categorias-nav-section">
       <div class="container">
         <div class="section-header">
-          <h2>Explora por Categoría</h2>
-          <p>Descubre nuestras colecciones artesanales</p>
+          <span class="section-label">{{ t('categories.label') }}</span>
+          <h2>{{ t('categories.title') }}</h2>
+          <p>{{ t('categories.subtitle') }}</p>
         </div>
-        <div class="categorias-filters">
-          <button 
-            @click="filtrarPorCategoria(null)"
-            :class="['filter-chip', { active: categoriaFiltro === null }]"
+        <div class="categorias-nav-grid">
+          <router-link 
+            v-for="cat in categoriasParaMostrar" 
+            :key="cat.id"
+            :to="`/categoria/${cat.id}`"
+            class="categoria-nav-card"
           >
-            Todos
-          </button>
-          <button 
-            v-for="categoria in categorias" 
-            :key="categoria.id"
-            @click="filtrarPorCategoria(categoria.id)"
-            :class="['filter-chip', { active: categoriaFiltro === categoria.id }]"
-          >
-            {{ categoria.nombre }}
-          </button>
+            <div class="cat-nav-img">
+              <img :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
+            </div>
+            <h3>{{ cat.nombre }}</h3>
+          </router-link>
         </div>
       </div>
     </section>
 
-    <!-- Catálogo -->
-    <section id="catalogo" class="catalogo-section">
+    <!-- Promociones por Temporada -->
+    <section id="promociones" class="promociones-section">
       <div class="container">
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando productos...</p>
-        </div>
-        
-        <div v-else-if="productos.length === 0" class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <p>No hay productos disponibles en esta categoría</p>
-          <button @click="filtrarPorCategoria(null)" class="btn btn-secondary">Ver todos</button>
+        <div class="section-header">
+          <span class="section-label">{{ t('promos.label') }}</span>
+          <h2>{{ t('promos.title') }}</h2>
         </div>
 
-        <div v-else class="productos-grid">
-          <div 
-            v-for="(producto, index) in productos" 
-            :key="producto.id"
-            class="producto-card"
-            :style="{ animationDelay: `${index * 0.05}s` }"
-            @click="verDetalle(producto.id)"
+        <div class="promos-grid-horizontal">
+          <a 
+            v-for="promo in promociones" 
+            :key="promo.id"
+            :href="whatsappPromo(promo.nombre)"
+            target="_blank"
+            class="promo-card-horizontal"
+            :class="'promo-' + promo.tema"
           >
-            <div class="producto-image">
-              <img 
-                :src="obtenerImagenPrincipal(producto)" 
-                :alt="producto.nombre"
-                @error="handleImageError"
-                loading="lazy"
-              />
-              <div class="producto-image-overlay">
-                <span class="ver-detalle-btn">Ver Detalle</span>
-              </div>
-              <div v-if="producto.destacado" class="badge-destacado">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Destacado
-              </div>
+            <div class="promo-image">
+              <img :src="promo.imagen" :alt="promo.nombre" loading="lazy" @error="handleImageError" />
+              <span class="promo-badge">{{ promo.temporada }}</span>
             </div>
-            <div class="producto-info">
-              <span class="producto-categoria-tag">{{ producto.categoria_nombre || 'Artesanía' }}</span>
-              <h3 class="producto-nombre">{{ producto.nombre }}</h3>
-              <div class="producto-meta">
-                <span v-if="producto.material" class="meta-item">{{ producto.material }}</span>
-              </div>
-              <div class="producto-footer">
-                <span class="producto-precio">${{ Number(producto.precio).toFixed(2) }}</span>
-                <span class="producto-ver">
-                  Ver
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </span>
-              </div>
-            </div>
-          </div>
+            <h3>{{ promo.nombre }}</h3>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- Nosotros / Ubicación -->
+    <!-- Nosotros / Ubicacion -->
     <section id="nosotros" class="nosotros-section">
       <div class="container">
+        <div class="section-header">
+          <span class="section-label">{{ t('about.label') }}</span>
+          <h2>{{ t('about.title') }}</h2>
+          <p>{{ t('about.subtitle') }}</p>
+        </div>
         <div class="nosotros-grid">
           <div class="nosotros-info">
-            <h2>Encuéntranos</h2>
-            <p class="nosotros-desc">Visítanos en nuestro local y descubre más artesanías únicas hechas con amor y tradición.</p>
             <div class="info-cards">
               <div class="info-card">
                 <div class="info-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
                 <div>
-                  <strong>Ubicación</strong>
-                  <p>Jorge Washington y Juan León Mera</p>
+                  <strong>{{ t('about.ubicacion') }}</strong>
+                  <p>Jorge Washington y Juan Leon Mera</p>
                   <p>"MERCADO ARTESANAL - LA MARISCAL"</p>
                   <p>Quito, Ecuador</p>
                 </div>
@@ -186,7 +171,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                 </div>
                 <div>
-                  <strong>Teléfono</strong>
+                  <strong>{{ t('about.telefono') }}</strong>
                   <p>(02) 2227781</p>
                   <p>+593 998 956 361</p>
                 </div>
@@ -196,7 +181,7 @@
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>
                 </div>
                 <div>
-                  <strong>Email</strong>
+                  <strong>{{ t('about.email') }}</strong>
                   <p>mary_cecy_ma@hotmail.com</p>
                 </div>
               </div>
@@ -216,12 +201,17 @@
               </a>
             </div>
           </div>
-          <div class="nosotros-visual">
-            <div class="image-mosaic">
-              <img src="/imagenes/logo-principal.jpg" alt="Idea Ancestral" class="mosaic-main" />
-              <img src="/imagenes/masc1.jpg" alt="Artesanía" class="mosaic-small mosaic-1" />
-              <img src="/imagenes/sol madera.jpg" alt="Artesanía" class="mosaic-small mosaic-2" />
-            </div>
+          <div class="nosotros-mapa">
+            <iframe 
+              src="https://maps.google.com/maps?q=Mercado+Artesanal+La+Mariscal,+Jorge+Washington+y+Juan+Leon+Mera,+Quito,+Ecuador&t=&z=16&ie=UTF8&iwloc=&output=embed"
+              width="100%" 
+              height="100%" 
+              style="border:0; border-radius: var(--radius-md);" 
+              allowfullscreen="" 
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              :title="t('about.ubicacion')"
+            ></iframe>
           </div>
         </div>
       </div>
@@ -236,19 +226,20 @@
               <span class="logo-icon">IA</span>
               <span class="logo-text">Ideancestral</span>
             </div>
-            <p>Artesanías hechas a mano con amor y tradición desde Ecuador.</p>
+            <p>{{ t('footer.slogan') }}</p>
           </div>
           <div class="footer-links-grid">
             <div>
-              <h4>Navegación</h4>
+              <h4>{{ t('footer.navegacion') }}</h4>
               <ul>
-                <li><a href="#inicio" @click.prevent="scrollTo('inicio')">Inicio</a></li>
-                <li><a href="#catalogo" @click.prevent="scrollTo('catalogo')">Catálogo</a></li>
-                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">Ubicación</a></li>
+                <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
+                <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
+                <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
+                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
               </ul>
             </div>
             <div>
-              <h4>Contacto</h4>
+              <h4>{{ t('footer.contacto') }}</h4>
               <ul>
                 <li>(02) 2227781</li>
                 <li>+593 998 956 361</li>
@@ -258,97 +249,172 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <p>Idea Ancestral &copy; {{ new Date().getFullYear() }}. Todos los derechos reservados.</p>
+          <p>Idea Ancestral &copy; {{ new Date().getFullYear() }}. {{ t('footer.derechos') }}</p>
         </div>
       </div>
     </footer>
 
+    <!-- Carrito Sidebar -->
+    <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
+    <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
+      <div class="carrito-header">
+        <h3>{{ t('cart.miCarrito') }} <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
+        <button class="carrito-close" @click="toggleCarrito">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div v-if="carrito.length === 0" class="carrito-empty">
+        <p>{{ t('cart.vacio') }}</p>
+        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">{{ t('cart.explorar') }}</router-link>
+      </div>
+      <div v-else class="carrito-body">
+        <div class="carrito-items">
+          <div v-for="item in carrito" :key="item.id" class="carrito-item">
+            <img :src="item.imagen" :alt="item.nombre" class="carrito-item-img" @error="handleImageError" />
+            <div class="carrito-item-info">
+              <h4>{{ item.nombre }}</h4>
+              <span class="carrito-item-precio">${{ item.precio.toFixed(2) }}</span>
+              <div class="carrito-item-qty">
+                <button @click="actualizarCantidad(item.id, item.cantidad - 1)">−</button>
+                <span>{{ item.cantidad }}</span>
+                <button @click="actualizarCantidad(item.id, item.cantidad + 1)">+</button>
+              </div>
+            </div>
+            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)">×</button>
+          </div>
+        </div>
+        <div class="carrito-footer">
+          <div class="carrito-total">
+            <span>{{ t('cart.total') }}</span>
+            <strong>${{ carritoTotal.toFixed(2) }}</strong>
+          </div>
+          <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
+            {{ t('cart.enviarWhatsApp') }}
+          </button>
+          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">{{ t('cart.vaciar') }}</button>
+        </div>
+      </div>
+    </aside>
+
     <!-- WhatsApp floating button -->
-    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float">
+    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float" :title="t('whatsapp.escribenos')">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useCarrito } from '../composables/useCarrito'
+import { useLanguageStore } from '../stores/language'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
 const WHATSAPP_NUMBER = '593998956361'
 
 export default {
   name: 'CatalogoView',
+  components: { ThemeToggle, LanguageSwitcher },
   setup() {
     const router = useRouter()
-    const productos = ref([])
-    const categorias = ref([])
-    const loading = ref(true)
-    const categoriaFiltro = ref(null)
+    const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
+    const { t } = useLanguageStore()
     const menuOpen = ref(false)
     const isScrolled = ref(false)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const whatsappGeneral = computed(() => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoGeneral'))}`)
 
-    const whatsappGeneral = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hola, me interesa conocer más sobre sus artesanías.')}`
+    // Categorias desde API (para cards de navegacion)
+    const categoriasParaMostrar = ref([])
+    const categoriasPorNombreImagen = {
+      'Madera': '/imagenes/sol madera.jpg',
+      'Cerámica': '/imagenes/vasos.jpg',
+      'Ceramica': '/imagenes/vasos.jpg',
+      'Mascaras': '/imagenes/diablo PRINCIPAL.jpg',
+      'Nacimientos': '/imagenes/nac1.jpg',
+      'Otros': '/imagenes/pulseras_varias.jpg',
+      'Tejidos': '/imagenes/logo-principal.jpg'
+    }
+    const imagenCategoria = (cat) => {
+      if (cat.imagen_url) {
+        return cat.imagen_url.startsWith('http') ? cat.imagen_url : `${API_URL.replace('/api', '')}${cat.imagen_url}`
+      }
+      return categoriasPorNombreImagen[cat.nombre] || '/imagenes/logo-principal.jpg'
+    }
 
-    const productosFiltrados = computed(() => {
-      if (!categoriaFiltro.value) return productos.value
-      return productos.value.filter(p => p.categoria_id === categoriaFiltro.value)
-    })
+    // Cargar categorias desde API
+    const cargarCategorias = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/categorias`)
+        categoriasParaMostrar.value = res.data || []
+      } catch {
+        categoriasParaMostrar.value = []
+      }
+    }
+
+    // Promociones desde API (con fallback local)
+    const promociones = ref([])
+    const promocionesFallback = [
+      { id: 'navidad', nombre: 'Navidad y Fin de Año', temporada: 'Diciembre', tema: 'navidad', imagen: '/imagenes/promo1.jpg' },
+      { id: 'madre', nombre: 'Día de la Madre', temporada: 'Mayo', tema: 'madre', imagen: '/imagenes/promo2.jpg' },
+      { id: 'cultural', nombre: 'Fiestas de Quito', temporada: 'Diciembre', tema: 'cultural', imagen: '/imagenes/promo3.jpg' },
+      { id: 'inti', nombre: 'Inti Raymi - Fiesta del Sol', temporada: 'Junio', tema: 'inti', imagen: '/imagenes/promo4.jpg' }
+    ]
+    const cargarPromociones = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/promociones`)
+        promociones.value = (res.data || []).map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          temporada: p.temporada,
+          tema: p.tema || 'general',
+          imagen: p.imagen_url ? (p.imagen_url.startsWith('http') ? p.imagen_url : `${API_URL.replace('/api', '')}${p.imagen_url}`) : '/imagenes/logo-principal.jpg'
+        }))
+        if (promociones.value.length === 0) promociones.value = promocionesFallback
+      } catch {
+        promociones.value = promocionesFallback
+      }
+    }
+
+    // Banner con imagenes flotantes
+    const bannerImagesSrc = [
+      '/imagenes/masc1.jpg', '/imagenes/nac2.jpg',
+      '/imagenes/vasos.jpg', '/imagenes/caballo.jpg'
+    ]
+    const bannerImages = ref([])
+
+    const initBannerImages = () => {
+      const srcs = [...bannerImagesSrc, ...bannerImagesSrc, ...bannerImagesSrc]
+        .sort(() => Math.random() - 0.5)
+      bannerImages.value = srcs.map((src, i) => ({
+        backgroundImage: `url('${src}')`,
+        left: `${(i % 4) * 25 + (Math.random() * 10 - 5)}%`,
+        top: `${Math.floor(i / 4) * 30 + (Math.random() * 15 - 7)}%`,
+        width: `${240 + Math.random() * 160}px`,
+        height: `${190 + Math.random() * 130}px`,
+        animationDuration: `${18 + Math.random() * 14}s`,
+        animationDelay: `-${Math.random() * 18}s`,
+        transform: `rotate(${Math.round(-12 + Math.random() * 24)}deg)`
+      }))
+    }
 
     const handleScroll = () => {
       isScrolled.value = window.scrollY > 50
-    }
-
-    const obtenerProductos = async () => {
-      try {
-        loading.value = true
-        const params = categoriaFiltro.value ? { categoria_id: categoriaFiltro.value } : {}
-        const response = await axios.get(`${API_URL}/productos`, { params })
-        productos.value = response.data
-      } catch (error) {
-        console.error('Error obteniendo productos:', error)
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const obtenerCategorias = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/categorias`)
-        categorias.value = response.data
-      } catch (error) {
-        console.error('Error obteniendo categorías:', error)
-      }
-    }
-
-    const filtrarPorCategoria = (categoriaId) => {
-      categoriaFiltro.value = categoriaId
-      obtenerProductos()
-    }
-
-    const obtenerImagenPrincipal = (producto) => {
-      if (producto.imagenes && producto.imagenes.length > 0) {
-        const principal = producto.imagenes.find(img => img.es_principal)
-        const img = principal || producto.imagenes[0]
-        return `${API_URL.replace('/api', '')}${img.url}`
-      }
-      return '/imagenes/logo-principal.jpg'
     }
 
     const handleImageError = (event) => {
       event.target.src = '/imagenes/logo-principal.jpg'
     }
 
-    const verDetalle = (productoId) => {
-      router.push(`/producto/${productoId}`)
-    }
-
     const scrollTo = (elementId) => {
       const element = document.getElementById(elementId)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
+        const offset = 80
+        const y = element.getBoundingClientRect().top + window.pageYOffset - offset
+        window.scrollTo({ top: y, behavior: 'smooth' })
       }
       menuOpen.value = false
     }
@@ -357,39 +423,84 @@ export default {
       menuOpen.value = !menuOpen.value
     }
 
+    // WhatsApp helpers
+    const whatsappProducto = (nombre) => {
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoProducto', { nombre }))}`
+    }
+
+    const whatsappPromo = (nombre) => {
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoPromo', { nombre }))}`
+    }
+
+    // Long press para acceso admin
+    let longPressTimer = null
+
+    const iniciarLongPress = () => {
+      longPressTimer = setTimeout(() => {
+        router.push('/admin')
+      }, 5000)
+    }
+
+    const cancelarLongPress = () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer)
+        longPressTimer = null
+      }
+    }
+
     onMounted(() => {
-      obtenerCategorias()
-      obtenerProductos()
+      initBannerImages()
+      cargarCategorias()
+      cargarPromociones()
       window.addEventListener('scroll', handleScroll)
     })
 
     onUnmounted(() => {
       window.removeEventListener('scroll', handleScroll)
+      cancelarLongPress()
     })
 
     return {
-      productos: productosFiltrados,
-      categorias,
-      loading,
-      categoriaFiltro,
+      t,
       menuOpen,
       isScrolled,
       whatsappGeneral,
-      filtrarPorCategoria,
-      obtenerImagenPrincipal,
+      categoriasParaMostrar,
+      imagenCategoria,
+      promociones,
+      bannerImages,
       handleImageError,
-      verDetalle,
       scrollTo,
-      toggleMenu
+      toggleMenu,
+      whatsappProducto,
+      whatsappPromo,
+      iniciarLongPress,
+      cancelarLongPress,
+      carrito,
+      carritoAbierto,
+      carritoCount,
+      carritoTotal,
+      toggleCarrito,
+      actualizarCantidad,
+      quitarDelCarrito,
+      vaciarCarrito,
+      enviarPedidoWhatsApp
     }
   }
 }
 </script>
 
 <style scoped>
+/* ===== BASE ===== */
 .catalogo-view {
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 /* ===== HEADER ===== */
@@ -399,14 +510,14 @@ export default {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.85);
+  background: var(--color-header-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: var(--transition);
 }
 
 .header.scrolled {
-  background: rgba(255,255,255,0.95);
+  background: var(--color-header-bg-scrolled);
   box-shadow: var(--shadow-sm);
 }
 
@@ -429,14 +540,17 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   background: var(--color-primary);
   color: var(--color-white);
-  border-radius: 8px;
+  border-radius: 6px;
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
 
 .logo-text {
@@ -449,7 +563,7 @@ export default {
 .nav-links {
   display: flex;
   list-style: none;
-  gap: 0.5rem;
+  gap: 0.25rem;
   align-items: center;
 }
 
@@ -467,16 +581,10 @@ export default {
   background: var(--color-bg-warm);
 }
 
-.nav-whatsapp {
-  display: flex !important;
+.nav-utilities {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  color: #25D366 !important;
-}
-
-.nav-admin {
-  color: var(--color-text-muted) !important;
-  font-size: 0.85rem !important;
+  gap: 0.5rem;
 }
 
 .menu-toggle {
@@ -509,7 +617,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 120px 24px 80px;
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 50%, #EDE0D4 100%);
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 50%, var(--color-bg-warm) 100%);
   overflow: hidden;
 }
 
@@ -550,7 +658,7 @@ export default {
 }
 
 .hero-description {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1.9;
   color: var(--color-text-light);
   margin-bottom: 2.5rem;
@@ -568,6 +676,11 @@ export default {
   font-size: 16px;
 }
 
+.btn-sm {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
 .hero-image-wrapper {
   display: flex;
   justify-content: center;
@@ -575,12 +688,12 @@ export default {
 
 .hero-image-frame {
   position: relative;
-  width: 420px;
-  height: 420px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 6px solid rgba(255,255,255,0.8);
+  border: 6px solid var(--color-frame-border);
 }
 
 .hero-image-frame img {
@@ -599,16 +712,28 @@ export default {
 
 .banner-bg-images {
   position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  inset: -60px;
 }
 
 .banner-bg-img {
+  position: absolute;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.3);
+  filter: brightness(0.35);
+  border-radius: 10px;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
+
+.drift-1 { animation-name: drift1; }
+.drift-2 { animation-name: drift2; }
+.drift-3 { animation-name: drift3; }
+.drift-4 { animation-name: drift4; }
+
+@keyframes drift1 { 0%, 100% { translate: 0 0; } 50% { translate: 40px -30px; } }
+@keyframes drift2 { 0%, 100% { translate: 0 0; } 50% { translate: -35px 25px; } }
+@keyframes drift3 { 0%, 100% { translate: 0 0; } 33% { translate: 25px 30px; } 66% { translate: -30px -20px; } }
+@keyframes drift4 { 0%, 100% { translate: 0 0; } 50% { translate: -25px -35px; } }
 
 .banner-overlay {
   position: absolute;
@@ -629,15 +754,6 @@ export default {
   text-transform: uppercase;
   color: var(--color-accent);
   margin-bottom: 1rem;
-}
-
-.banner-title-cursive {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 4rem;
-  color: var(--color-accent-light);
-  margin-bottom: 0.25rem;
-  font-weight: 400;
 }
 
 .banner-title-main {
@@ -672,90 +788,197 @@ export default {
   margin-top: 1rem;
 }
 
-/* ===== CATEGORÍAS ===== */
-.categorias-section {
-  padding: 3rem 0 1rem;
+/* ===== SECTION HEADER (reutilizable) ===== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 400px;
+  margin: 1.5rem auto 0;
+  padding: 0.6rem 1rem;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+.search-bar:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(123, 63, 0, 0.1);
+}
+.search-bar svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+  color: var(--color-text);
+}
+.search-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--color-secondary);
+  margin-bottom: 0.75rem;
 }
 
 .section-header h2 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .section-header p {
   color: var(--color-text-muted);
-  font-size: 1rem;
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
 }
 
-.categorias-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
+/* ===== CATEGORIAS NAV ===== */
+.categorias-nav-section {
+  padding: 5rem 0 3rem;
 }
 
-.filter-chip {
-  padding: 0.6rem 1.4rem;
-  border: 1.5px solid var(--color-gray-light);
-  background: var(--color-white);
-  color: var(--color-text);
-  border-radius: 100px;
+.categorias-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+
+.categoria-nav-card {
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  font-family: var(--font-sans);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  padding: 0;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.filter-chip:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+.categoria-nav-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
 }
 
-.filter-chip.active {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-white);
+.cat-nav-img {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
 }
 
-/* ===== CATÁLOGO ===== */
-.catalogo-section {
-  padding: 2rem 0 5rem;
-  min-height: 60vh;
+.cat-nav-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
+.categoria-nav-card:hover .cat-nav-img img {
+  transform: scale(1.08);
+}
+
+.categoria-nav-card h3 {
+  font-size: 1rem;
+  color: var(--color-text);
+  margin: 1rem 0 0.25rem;
+  font-weight: 600;
+}
+
+/* ===== CATEGORIA SECTION ===== */
+.categoria-section {
+  padding: 5rem 0;
+}
+
+.categoria-section.bg-alt {
+  background: var(--color-bg-warm);
+}
+
+.categoria-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.categoria-header-text {
+  max-width: 600px;
+}
+
+.categoria-header-text .section-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.categoria-header-text h2 {
+  font-size: 2rem;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+}
+
+.categoria-header-text p {
+  color: var(--color-text-light);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.categoria-header-deco {
+  flex-shrink: 0;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(to right, var(--color-accent), transparent);
+  margin-top: 1.5rem;
+}
+
+/* ===== PRODUCTOS GRID ===== */
 .productos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
 .producto-card {
-  background: var(--color-white);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
-  cursor: pointer;
   animation: fadeInUp 0.5s ease forwards;
   opacity: 0;
 }
 
 .producto-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
 .producto-image {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 300px;
   overflow: hidden;
   background-color: var(--color-gray-light);
 }
@@ -768,169 +991,157 @@ export default {
 }
 
 .producto-card:hover .producto-image img {
-  transform: scale(1.08);
-}
-
-.producto-image-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.producto-card:hover .producto-image-overlay {
-  opacity: 1;
-}
-
-.ver-detalle-btn {
-  padding: 0.6rem 1.5rem;
-  background: var(--color-white);
-  color: var(--color-text);
-  border-radius: 100px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.badge-destacado {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: linear-gradient(135deg, #D4A76A, #C4853A);
-  color: var(--color-white);
-  padding: 0.35rem 0.9rem;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: scale(1.05);
 }
 
 .producto-info {
-  padding: 1.25rem 1.5rem 1.5rem;
+  padding: 1.5rem;
 }
 
-.producto-categoria-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--color-secondary);
+.producto-nombre-link {
+  text-decoration: none;
+  color: inherit;
 }
-
+.producto-nombre-link:hover .producto-nombre {
+  color: var(--color-primary);
+}
+.producto-image a {
+  display: block;
+  height: 100%;
+}
 .producto-nombre {
-  font-size: 1.15rem;
-  margin: 0.4rem 0 0.6rem;
+  font-size: 1.1rem;
   color: var(--color-text);
   font-weight: 600;
   line-height: 1.4;
+  margin-bottom: 0.5rem;
 }
 
-.producto-meta {
-  margin-bottom: 1rem;
-}
-
-.meta-item {
-  font-size: 0.85rem;
+.producto-material {
+  font-size: 0.88rem;
   color: var(--color-text-muted);
-}
-
-.producto-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-gray-light);
+  margin-bottom: 1rem;
+  line-height: 1.5;
 }
 
 .producto-precio {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-primary);
+  margin-top: 0.5rem;
 }
 
-.producto-ver {
-  display: flex;
+/* ===== CATEGORIA ACTIONS ===== */
+.categoria-actions {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+.btn-ver-todos {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 8px;
+  padding: 0.85rem 2rem;
+  background: transparent;
   color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 100px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
   transition: var(--transition);
 }
 
-.producto-card:hover .producto-ver {
-  gap: 8px;
+.btn-ver-todos:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
 }
 
-/* Loading / Empty */
-.loading-state {
-  text-align: center;
+/* ===== PROMOCIONES ===== */
+.promociones-section {
   padding: 5rem 0;
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-warm) 100%);
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-gray-light);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 0.8s linear infinite;
+.promos-grid-horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.promo-card-horizontal {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.loading-state p, .empty-state p {
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
+.promo-card-horizontal:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
-.empty-state {
-  text-align: center;
-  padding: 5rem 0;
-  color: var(--color-text-muted);
+.promo-card-horizontal .promo-image {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
 }
 
-.empty-state svg {
-  margin: 0 auto 1rem;
+.promo-card-horizontal .promo-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
-.empty-state .btn {
-  margin-top: 1rem;
+.promo-card-horizontal:hover .promo-image img {
+  transform: scale(1.05);
+}
+
+.promo-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 0.35rem 0.85rem;
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.promo-navidad .promo-badge { background: #C0392B; }
+.promo-madre .promo-badge { background: #E91E63; }
+.promo-cultural .promo-badge { background: #7B3F00; }
+.promo-inti .promo-badge { background: #E67E22; }
+
+.promo-card-horizontal h3 {
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ===== NOSOTROS ===== */
 .nosotros-section {
-  padding: 6rem 0;
-  background: var(--color-white);
+  padding: 5rem 0;
+  background: var(--color-surface);
 }
 
 .nosotros-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: center;
-}
-
-.nosotros-info h2 {
-  font-size: 2.5rem;
-  color: var(--color-text);
-  margin-bottom: 1rem;
-}
-
-.nosotros-desc {
-  color: var(--color-text-light);
-  font-size: 1.05rem;
-  line-height: 1.8;
-  margin-bottom: 2rem;
+  align-items: start;
 }
 
 .info-cards {
@@ -944,22 +1155,23 @@ export default {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  padding: 1rem;
+  padding: 1.25rem;
   background: var(--color-bg);
   border-radius: var(--radius-md);
 }
 
 .info-icon {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-primary);
   color: var(--color-white);
-  border-radius: 10px;
+  border-radius: 8px;
 }
+.info-icon svg { width: 16px; height: 16px; }
 
 .info-card strong {
   display: block;
@@ -1007,41 +1219,18 @@ export default {
   background: #D1F5E0;
 }
 
-.nosotros-visual {
-  position: relative;
-}
-
-.image-mosaic {
-  position: relative;
-  height: 500px;
-}
-
-.mosaic-main {
-  width: 85%;
-  height: 400px;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
+.nosotros-mapa {
+  width: 100%;
+  height: 450px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
 
-.mosaic-small {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  border: 4px solid var(--color-white);
-  box-shadow: var(--shadow-md);
-}
-
-.mosaic-1 {
-  bottom: 0;
-  right: 0;
-}
-
-.mosaic-2 {
-  bottom: 80px;
-  right: 120px;
+.nosotros-mapa iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ===== FOOTER ===== */
@@ -1063,7 +1252,13 @@ export default {
 }
 
 .footer-brand .logo-text {
-  color: var(--color-white);
+  color: #FFFFFF;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .footer-brand > p {
@@ -1079,7 +1274,7 @@ export default {
 }
 
 .footer-links-grid h4 {
-  color: var(--color-white);
+  color: #FFFFFF;
   margin-bottom: 1rem;
   font-size: 1rem;
 }
@@ -1133,12 +1328,33 @@ export default {
   box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
 }
 
+/* ===== LOADING / EMPTY ===== */
+.loading-state {
+  text-align: center;
+  padding: 5rem 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-gray-light);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .hero-title { font-size: 2.8rem; }
-  .hero-image-frame { width: 350px; height: 350px; }
+  .hero-image-frame { width: 340px; height: 340px; }
   .banner-title-main { font-size: 3.5rem; }
-  .banner-title-cursive { font-size: 3rem; }
+  .categorias-nav-grid { grid-template-columns: repeat(3, 1fr); }
+  .productos-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -1148,7 +1364,7 @@ export default {
     right: 0;
     width: 280px;
     height: 100vh;
-    background: var(--color-white);
+    background: var(--color-surface);
     flex-direction: column;
     padding: 5rem 2rem 2rem;
     box-shadow: var(--shadow-xl);
@@ -1175,26 +1391,36 @@ export default {
   .hero-title { font-size: 2.2rem; }
   .hero-description { margin: 0 auto 2rem; }
   .hero-actions { justify-content: center; }
-
   .hero-image-frame { width: 260px; height: 260px; margin: 0 auto; }
 
-  .banner-title-cursive { font-size: 2.5rem; }
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
   .banner-subtitle { font-size: 1.2rem; }
   .banner-central { padding: 4rem 20px; }
 
-  .nosotros-grid { grid-template-columns: 1fr; }
-  .image-mosaic { height: 350px; }
-  .mosaic-main { width: 100%; height: 300px; }
-  .mosaic-small { width: 120px; height: 120px; }
-  .mosaic-2 { right: 60px; bottom: 30px; }
+  .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .categoria-nav-card:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
 
-  .footer-top { grid-template-columns: 1fr; gap: 2rem; }
+  .categoria-header { flex-direction: column; }
+  .categoria-header-deco { display: none; }
 
   .productos-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
   }
+
+  .producto-image { height: 220px; }
+
+  .promos-grid-horizontal { grid-template-columns: repeat(2, 1fr); }
+
+  .nosotros-grid { grid-template-columns: 1fr; }
+  .nosotros-mapa { height: 300px; }
+
+  .section-header h2 { font-size: 1.8rem; }
+  .categoria-section { padding: 3.5rem 0; }
+  .categorias-nav-section { padding: 3.5rem 0 2rem; }
+  .promociones-section { padding: 3.5rem 0; }
+
+  .footer-top { grid-template-columns: 1fr; gap: 2rem; }
 }
 
 @media (max-width: 480px) {
@@ -1202,8 +1428,213 @@ export default {
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; }
   .banner-title-main { font-size: 2rem; }
+
+  .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .categoria-nav-card:last-child { grid-column: span 2; max-width: 100%; }
+
   .productos-grid { grid-template-columns: 1fr; }
+  .producto-image { height: 260px; }
+
+  .promos-grid-horizontal { grid-template-columns: 1fr; }
+  .promo-card-horizontal .promo-image { height: 200px; }
+
   .nosotros-social { flex-direction: column; }
   .footer-links-grid { grid-template-columns: 1fr; }
+  .nosotros-mapa { height: 250px; }
+}
+
+/* Carrito */
+.cart-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+.cart-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-bg-warm);
+}
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--color-secondary);
+  color: var(--color-white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carrito-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.carrito-overlay.visible { opacity: 1; visibility: visible; }
+
+.carrito-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--color-surface);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 30px rgba(0,0,0,0.15);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.carrito-sidebar.open { transform: translateX(0); }
+
+.carrito-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-header h3 { font-size: 1.1rem; color: var(--color-text); margin: 0; }
+.carrito-count { font-weight: 400; color: var(--color-text-muted); font-size: 0.9rem; }
+.carrito-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+.carrito-close:hover { background: var(--color-bg); color: var(--color-text); }
+
+.carrito-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--color-text-muted);
+}
+.carrito-empty p { font-size: 1.05rem; font-weight: 600; color: var(--color-text-light); margin: 0; }
+
+.carrito-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.carrito-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+
+.carrito-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-gray-light);
+}
+.carrito-item:last-child { border-bottom: none; }
+.carrito-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.carrito-item-info { flex: 1; min-width: 0; }
+.carrito-item-info h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.carrito-item-precio { font-size: 0.85rem; color: var(--color-primary); font-weight: 600; }
+.carrito-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.carrito-item-qty button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--color-gray-light);
+  background: var(--color-surface);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: var(--transition);
+}
+.carrito-item-qty button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.carrito-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: var(--transition);
+  font-size: 1.2rem;
+}
+.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+
+.carrito-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-gray-light);
+  background: var(--color-bg);
+}
+.carrito-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.carrito-total span { color: var(--color-text-light); }
+.carrito-total strong { font-size: 1.4rem; color: var(--color-primary); }
+.carrito-btn-pedido {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+}
+.carrito-btn-vaciar { width: 100%; margin-top: 0.5rem; padding: 0.6rem; font-size: 0.85rem; }
+
+@media (max-width: 768px) {
+  .carrito-sidebar { width: 100%; max-width: 100vw; }
 }
 </style>
