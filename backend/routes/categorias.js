@@ -1,6 +1,8 @@
 import express from 'express';
 import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sanitizeString } from '../utils/sanitize.js';
+import { logAudit } from '../middleware/auditLog.js';
 
 const router = express.Router();
 
@@ -44,7 +46,10 @@ router.get('/:id', async (req, res) => {
 // POST /api/categorias - Crear nueva categoría (requiere autenticación)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { nombre, descripcion, imagen_url, activa } = req.body;
+    const nombre = sanitizeString(req.body.nombre || '');
+    const descripcion = req.body.descripcion ? sanitizeString(req.body.descripcion) : null;
+    const imagen_url = req.body.imagen_url ? sanitizeString(req.body.imagen_url) : null;
+    const activa = req.body.activa;
 
     if (!nombre) {
       return res.status(400).json({ error: 'El nombre es requerido' });
@@ -56,6 +61,7 @@ router.post('/', authenticateToken, async (req, res) => {
       RETURNING *
     `, [nombre, descripcion, imagen_url, activa]);
 
+    await logAudit({ adminId: req.user.id, action: 'create', entity: 'categorias', entityId: result.rows[0].id, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
     if (error.code === '23505') { // Violación de unique constraint
@@ -70,7 +76,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, imagen_url, activa } = req.body;
+    const nombre = req.body.nombre != null ? sanitizeString(req.body.nombre) : null;
+    const descripcion = req.body.descripcion != null ? sanitizeString(req.body.descripcion) : null;
+    const imagen_url = req.body.imagen_url != null ? sanitizeString(req.body.imagen_url) : null;
+    const activa = req.body.activa;
 
     const result = await pool.query(`
       UPDATE categorias
@@ -87,6 +96,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Categoría no encontrada' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'update', entity: 'categorias', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando categoría:', error);
@@ -104,6 +114,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Categoría no encontrada' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'delete', entity: 'categorias', entityId: parseInt(id), req });
     res.json({ message: 'Categoría eliminada correctamente' });
   } catch (error) {
     console.error('Error eliminando categoría:', error);

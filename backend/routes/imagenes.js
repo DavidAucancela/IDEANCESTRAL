@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import pool from '../database/connection.js';
 import fs from 'fs';
 import { authenticateToken } from '../middleware/auth.js';
+import { validateImageMime } from '../utils/validateMime.js';
+import { logAudit } from '../middleware/auditLog.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,10 +51,16 @@ router.post('/', authenticateToken, upload.single('imagen'), async (req, res) =>
       return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
     }
 
+    // Validación MIME real (magic bytes) - no confiar en extensión ni Content-Type del cliente
+    const mimeCheck = await validateImageMime(req.file.path);
+    if (!mimeCheck.valid) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Tipo de archivo no permitido. Solo imágenes JPEG, PNG, GIF o WebP válidas.' });
+    }
+
     const { producto_id, es_principal, orden } = req.body;
 
     if (!producto_id) {
-      // Eliminar archivo si no hay producto_id
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ error: 'producto_id es requerido' });
     }
@@ -73,6 +81,7 @@ router.post('/', authenticateToken, upload.single('imagen'), async (req, res) =>
       RETURNING *
     `, [producto_id, url, orden || 0, es_principal === 'true' || es_principal === true]);
 
+    await logAudit({ adminId: req.user.id, action: 'create', entity: 'imagenes', entityId: result.rows[0].id, details: { producto_id }, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error subiendo imagen:', error);
@@ -106,6 +115,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       fs.unlinkSync(filePath);
     }
 
+    await logAudit({ adminId: req.user.id, action: 'delete', entity: 'imagenes', entityId: parseInt(id), req });
     res.json({ message: 'Imagen eliminada correctamente' });
   } catch (error) {
     console.error('Error eliminando imagen:', error);
@@ -143,6 +153,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Imagen no encontrada' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'update', entity: 'imagenes', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando imagen:', error);

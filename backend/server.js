@@ -8,6 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import pino from 'pino';
 import pool from './database/connection.js';
+import { httpsRedirect } from './middleware/httpsRedirect.js';
 import productosRoutes from './routes/productos.js';
 import categoriasRoutes from './routes/categorias.js';
 import imagenesRoutes from './routes/imagenes.js';
@@ -36,11 +37,13 @@ if (isWeakSecret) {
   process.exit(1);
 }
 
-// --- VALIDACIÓN CRÍTICA: DB_PASSWORD ---
-const WEAK_DB_PASSWORDS = ['admin', 'postgres', 'password', '123456', 'root'];
-if (WEAK_DB_PASSWORDS.includes((process.env.DB_PASSWORD || '').toLowerCase())) {
-  logger.fatal('DB_PASSWORD no puede ser una contraseña débil (admin, postgres, etc.). Configura una contraseña segura en backend/.env');
-  process.exit(1);
+// --- VALIDACIÓN CRÍTICA: DB_PASSWORD (omitir si se usa DATABASE_URL) ---
+if (!process.env.DATABASE_URL) {
+  const WEAK_DB_PASSWORDS = ['admin', 'postgres', 'password', '123456', 'root'];
+  if (WEAK_DB_PASSWORDS.includes((process.env.DB_PASSWORD || '').toLowerCase())) {
+    logger.fatal('DB_PASSWORD no puede ser una contraseña débil (admin, postgres, etc.). Configura una contraseña segura en backend/.env');
+    process.exit(1);
+  }
 }
 
 // CORS - orígenes permitidos
@@ -54,6 +57,9 @@ if (process.env.NODE_ENV !== 'production') {
     if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
   }
 }
+
+// --- HTTPS obligatorio en producción ---
+app.use(httpsRedirect);
 
 // --- HELMET: headers de seguridad ---
 app.use(helmet({
@@ -134,6 +140,16 @@ app.use('/api/promociones', promocionesRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API funcionando correctamente' });
 });
+
+// --- Producción: servir frontend estático (despliegue monolítico) ---
+const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Manejo de errores centralizado
 app.use((err, req, res, next) => {

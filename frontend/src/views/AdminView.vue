@@ -354,6 +354,7 @@ export default {
     const isAuthenticated = ref(false)
     const usuario = ref(null)
     const token = ref(localStorage.getItem('admin_token'))
+    const refreshToken = ref(localStorage.getItem('admin_refresh_token'))
     const loading = ref(false)
     const error = ref('')
     
@@ -405,6 +406,20 @@ export default {
       activa: true
     })
 
+    // Renovar token con refresh token
+    const tryRefreshToken = async () => {
+      if (!refreshToken.value) return false
+      try {
+        const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken: refreshToken.value })
+        token.value = response.data.token
+        localStorage.setItem('admin_token', token.value)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+        return true
+      } catch {
+        return false
+      }
+    }
+
     // Configurar axios con token y verificar sesión
     const configurarAxios = async () => {
       if (token.value) {
@@ -415,11 +430,18 @@ export default {
           isAuthenticated.value = true
           cargarDatos()
         } catch (err) {
-          // Token inválido o expirado — limpiar sesión
-          token.value = null
-          localStorage.removeItem('admin_token')
-          delete axios.defaults.headers.common['Authorization']
-          isAuthenticated.value = false
+          if (err.response?.status === 403 && await tryRefreshToken()) {
+            try {
+              const retry = await axios.get(`${API_URL}/auth/me`)
+              usuario.value = retry.data.usuario
+              isAuthenticated.value = true
+              cargarDatos()
+            } catch {
+              logout()
+            }
+          } else {
+            logout()
+          }
         }
       }
     }
@@ -431,6 +453,10 @@ export default {
         const response = await axios.post(`${API_URL}/auth/login`, loginForm)
         token.value = response.data.token
         usuario.value = response.data.usuario
+        if (response.data.refreshToken) {
+          refreshToken.value = response.data.refreshToken
+          localStorage.setItem('admin_refresh_token', response.data.refreshToken)
+        }
         localStorage.setItem('admin_token', token.value)
         axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
         isAuthenticated.value = true
@@ -444,8 +470,10 @@ export default {
 
     const logout = () => {
       token.value = null
+      refreshToken.value = null
       usuario.value = null
       localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_refresh_token')
       delete axios.defaults.headers.common['Authorization']
       isAuthenticated.value = false
     }

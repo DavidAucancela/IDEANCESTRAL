@@ -2,6 +2,8 @@ import express from 'express';
 import { z } from 'zod';
 import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sanitizeString } from '../utils/sanitize.js';
+import { logAudit } from '../middleware/auditLog.js';
 
 const router = express.Router();
 
@@ -48,9 +50,12 @@ router.get('/', async (req, res) => {
     }
 
     if (buscar && buscar.trim()) {
-      whereClause += ` AND (p.nombre ILIKE $${paramCount} OR p.descripcion ILIKE $${paramCount} OR p.material ILIKE $${paramCount})`;
-      params.push(`%${buscar.trim()}%`);
-      paramCount++;
+      const busquedaSegura = sanitizeString(buscar);
+      if (busquedaSegura) {
+        whereClause += ` AND (p.nombre ILIKE $${paramCount} OR p.descripcion ILIKE $${paramCount} OR p.material ILIKE $${paramCount})`;
+        params.push(`%${busquedaSegura}%`);
+        paramCount++;
+      }
     }
 
     const ordenValido = { precio_asc: 'p.precio ASC', precio_desc: 'p.precio DESC', nombre: 'p.nombre ASC', reciente: 'p.created_at DESC' };
@@ -142,7 +147,12 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!parsed.success) {
       return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
     }
-    const { nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado } = parsed.data;
+    const data = parsed.data;
+    const nombre = sanitizeString(data.nombre);
+    const descripcion = data.descripcion ? sanitizeString(data.descripcion) : null;
+    const material = data.material ? sanitizeString(data.material) : null;
+    const peso = data.peso ? sanitizeString(data.peso) : null;
+    const { precio, categoria_id, publicado, destacado } = data;
 
     const result = await pool.query(`
       INSERT INTO productos (nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado)
@@ -150,6 +160,7 @@ router.post('/', authenticateToken, async (req, res) => {
       RETURNING *
     `, [nombre, descripcion ?? null, precio, material ?? null, peso ?? null, categoria_id || null, publicado ?? true, destacado ?? false]);
 
+    await logAudit({ adminId: req.user.id, action: 'create', entity: 'productos', entityId: result.rows[0].id, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creando producto:', error);
@@ -161,7 +172,11 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado } = req.body;
+    const nombre = req.body.nombre != null ? sanitizeString(req.body.nombre) : null;
+    const descripcion = req.body.descripcion != null ? sanitizeString(req.body.descripcion) : null;
+    const material = req.body.material != null ? sanitizeString(req.body.material) : null;
+    const peso = req.body.peso != null ? sanitizeString(req.body.peso) : null;
+    const { precio, categoria_id, publicado, destacado } = req.body;
 
     const result = await pool.query(`
       UPDATE productos
@@ -182,6 +197,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'update', entity: 'productos', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando producto:', error);
@@ -199,6 +215,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'delete', entity: 'productos', entityId: parseInt(id), req });
     res.json({ message: 'Producto eliminado correctamente' });
   } catch (error) {
     console.error('Error eliminando producto:', error);
