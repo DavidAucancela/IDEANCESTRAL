@@ -42,6 +42,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API funcionando correctamente' });
 });
 
+// En producción: servir el frontend compilado (Vue SPA)
+const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
 // Manejo de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
