@@ -1,10 +1,18 @@
 # Funciona con contexto raíz (Render) y con contexto ./backend (docker-compose)
-# docker-compose usa: context: .  dockerfile: backend/Dockerfile
-FROM node:20-alpine
+# Incluye frontend compilado para despliegue monolítico
+FROM node:20-alpine AS frontend-builder
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ .
+ENV VITE_API_URL=/api
+RUN npm run build
 
+FROM node:20-alpine
+ENV NODE_ENV=production
 WORKDIR /app
 
-# Rutas relativas al contexto (raíz del repo en Render, . en docker-compose)
+# Backend
 COPY backend/package*.json ./
 RUN npm ci
 
@@ -12,6 +20,9 @@ COPY backend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 COPY backend/ .
+
+# Frontend compilado (server.js busca en ../frontend/dist)
+COPY --from=frontend-builder /frontend/dist /frontend/dist
 
 EXPOSE 3000
 
