@@ -151,6 +151,16 @@ curl -X POST http://localhost:3000/api/auth/register \
 ## 🚀 Ejecución
 
 ### Desarrollo (Frontend + Backend simultáneamente)
+
+**Importante:** El backend necesita PostgreSQL. Si usas Docker para la base de datos:
+
+```bash
+npm run db:start    # Inicia solo PostgreSQL (puerto 5435)
+npm run dev         # Inicia frontend + backend
+```
+
+Si tienes PostgreSQL instalado localmente, asegúrate de que `backend/.env` tenga `DB_PORT=5432` (o el puerto que uses).
+
 ```bash
 npm run dev
 ```
