@@ -1,6 +1,8 @@
 import express from 'express';
 import pool from '../database/connection.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sanitizeString } from '../utils/sanitize.js';
+import { logAudit } from '../middleware/auditLog.js';
 
 const router = express.Router();
 
@@ -44,7 +46,11 @@ router.get('/:id', async (req, res) => {
 // POST /api/promociones - Crear nueva promoción (requiere autenticación)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { nombre, temporada, tema, imagen_url, orden, activa } = req.body;
+    const nombre = sanitizeString(req.body.nombre || '');
+    const temporada = sanitizeString(req.body.temporada || '');
+    const tema = req.body.tema ? sanitizeString(req.body.tema) : 'general';
+    const imagen_url = req.body.imagen_url ? sanitizeString(req.body.imagen_url) : null;
+    const { orden, activa } = req.body;
 
     if (!nombre || !temporada) {
       return res.status(400).json({ error: 'Nombre y temporada son requeridos' });
@@ -54,8 +60,9 @@ router.post('/', authenticateToken, async (req, res) => {
       INSERT INTO promociones (nombre, temporada, tema, imagen_url, orden, activa)
       VALUES ($1, $2, COALESCE($3, 'general'), $4, COALESCE($5, 0), COALESCE($6, true))
       RETURNING *
-    `, [nombre, temporada, tema, imagen_url || null, orden ?? 0, activa ?? true]);
+    `, [nombre, temporada, tema, imagen_url, orden ?? 0, activa ?? true]);
 
+    await logAudit({ adminId: req.user.id, action: 'create', entity: 'promociones', entityId: result.rows[0].id, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creando promoción:', error);
@@ -67,7 +74,11 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, temporada, tema, imagen_url, orden, activa } = req.body;
+    const nombre = req.body.nombre != null ? sanitizeString(req.body.nombre) : null;
+    const temporada = req.body.temporada != null ? sanitizeString(req.body.temporada) : null;
+    const tema = req.body.tema != null ? sanitizeString(req.body.tema) : null;
+    const imagen_url = req.body.imagen_url != null ? sanitizeString(req.body.imagen_url) : null;
+    const { orden, activa } = req.body;
 
     const result = await pool.query(`
       UPDATE promociones
@@ -86,6 +97,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Promoción no encontrada' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'update', entity: 'promociones', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando promoción:', error);
@@ -103,6 +115,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Promoción no encontrada' });
     }
 
+    await logAudit({ adminId: req.user.id, action: 'delete', entity: 'promociones', entityId: parseInt(id), req });
     res.json({ message: 'Promoción eliminada correctamente' });
   } catch (error) {
     console.error('Error eliminando promoción:', error);

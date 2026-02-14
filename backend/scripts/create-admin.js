@@ -27,13 +27,19 @@ if (WEAK_PASSWORDS.includes(password.toLowerCase())) {
   process.exit(1);
 }
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'catalogo_artesanias',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || undefined,
-});
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL !== 'false' ? { rejectUnauthorized: false } : false,
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'catalogo_artesanias',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || undefined,
+    };
+const pool = new Pool(poolConfig);
 
 async function createAdmin() {
   try {

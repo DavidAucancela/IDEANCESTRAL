@@ -72,16 +72,33 @@
       </div>
     </section>
 
-    <!-- Banner Central -->
+    <!-- Banner Central - Carrusel -->
     <section class="banner-central">
-      <div class="banner-bg-images">
-        <div 
-          v-for="(img, i) in bannerImages" 
-          :key="i" 
-          class="banner-bg-img"
-          :class="`drift-${(i % 4) + 1}`"
-          :style="img"
-        ></div>
+      <div class="banner-carousel">
+        <div class="banner-carousel-track" :style="{ transform: `translateX(-${bannerIndex * 100}%)` }">
+          <div 
+            v-for="(src, i) in bannerImagesSrc" 
+            :key="i" 
+            class="banner-carousel-slide"
+            :style="{ backgroundImage: `url('${src}')` }"
+          ></div>
+        </div>
+        <button class="banner-carousel-btn banner-carousel-prev" @click="bannerPrev" aria-label="Anterior">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="banner-carousel-btn banner-carousel-next" @click="bannerNext" aria-label="Siguiente">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="banner-carousel-dots">
+          <button 
+            v-for="(_, i) in bannerImagesSrc" 
+            :key="i" 
+            class="banner-dot" 
+            :class="{ active: bannerIndex === i }"
+            @click="bannerIndex = i"
+            :aria-label="`Ir a imagen ${i + 1}`"
+          ></button>
+        </div>
       </div>
       <div class="banner-overlay"></div>
       <div class="banner-content">
@@ -379,26 +396,25 @@ export default {
       }
     }
 
-    // Banner con imagenes flotantes
+    // Banner carrusel
     const bannerImagesSrc = [
       '/imagenes/masc1.jpg', '/imagenes/nac2.jpg',
       '/imagenes/vasos.jpg', '/imagenes/caballo.jpg'
     ]
-    const bannerImages = ref([])
+    const bannerIndex = ref(0)
+    let bannerInterval = null
 
-    const initBannerImages = () => {
-      const srcs = [...bannerImagesSrc, ...bannerImagesSrc, ...bannerImagesSrc]
-        .sort(() => Math.random() - 0.5)
-      bannerImages.value = srcs.map((src, i) => ({
-        backgroundImage: `url('${src}')`,
-        left: `${(i % 4) * 25 + (Math.random() * 10 - 5)}%`,
-        top: `${Math.floor(i / 4) * 30 + (Math.random() * 15 - 7)}%`,
-        width: `${240 + Math.random() * 160}px`,
-        height: `${190 + Math.random() * 130}px`,
-        animationDuration: `${18 + Math.random() * 14}s`,
-        animationDelay: `-${Math.random() * 18}s`,
-        transform: `rotate(${Math.round(-12 + Math.random() * 24)}deg)`
-      }))
+    const bannerNext = () => {
+      bannerIndex.value = (bannerIndex.value + 1) % bannerImagesSrc.length
+      resetBannerAutoAdvance()
+    }
+    const bannerPrev = () => {
+      bannerIndex.value = (bannerIndex.value - 1 + bannerImagesSrc.length) % bannerImagesSrc.length
+      resetBannerAutoAdvance()
+    }
+    const resetBannerAutoAdvance = () => {
+      if (bannerInterval) clearInterval(bannerInterval)
+      bannerInterval = setInterval(bannerNext, 5000)
     }
 
     const handleScroll = () => {
@@ -449,13 +465,14 @@ export default {
     }
 
     onMounted(() => {
-      initBannerImages()
+      resetBannerAutoAdvance()
       cargarCategorias()
       cargarPromociones()
       window.addEventListener('scroll', handleScroll)
     })
 
     onUnmounted(() => {
+      if (bannerInterval) clearInterval(bannerInterval)
       window.removeEventListener('scroll', handleScroll)
       cancelarLongPress()
     })
@@ -468,7 +485,10 @@ export default {
       categoriasParaMostrar,
       imagenCategoria,
       promociones,
-      bannerImages,
+      bannerImagesSrc,
+      bannerIndex,
+      bannerPrev,
+      bannerNext,
       handleImageError,
       scrollTo,
       toggleMenu,
@@ -702,7 +722,7 @@ export default {
   object-fit: cover;
 }
 
-/* ===== BANNER ===== */
+/* ===== BANNER CARRUSEL ===== */
 .banner-central {
   position: relative;
   padding: 6rem 24px;
@@ -710,40 +730,92 @@ export default {
   overflow: hidden;
 }
 
-.banner-bg-images {
+.banner-carousel {
   position: absolute;
-  inset: -60px;
+  inset: 0;
+  z-index: 0;
 }
 
-.banner-bg-img {
-  position: absolute;
+.banner-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.banner-carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.35);
-  border-radius: 10px;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
+  filter: brightness(0.4) saturate(0.9);
 }
 
-.drift-1 { animation-name: drift1; }
-.drift-2 { animation-name: drift2; }
-.drift-3 { animation-name: drift3; }
-.drift-4 { animation-name: drift4; }
+.banner-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(90, 40, 0, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+}
+.banner-carousel-btn:hover {
+  background: rgba(139, 69, 19, 0.85);
+  color: #fff;
+  transform: translateY(-50%) scale(1.08);
+}
+.banner-carousel-prev { left: 16px; }
+.banner-carousel-next { right: 16px; }
 
-@keyframes drift1 { 0%, 100% { translate: 0 0; } 50% { translate: 40px -30px; } }
-@keyframes drift2 { 0%, 100% { translate: 0 0; } 50% { translate: -35px 25px; } }
-@keyframes drift3 { 0%, 100% { translate: 0 0; } 33% { translate: 25px 30px; } 66% { translate: -30px -20px; } }
-@keyframes drift4 { 0%, 100% { translate: 0 0; } 50% { translate: -25px -35px; } }
+.banner-carousel-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+.banner-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.banner-dot:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.banner-dot.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: scale(1.2);
+}
 
 .banner-overlay {
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(135deg, rgba(90, 40, 0, 0.85) 0%, rgba(139, 69, 19, 0.8) 50%, rgba(90, 40, 0, 0.85) 100%);
+  pointer-events: none;
 }
 
 .banner-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 700px;
   margin: 0 auto;
 }
@@ -1396,6 +1468,10 @@ export default {
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
   .banner-subtitle { font-size: 1.2rem; }
   .banner-central { padding: 4rem 20px; }
+  .banner-carousel-btn { width: 36px; height: 36px; }
+  .banner-carousel-prev { left: 8px; }
+  .banner-carousel-next { right: 8px; }
+  .banner-carousel-dots { bottom: 16px; }
 
   .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
   .categoria-nav-card:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
@@ -1428,6 +1504,10 @@ export default {
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; }
   .banner-title-main { font-size: 2rem; }
+  .banner-carousel-btn { width: 32px; height: 32px; }
+  .banner-carousel-prev { left: 4px; }
+  .banner-carousel-next { right: 4px; }
+  .banner-dot { width: 8px; height: 8px; }
 
   .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
   .categoria-nav-card:last-child { grid-column: span 2; max-width: 100%; }

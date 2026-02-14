@@ -40,6 +40,8 @@ Thumbs.db
 *.tmp
 *.temp
 
-## archivos personales
-README.md
-SETUP.md
+# Ignorar archivos de entorno sensibles
+.env
+
+# carpetas
+/docs
