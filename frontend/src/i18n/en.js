@@ -8,7 +8,7 @@ export default {
   },
   hero: {
     bienvenido: 'Welcome to',
-    descripcion: 'We showcase the cultural and artisanal richness of Ecuador, featuring products crafted with traditional techniques and noble materials. Each piece is unique, handmade with love and tradition.',
+    descripcion: 'We promote Ecuador\'s cultural identity by exhibiting unique handicrafts, created by hand with traditional knowledge and authentic materials.',
     explorar: 'Explore Catalog',
     contactanos: 'Contact Us',
   },

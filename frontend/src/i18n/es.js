@@ -8,7 +8,7 @@ export default {
   },
   hero: {
     bienvenido: 'Bienvenido a',
-    descripcion: 'Difundimos la riqueza cultural y artesanal de Ecuador, exhibiendo productos elaborados con técnicas tradicionales y materiales nobles. Cada pieza es única, hecha a mano con amor y tradición.',
+    descripcion: 'Difundimos la identidad cultural del Ecuador exhibiendo artesanías únicas, creadas a mano con saberes tradicionales y materiales auténticos.',
     explorar: 'Catálogo',
     contactanos: 'Contáctanos',
   },

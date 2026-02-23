@@ -8,7 +8,7 @@ export default {
   },
   hero: {
     bienvenido: 'Bem-vindo a',
-    descripcion: 'Divulgamos a riqueza cultural e artesanal do Equador, exibindo produtos elaborados com técnicas tradicionais e materiais nobres. Cada peça é única, feita à mão com amor e tradição.',
+    descripcion: 'Promovemos a identidade cultural do Equador exibindo artesanias únicas, criadas à mão com conhecimentos tradicionais e materiais autênticos.',
     explorar: 'Explorar Catálogo',
     contactanos: 'Contate-nos',
   },
