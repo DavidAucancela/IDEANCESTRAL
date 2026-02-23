@@ -3,9 +3,12 @@ node_modules/
 frontend/node_modules/
 backend/node_modules/
 
-# Environment variables
+# Environment variables (NUNCA subir al repo)
 .env
+.env.local
+.env.production
 backend/.env
+backend/.env.local
 frontend/.env
 frontend/.env.local
 frontend/.env.production
@@ -42,6 +45,3 @@ Thumbs.db
 
 # Ignorar archivos de entorno sensibles
 .env
-
-# carpetas
-/docs

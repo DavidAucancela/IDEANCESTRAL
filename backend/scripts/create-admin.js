@@ -27,18 +27,46 @@ if (WEAK_PASSWORDS.includes(password.toLowerCase())) {
   process.exit(1);
 }
 
-const poolConfig = process.env.DATABASE_URL
-  ? {
-      connectionString: process.env.DATABASE_URL,
+/** Parsea DATABASE_URL a config object (evita "Invalid URL" en pg con ciertos formatos) */
+function parseDatabaseUrl(url) {
+  const u = (url || '').trim().replace(/^postgresql:\/\//, '');
+  const at = u.indexOf('@');
+  if (at === -1) return null;
+  const auth = u.substring(0, at);
+  const hostDb = u.substring(at + 1);
+  const colon = auth.lastIndexOf(':');
+  const user = auth.substring(0, colon);
+  const pass = decodeURIComponent(auth.substring(colon + 1));
+  const slash = hostDb.indexOf('/');
+  const hostPort = hostDb.substring(0, slash);
+  const database = hostDb.substring(slash + 1).split('?')[0];
+  const [host, port] = hostPort.includes(':') ? hostPort.split(':') : [hostPort, '5432'];
+  return { host, port: parseInt(port) || 5432, database, user, password: pass };
+}
+
+let poolConfig;
+if (process.env.DATABASE_URL) {
+  const parsed = parseDatabaseUrl(process.env.DATABASE_URL);
+  if (parsed) {
+    poolConfig = {
+      ...parsed,
       ssl: process.env.DATABASE_SSL !== 'false' ? { rejectUnauthorized: false } : false,
-    }
-  : {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'catalogo_artesanias',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || undefined,
     };
+  } else {
+    poolConfig = {
+      connectionString: process.env.DATABASE_URL.trim(),
+      ssl: process.env.DATABASE_SSL !== 'false' ? { rejectUnauthorized: false } : false,
+    };
+  }
+} else {
+  poolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'catalogo_artesanias',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || undefined,
+  };
+}
 const pool = new Pool(poolConfig);
 
 async function createAdmin() {

@@ -1,10 +1,24 @@
--- Datos de ejemplo para desarrollo
--- Limpiar datos previos para re-seed limpio
+-- =============================================================================
+-- SEED: Datos iniciales para IdeAncestral
+-- =============================================================================
+-- Uso: node scripts/init-db.js --seed
+--
+-- IMÁGENES:
+--   - El seed usa /imagenes/logo-principal.jpg como placeholder (existe en frontend/public/imagenes/)
+--   - Para imágenes reales: súbelas desde el panel admin (van a backend/uploads/)
+--   - O coloca tus archivos en frontend/public/imagenes/ y actualiza las URLs en BD
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. LIMPIEZA: Borrar datos previos para re-seed limpio
+-- -----------------------------------------------------------------------------
 DELETE FROM imagenes_productos;
 DELETE FROM productos;
 DELETE FROM promociones;
 
--- Insertar productos de ejemplo
+-- -----------------------------------------------------------------------------
+-- 2. PRODUCTOS: Insertar catálogo de ejemplo
+-- -----------------------------------------------------------------------------
 INSERT INTO productos (id, nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado) VALUES
 (1, 'Máscara Diablo Huma', 'Máscara artesanal tallada en madera de cedro con detalles tradicionales del Diablo Huma, icono de las fiestas de Inti Raymi. Cada pieza es única, pintada a mano con colores vibrantes.', 20.00, 'Madera de cedro', '2 lbs', 1, true, true),
 (2, 'Máscara Ciervo', 'Máscara de ciervo tallada a mano en madera de cedro. Pieza decorativa con acabado rústico ideal para decorar espacios con estilo ancestral.', 20.00, 'Madera de cedro', '1 lb', 1, true, false),
@@ -34,76 +48,61 @@ ON CONFLICT (id) DO UPDATE SET
   publicado = EXCLUDED.publicado,
   destacado = EXCLUDED.destacado;
 
--- Resetear la secuencia del id
 SELECT setval('productos_id_seq', (SELECT MAX(id) FROM productos));
 
--- Insertar imágenes asociadas a cada producto
+-- -----------------------------------------------------------------------------
+-- 3. IMÁGENES: Imágenes reales de frontend/public/imagenes/
+--    Rutas servidas por Express en /imagenes/* (producción y desarrollo)
+-- -----------------------------------------------------------------------------
 INSERT INTO imagenes_productos (producto_id, url, orden, es_principal) VALUES
--- Máscara Diablo Huma (id: 1)
-(1, '/imagenes/masc1.jpg', 0, true),
-(1, '/imagenes/diablo-PRINCIPAL3.jpg', 1, false),
-(1, '/imagenes/didablos-varios.jpg', 2, false),
-
--- Máscara Ciervo (id: 2)
-(2, '/imagenes/masc2.jpg', 0, true),
-(2, '/imagenes/masc3 larga.jpg', 1, false),
-
--- Marco de Madera (id: 3)
+-- 1: Máscara Diablo Huma (imagen principal + alternativas)
+(1, '/imagenes/mascara diablo huma - corregida.jpg', 0, true),
+(1, '/imagenes/diablo PRINCIPAL.jpg', 1, false),
+(1, '/imagenes/diablo PRINCIPAL2.jpg', 2, false),
+-- 2: Máscara Ciervo
+(2, '/imagenes/masc1.jpg', 0, true),
+(2, '/imagenes/masc2.jpg', 1, false),
+(2, '/imagenes/masc3 larga.jpg', 2, false),
+-- 3: Marco de Madera
 (3, '/imagenes/marco madera.jpg', 0, true),
-
--- Nacimiento Tejido (id: 4)
-(4, '/imagenes/nac2.jpg', 0, true),
-(4, '/imagenes/nac3.jpg', 1, false),
-(4, '/imagenes/nac4 pequeño.jpg', 2, false),
-
--- Nacimiento Base de Madera (id: 5)
-(5, '/imagenes/nac1.jpg', 0, true),
-
--- Sol de Madera (id: 6)
+-- 4: Nacimiento Tejido
+(4, '/imagenes/nac1.jpg', 0, true),
+(4, '/imagenes/nac4 pequeño.jpg', 1, false),
+-- 5: Nacimiento Base de Madera
+(5, '/imagenes/nac2.jpg', 0, true),
+(5, '/imagenes/nac3.jpg', 1, false),
+(5, '/imagenes/nacimiento pareja gorditos.jpg', 2, false),
+(5, '/imagenes/naciemientos nuez.jpg', 3, false),
+(5, '/imagenes/nacimiento tallado 5 piezas.jpg', 4, false),
+-- 6: Sol de Madera
 (6, '/imagenes/sol madera.jpg', 0, true),
-
--- Tazas Cerámica (id: 7)
+-- 7: Tazas Cerámica
 (7, '/imagenes/vasos.jpg', 0, true),
-
--- Árbol de Cuarzos (id: 8)
+(7, '/imagenes/canoa con productos en cerámica.png', 1, false),
+-- 8: Árbol de Cuarzos
 (8, '/imagenes/arbol de cuarzos.jpg', 0, true),
-
--- Caballo Botero (id: 9)
+-- 9: Caballo Botero
 (9, '/imagenes/caballo.jpg', 0, true),
-
--- Cucharas Artesanales (id: 10)
+-- 10: Cucharas Artesanales
 (10, '/imagenes/cucharas PRINCIPAL.jpg', 0, true),
-
--- Destapadores (id: 11)
+-- 11: Destapadores Artesanales
 (11, '/imagenes/destapadores.jpg', 0, true),
-
--- Cuadro Diablo Huma (id: 12)
+-- 12: Cuadro Diablo Huma
 (12, '/imagenes/cuadro diablohuma.jpg', 0, true),
 (12, '/imagenes/cuadros varios.jpg', 1, false),
-
--- Cuadro Paisaje Grande (id: 13)
+-- 13: Cuadro Paisaje Grande
 (13, '/imagenes/cuadro paisaje grande.jpg', 0, true),
-
--- Portallaves de Piedra (id: 14)
+-- 14: Portallaves de Piedra
 (14, '/imagenes/portallaves piedra.jpg', 0, true),
-
--- Pulseras Artesanales (id: 15)
+-- 15: Pulseras Artesanales
 (15, '/imagenes/pulseras_varias.jpg', 0, true),
-
--- Muñeca de Cerámica (id: 16)
+-- 16: Muñeca de Cerámica
 (16, '/imagenes/muñeca cermica.jpg', 0, true),
-
--- Máscara de Jesús (id: 17)
+-- 17: Máscara de Jesús
 (17, '/imagenes/mascara-Jesus.jpg', 0, true),
 (17, '/imagenes/mascaras pequeñas.jpg', 1, false),
-
--- Caja de Té (id: 18)
+-- 18: Caja de Té
 (18, '/imagenes/caja de te.jpeg', 0, true)
 ON CONFLICT DO NOTHING;
 
--- Insertar promociones por temporada
-INSERT INTO promociones (nombre, temporada, tema, imagen_url, orden, activa) VALUES
-('Navidad y Fin de Año', 'Diciembre', 'navidad', '/imagenes/promo1.jpg', 1, true),
-('Día de la Madre', 'Mayo', 'madre', '/imagenes/promo2.jpg', 2, true),
-('Fiestas de Quito', 'Diciembre', 'cultural', '/imagenes/promo3.jpg', 3, true),
-('Inti Raymi - Fiesta del Sol', 'Junio', 'inti', '/imagenes/promo4.jpg', 4, true);
+
