@@ -1,64 +1,78 @@
-# Catálogo Artesanal - Ideancestral
+# Ideancestral - Catálogo Artesanal
 
-Sistema de catálogo web para exhibir artículos de artesanías desarrollado con Vue 3 y PostgreSQL.
+Sistema web para exhibir y gestionar el catálogo de productos artesanales de **Ideancestral**, una tienda ubicada en el Mercado Artesanal La Mariscal, Quito, Ecuador.
 
-## 🚀 Características
+---
 
-### Para Visitantes
-- ✅ Ver catálogo completo de productos
-- ✅ Filtrar productos por categorías
-- ✅ Ver detalle completo de cada producto
-- ✅ Galería de imágenes por producto
-- ✅ **Carrito de compras** con envío de pedidos por WhatsApp
-- ✅ **Promociones por temporada** (Navidad, Día de la Madre, Fiestas de Quito, Inti Raymi)
-- ✅ **Internacionalización** (Español, Inglés, Portugués)
-- ✅ **Modo oscuro/claro** configurable
-- ✅ **Carrusel** en banner central con transiciones suaves
-- ✅ Diseño responsive (móvil y desktop)
-- ✅ Navegación intuitiva
-- ✅ Botón flotante de WhatsApp
+## Características
 
-### Para Administradores
-- ✅ Panel de administración completo
-- ✅ CRUD de productos (Crear, Leer, Actualizar, Eliminar)
-- ✅ Gestión de categorías
-- ✅ Gestión de promociones por temporada
-- ✅ Subir múltiples imágenes por producto
-- ✅ Publicar/ocultar productos
-- ✅ Marcar productos como destacados
-- ✅ Autenticación segura (JWT)
-- ✅ Script para crear administrador inicial
+### Para visitantes
+- Catálogo completo de productos con filtros por categoría
+- Vista de detalle con galería de imágenes por producto
+- Carrito de compras con envío de pedidos por WhatsApp
+- Promociones por temporada (Navidad, Día de la Madre, Fiestas de Quito, Inti Raymi)
+- Internacionalización: Español, Inglés y Portugués
+- Modo oscuro / claro
+- Carrusel animado en el banner principal
+- Diseño responsive (móvil, tablet y escritorio)
+- Botón flotante de contacto por WhatsApp
 
-## 🛠️ Tecnologías
+### Para administradores
+- Panel de administración con acceso protegido
+- CRUD completo de productos, categorías e imágenes
+- Gestión de promociones por temporada
+- Subida de múltiples imágenes por producto
+- Control de visibilidad y productos destacados
+- Autenticación segura con JWT y refresh tokens
+- Registro de auditoría de acciones administrativas
 
-### Frontend
-- Vue 3 (Composition API)
-- Vue Router
-- Vite
-- Pinia (estado global)
-- Axios
-- i18n (internacionalización)
-- CSS3 (Responsive Design, variables CSS)
+---
 
-### Backend
-- Node.js
-- Express
-- PostgreSQL
-- Multer (gestión de archivos)
-- JWT (autenticación)
-- bcryptjs (hash de contraseñas)
-- Helmet (headers de seguridad)
-- express-rate-limit (limitación de peticiones)
-- Pino (logging)
-- Zod (validación)
+## Tecnologías
 
-## 📋 Requisitos Previos
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | Vue 3 (Composition API), Vite, Pinia, Vue Router, Axios, vue-i18n |
+| Backend | Node.js, Express, Multer, JWT, bcryptjs, Zod, Pino |
+| Base de datos | PostgreSQL |
+| Seguridad | Helmet, express-rate-limit, sanitización XSS, validación MIME |
+| Infraestructura | Docker Compose, Render |
 
-- Node.js (v18 o superior)
-- PostgreSQL (v12 o superior)
-- npm o yarn
+---
 
-## 🔧 Instalación
+## Estructura del proyecto
+
+```
+IdeAncestral/
+├── frontend/
+│   └── src/
+│       ├── views/          # CatalogoView, CategoriaView, ProductoDetalleView, AdminView
+│       ├── components/     # ThemeToggle, LanguageSwitcher, ToastContainer
+│       ├── stores/         # carrito, theme, language (Pinia)
+│       ├── composables/    # useCarrito, useToast
+│       ├── i18n/           # Traducciones: es, en, pt
+│       └── router/
+│
+├── backend/
+│   ├── routes/             # productos, categorias, imagenes, auth, promociones
+│   ├── middleware/         # Autenticación JWT
+│   ├── database/           # schema.sql, seed.sql, migraciones, conexión
+│   ├── scripts/            # Inicialización de BD y creación de admin
+│   ├── utils/              # Sanitización, validaciones
+│   └── server.js
+│
+├── docs/                   # Guías de despliegue, seguridad y devops
+├── docker-compose.yml
+└── package.json
+```
+
+---
+
+## Instalación y puesta en marcha
+
+### Requisitos previos
+- Node.js v18 o superior
+- PostgreSQL v12 o superior (o Docker)
 
 ### 1. Clonar el repositorio
 ```bash
@@ -71,239 +85,111 @@ cd IdeAncestral
 npm run install:all
 ```
 
-### 3. Configurar Base de Datos
+### 3. Configurar variables de entorno
+```bash
+# Backend
+cp backend/.env.example backend/.env
+# Editar backend/.env con los valores del entorno
+```
 
-#### Opción A: Script automático (recomendado)
+```bash
+# Frontend
+# Crear frontend/.env con la URL de la API
+VITE_API_URL=<URL del backend>/api
+```
+
+### 4. Inicializar la base de datos
 ```bash
 cd backend
-node scripts/init-db.js
+node scripts/init-db.js          # Solo esquema
+node scripts/init-db.js --seed   # Con datos de ejemplo
 ```
 
-Con datos de ejemplo:
-```bash
-node scripts/init-db.js --seed
-```
-
-#### Opción B: Manualmente
-```sql
-CREATE DATABASE catalogo_artesanias;
-\q
-psql -U postgres -d catalogo_artesanias -f backend/database/schema.sql
-psql -U postgres -d catalogo_artesanias -f backend/database/seed.sql
-```
-
-### 4. Configurar Variables de Entorno
-
-#### Backend:
+### 5. Crear usuario administrador
 ```bash
 cd backend
-cp .env.example .env
-```
-
-Editar `backend/.env` con valores seguros:
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=catalogo_artesanias
-DB_USER=postgres
-DB_PASSWORD=tu_password_seguro
-PORT=3000
-JWT_SECRET=genera_con_openssl_rand_base64_32
-```
-
-Generar JWT_SECRET:
-```bash
-openssl rand -base64 32
-```
-
-#### Frontend:
-Crear `frontend/.env` (o copiar desde `.env.example` si existe):
-```env
-VITE_API_URL=http://localhost:3000/api
-```
-
-### 5. Ejecutar migración de seguridad (bases existentes)
-
-Si ya tenías la base de datos antes de las mejoras de seguridad:
-
-```bash
-cd backend
-npm run migrate
-```
-
-Esto crea las tablas `refresh_tokens` y `admin_audit_log`. Las nuevas instalaciones con `init-db` ya las incluyen.
-
-### 6. Crear usuario administrador
-
-```bash
-cd backend
-# Configurar ADMIN_USER, ADMIN_EMAIL, ADMIN_PASSWORD en .env
+# Configurar ADMIN_USER, ADMIN_EMAIL y ADMIN_PASSWORD en .env
 node scripts/create-admin.js
 ```
 
-Alternativa vía API (solo desarrollo):
+### 6. Ejecutar en desarrollo
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"usuario": "admin", "email": "admin@example.com", "password": "tu_password_seguro"}'
+npm run dev       # Frontend + Backend simultáneamente
 ```
 
-## 🚀 Ejecución
+---
 
-### Desarrollo (Frontend + Backend simultáneamente)
-
-**Importante:** El backend necesita PostgreSQL. Si usas Docker para la base de datos:
+## Ejecución con Docker
 
 ```bash
-npm run db:start    # Inicia solo PostgreSQL (puerto 5435)
-npm run dev         # Inicia frontend + backend
-```
-
-Si tienes PostgreSQL instalado localmente, asegúrate de que `backend/.env` tenga `DB_PORT=5432` (o el puerto que uses).
-
-```bash
-npm run dev
-```
-
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000
-
-### Solo Frontend
-```bash
-npm run dev:frontend
-```
-
-### Solo Backend
-```bash
-npm run dev:backend
-```
-
-### Producción
-```bash
-# Build del frontend
-npm run build
-
-# Iniciar backend
-cd backend
-npm start
-```
-
-## 🐳 Docker
-
-```bash
-cp .env.example .env
-# Editar .env con DB_PASSWORD, JWT_SECRET
+cp .env.example .env   # Completar DB_PASSWORD y JWT_SECRET
 docker-compose up --build
 ```
 
-Accede en http://localhost:5173
+Acceso local tras levantar los contenedores: `http://localhost:5173`
 
-## ☁️ Despliegue en Render
+---
 
-Consulta **[RENDER_DEPLOY.md](RENDER_DEPLOY.md)** para la guía completa paso a paso.
+## Despliegue en producción (Render)
 
-### Configuración recomendada
+Consulta [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) para la guía completa.
 
-| Campo | Valor |
-|-------|-------|
-| **Root Directory** | *(vacío)* |
-| **Build Command** | `npm run install:all && npm run build:prod` |
-| **Start Command** | `cd backend && npm start` |
-| **Release Command** | `cd backend && node scripts/init-db.js` *(opcional, solo primer deploy)* |
+**Variables de entorno requeridas en producción:**
+- `NODE_ENV`
+- `DATABASE_URL` (o variables individuales de BD)
+- `JWT_SECRET` (mínimo 32 caracteres — generar con `openssl rand -base64 32`)
+- `FRONTEND_URL`
 
-### Variables de entorno en Render
-- `NODE_ENV` = `production`
-- `DATABASE_URL` *(si usas PostgreSQL de Render)* o `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `JWT_SECRET` (mínimo 32 caracteres)
-- `FRONTEND_URL` = URL de tu app (ej. `https://ideancestral.onrender.com`) Consulta `SETUP.md` para más detalles.
+---
 
-## 📁 Estructura del Proyecto
+## Seguridad
 
-```
-IdeAncestral/
-├── frontend/
-│   ├── src/
-│   │   ├── views/           # CatalogoView, CategoriaView, ProductoDetalleView, AdminView
-│   │   ├── components/      # ThemeToggle, LanguageSwitcher, ToastContainer
-│   │   ├── stores/          # carrito, theme, language
-│   │   ├── composables/     # useCarrito, useToast
-│   │   ├── i18n/            # es, en, pt
-│   │   ├── router/
-│   │   └── App.vue
-│   └── public/imagenes/
-│
-├── backend/
-│   ├── routes/              # productos, categorias, imagenes, auth, promociones
-│   ├── middleware/          # auth
-│   ├── database/            # schema.sql, seed.sql, connection.js
-│   ├── scripts/             # init-db, create-admin
-│   ├── uploads/
-│   └── server.js
-│
-└── package.json
-```
-## 🔒 Seguridad
+- Contraseñas hasheadas con bcrypt
+- JWT con expiración corta y refresh tokens de larga duración
+- Rate limiting global y en endpoints de autenticación
+- Headers de seguridad HTTP con Helmet
+- CORS restringido por origen
+- Sanitización de inputs contra XSS
+- Validación de tipo MIME real en archivos subidos
+- Acceso a archivos estáticos protegido (solo archivos registrados en BD)
+- HTTPS obligatorio en producción
+- Auditoría de acciones del administrador
 
-### Implementado
-- ✅ JWT con expiración (24h)
-- ✅ Contraseñas hasheadas con bcrypt
-- ✅ Validación de JWT_SECRET y DB_PASSWORD al iniciar
-- ✅ Helmet (headers de seguridad)
-- ✅ Rate limiting global (200 req/15 min)
-- ✅ Rate limiting en login (5 intentos/15 min)
-- ✅ CORS configurado por origen
-- ✅ Validación de Origin para operaciones de escritura (protección CSRF básica)
-- ✅ `/uploads` protegido: solo archivos registrados en BD
-- ✅ Logging con Pino
+---
 
-### Implementado (nivel alto)
-- ✅ HTTPS obligatorio en producción (redirect si X-Forwarded-Proto: http)
-- ✅ Sanitización de inputs (XSS) con librería `xss`
-- ✅ Validación de tipos MIME en uploads (magic bytes con `file-type`)
-- ✅ Refresh tokens (7 días, tabla `refresh_tokens`)
-- ✅ Auditoría de acciones (tabla `admin_audit_log`)
+## Scripts disponibles
 
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Inicia frontend y backend en modo desarrollo |
+| `npm run dev:frontend` | Solo el frontend |
+| `npm run dev:backend` | Solo el backend |
+| `npm run build` | Compila el frontend para producción |
+| `npm run install:all` | Instala dependencias de todos los módulos |
+| `npm run db:start` | Inicia solo la base de datos con Docker |
+| `npm run db:stop` | Detiene el contenedor de la base de datos |
 
-### Checklist para llegar al 100%
+---
 
-1. **Pruebas** (prioridad alta)
-   - [x] Tests unitarios backend (sanitize)
-   - [x] Tests unitarios frontend (carrito store)
-   - [ ] Ampliar cobertura y test E2E
+## Documentación adicional
 
-2. **Seguridad** (prioridad media)
-   - [x] Sanitización XSS en productos, categorías, promociones, auth
-   - [x] Validación MIME real en uploads
-   - [ ] Revisar Content-Security-Policy (actualmente deshabilitada)
+| Documento | Contenido |
+|-----------|-----------|
+| [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) | Guía de despliegue en Render |
+| [`docs/SEGURIDAD-IMPLEMENTADA.md`](docs/SEGURIDAD-IMPLEMENTADA.md) | Detalle de medidas de seguridad |
+| [`docs/DEVOPS_GUIA.md`](docs/DEVOPS_GUIA.md) | Guía de operaciones y Docker |
+| [`docs/SETUP.md`](docs/SETUP.md) | Configuración detallada del entorno |
+| [`docs/PRUEBAS.md`](docs/PRUEBAS.md) | Guía de pruebas |
 
-## 📱 Responsive Design
+---
 
-- Desktop (1200px+)
-- Tablet (768px - 1199px)
-- Móvil (< 768px)
+## Contacto
 
-## 📝 Notas
+- **Email:** mary_cecy_ma@hotmail.com
+- **Teléfono:** (02) 2227781 / +593 998 956 361
+- **Instagram:** [@ideancestral](https://www.instagram.com/ideancestral/)
+- **Ubicación:** Jorge Washington y Juan León Mera, Mercado Artesanal La Mariscal, Quito, Ecuador
 
-- Las imágenes se almacenan en `backend/uploads/`
-- El esquema incluye triggers para `updated_at`
-- Los productos pueden marcarse como destacados y publicarse/ocultarse
-- Acceso oculto al admin: mantener pulsado el logo "IA" durante 5 segundos
+---
 
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit (`git commit -m 'Añadir nueva funcionalidad'`)
-4. Push (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto es privado y pertenece a Ideancestral.
-
-## 📧 Contacto
-
-- Email: mary_cecy_ma@hotmail.com
-- Tel: (02) 2227781 / +593 998 956 361
-- Instagram: [@ideancestral](https://www.instagram.com/ideancestral/)
-- Ubicación: Jorge Washington y Juan Leon Mera, Mercado Artesanal La Mariscal, Quito, Ecuador
+> Este proyecto es privado y pertenece a **Ideancestral**.
