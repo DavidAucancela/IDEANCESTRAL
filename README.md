@@ -186,7 +186,7 @@ Consulta [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) para la guía completa
 ## Contacto
 
 - **Email:** mary_cecy_ma@hotmail.com
-- **Teléfono:** (02) 2227781 / +593 998 956 361
+- **Teléfono:** (02) 2227781 / +593 987 999 136 / +593 978 752 422
 - **Instagram:** [@ideancestral](https://www.instagram.com/ideancestral/)
 - **Ubicación:** Jorge Washington y Juan León Mera, Mercado Artesanal La Mariscal, Quito, Ecuador
 
