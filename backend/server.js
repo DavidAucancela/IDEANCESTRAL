@@ -73,6 +73,7 @@ app.use(helmet({
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
+      frameSrc: ["https://maps.google.com", "https://www.google.com"],
       frameAncestors: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     }
