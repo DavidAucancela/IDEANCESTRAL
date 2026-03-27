@@ -137,10 +137,13 @@ app.use('/uploads', async (req, res, next) => {
   res.status(404).json({ error: 'No encontrado' });
 });
 
-// Servir imágenes del frontend (public/imagenes)
+// Servir imágenes del frontend (public/imagenes en dev, dist/imagenes en producción Docker)
 const imagenesDir = path.join(__dirname, '..', 'frontend', 'public', 'imagenes');
+const imagenesDistDir = path.join(__dirname, '..', 'frontend', 'dist', 'imagenes');
 if (fs.existsSync(imagenesDir)) {
   app.use('/imagenes', express.static(imagenesDir));
+} else if (fs.existsSync(imagenesDistDir)) {
+  app.use('/imagenes', express.static(imagenesDistDir));
 }
 
 // Rutas
