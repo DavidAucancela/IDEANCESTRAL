@@ -18,7 +18,7 @@
               <LanguageSwitcher />
             </li>
             <li>
-              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
+              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')" :class="{ 'cart-bounce': cartBouncing }">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
                 <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
               </button>
@@ -53,39 +53,70 @@
           </div>
         </div>
 
-        <!-- Loading -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>{{ t('categoryView.cargando') }}</p>
+        <!-- Skeleton loading -->
+        <div v-if="loading" class="skeleton-grid">
+          <div v-for="n in 8" :key="n" class="skeleton-card">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line skeleton-line-lg"></div>
+              <div class="skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton-line skeleton-line-md"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Productos grid -->
-        <div v-else class="productos-section">
-          <div class="search-bar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input 
-              v-model="busquedaTexto" 
-              type="search" 
-              :placeholder="t('categoryView.buscar')" 
-              class="search-input"
-              :aria-label="t('categoryView.buscar')"
-            />
+        <div v-if="!loading" class="productos-section">
+          <div class="filtros-bar">
+            <div class="search-bar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input
+                v-model="busquedaTexto"
+                type="search"
+                :placeholder="t('categoryView.buscar')"
+                class="search-input"
+                :aria-label="t('categoryView.buscar')"
+              />
+            </div>
+            <div class="filtros-right">
+              <div class="filtro-precio">
+                <span class="filtro-label">Precio:</span>
+                <input v-model.number="precioMin" type="number" placeholder="Min" class="precio-input" min="0" />
+                <span>—</span>
+                <input v-model.number="precioMax" type="number" placeholder="Max" class="precio-input" min="0" />
+              </div>
+              <select v-model="ordenamiento" class="sort-select">
+                <option value="">Ordenar</option>
+                <option value="precio_asc">Precio: menor a mayor</option>
+                <option value="precio_desc">Precio: mayor a menor</option>
+                <option value="nombre_asc">Nombre: A-Z</option>
+                <option value="destacados">Destacados primero</option>
+              </select>
+            </div>
           </div>
 
+          <p class="resultados-contador">
+            {{ productosFiltrados.length }} {{ productosFiltrados.length === 1 ? 'producto' : 'productos' }} encontrados
+          </p>
           <div class="productos-grid">
-            <div 
-              v-for="(producto, index) in productosFiltrados" 
+            <div
+              v-for="(producto, index) in productosFiltrados"
               :key="producto.id"
               class="producto-card"
               :style="{ animationDelay: `${index * 0.05}s` }"
+              data-animate
             >
               <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
-                <img 
-                  :src="obtenerImagenProducto(producto)" 
+                <img
+                  :src="obtenerImagenProducto(producto)"
                   :alt="producto.nombre"
                   @error="handleImageError"
                   loading="lazy"
                 />
+                <span v-if="producto.destacado" class="badge-card badge-destacado-card">✦ Destacado</span>
+                <div class="producto-overlay">
+                  <span class="producto-overlay-btn">Ver detalle</span>
+                </div>
               </router-link>
               <div class="producto-info">
                 <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-nombre-link">
@@ -156,6 +187,7 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
 import { useLanguageStore } from '../stores/language'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
@@ -184,6 +216,9 @@ export default {
     const menuOpen = ref(false)
     const isScrolled = ref(false)
     const busquedaTexto = ref('')
+    const precioMin = ref('')
+    const precioMax = ref('')
+    const ordenamiento = ref('')
 
     const imagenCategoria = computed(() => {
       if (!categoria.value) return null
@@ -196,11 +231,18 @@ export default {
 
     const productosFiltrados = computed(() => {
       const txt = (busquedaTexto.value || '').trim().toLowerCase()
-      if (!txt) return productos.value
-      return productos.value.filter(p =>
-        (p.nombre || '').toLowerCase().includes(txt) ||
-        (p.material || '').toLowerCase().includes(txt)
-      )
+      let lista = productos.value.filter(p => {
+        const matchTxt = !txt || (p.nombre || '').toLowerCase().includes(txt) || (p.material || '').toLowerCase().includes(txt)
+        const precio = Number(p.precio) || 0
+        const matchMin = precioMin.value === '' || precio >= precioMin.value
+        const matchMax = precioMax.value === '' || precio <= precioMax.value
+        return matchTxt && matchMin && matchMax
+      })
+      if (ordenamiento.value === 'precio_asc') lista = [...lista].sort((a,b) => Number(a.precio) - Number(b.precio))
+      else if (ordenamiento.value === 'precio_desc') lista = [...lista].sort((a,b) => Number(b.precio) - Number(a.precio))
+      else if (ordenamiento.value === 'nombre_asc') lista = [...lista].sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''))
+      else if (ordenamiento.value === 'destacados') lista = [...lista].sort((a,b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0))
+      return lista
     })
 
     const obtenerImagenProducto = (producto) => {
@@ -241,12 +283,24 @@ export default {
     const handleScroll = () => { isScrolled.value = window.scrollY > 50 }
     const toggleMenu = () => { menuOpen.value = !menuOpen.value }
 
+    useScrollAnimation()
+
     watch(() => route.params.id, cargarDatos)
+    const cartBouncing = ref(false)
+    const handleCartAdded = () => {
+      cartBouncing.value = true
+      setTimeout(() => { cartBouncing.value = false }, 600)
+    }
+
     onMounted(() => {
       cargarDatos()
       window.addEventListener('scroll', handleScroll)
+      window.addEventListener('cart-item-added', handleCartAdded)
     })
-    onUnmounted(() => window.removeEventListener('scroll', handleScroll))
+    onUnmounted(() => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('cart-item-added', handleCartAdded)
+    })
 
     return {
       t,
@@ -256,6 +310,9 @@ export default {
       menuOpen,
       isScrolled,
       busquedaTexto,
+      precioMin,
+      precioMax,
+      ordenamiento,
       productosFiltrados,
       imagenCategoria,
       obtenerImagenProducto,
@@ -269,7 +326,8 @@ export default {
       quitarDelCarrito,
       vaciarCarrito,
       enviarPedidoWhatsApp,
-      toggleMenu
+      toggleMenu,
+      cartBouncing
     }
   }
 }
@@ -470,8 +528,124 @@ export default {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Overlay hover */
+.producto-image { position: relative; }
+.producto-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 34, 24, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.producto-card:hover .producto-overlay { opacity: 1; }
+.producto-overlay-btn {
+  background: #fff;
+  color: var(--color-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  border-radius: 50px;
+  letter-spacing: 0.05em;
+  transform: translateY(8px);
+  transition: transform 0.3s ease;
+}
+.producto-card:hover .producto-overlay-btn { transform: translateY(0); }
+
+/* Filters bar */
+.filtros-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.filtros-bar .search-bar { margin-bottom: 0; flex: 1; min-width: 200px; }
+.filtros-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.filtro-label { font-size: 0.85rem; color: var(--color-text-muted); white-space: nowrap; }
+.filtro-precio { display: flex; align-items: center; gap: 0.4rem; }
+.precio-input {
+  width: 70px;
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+}
+.precio-input:focus { border-color: var(--color-primary); }
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid var(--color-gray-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+}
+.sort-select:focus { border-color: var(--color-primary); }
+
+/* Skeleton */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.skeleton-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.skeleton-img {
+  height: 260px;
+  background: linear-gradient(90deg, var(--color-gray-light) 25%, var(--color-bg-warm) 50%, var(--color-gray-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-body { padding: 1.25rem; }
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+  background: linear-gradient(90deg, var(--color-gray-light) 25%, var(--color-bg-warm) 50%, var(--color-gray-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-line-lg { width: 75%; }
+.skeleton-line-sm { width: 45%; }
+.skeleton-line-md { width: 30%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 .empty-state { text-align: center; padding: 3rem 0; }
 .empty-state p { margin-bottom: 1rem; color: var(--color-text-light); }
+
+.badge-card {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 50px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.badge-destacado-card {
+  background: linear-gradient(135deg, #C4853A, #D4A76A);
+  color: #fff;
+}
+.resultados-contador {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+}
 
 /* Carrito */
 .carrito-overlay {
@@ -553,5 +727,17 @@ export default {
   .productos-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
   .producto-image { height: 180px; }
   .carrito-sidebar { width: 100%; }
+  .filtros-bar { flex-direction: column; align-items: stretch; }
+  .filtros-right { justify-content: flex-start; }
+  .skeleton-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ===== CART BOUNCE ===== */
+@keyframes cartBounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.15); }
+}
+.cart-bounce { animation: cartBounce 0.5s ease; }
 </style>

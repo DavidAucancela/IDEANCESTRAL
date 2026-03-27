@@ -26,7 +26,7 @@
               <LanguageSwitcher />
             </li>
             <li>
-              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
+              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')" :class="{ 'cart-bounce': cartBouncing }">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
                 <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
               </button>
@@ -42,17 +42,16 @@
     </header>
 
     <!-- Hero Section -->
-    <section id="inicio" class="hero">
+    <section id="inicio" class="hero" ref="heroRef">
+      <div class="hero-bg" :style="{ transform: `translateY(${parallaxOffset}px)` }">
+        <img src="/imagenes/logo-principal.jpg" alt="Ideancestral" />
+      </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <div class="hero-text">
-          <h1 class="hero-title">
-            <span class="hero-title-small">{{ t('hero.bienvenido') }}</span>
-            Ideancestral
-          </h1>
-          <p class="hero-description">
-            {{ t('hero.descripcion') }}
-          </p>
+        <div class="hero-text" data-animate>
+          <span class="hero-badge">✦ {{ t('hero.bienvenido') }} ✦</span>
+          <h1 class="hero-title">Ideancestral</h1>
+          <p class="hero-description">{{ t('hero.descripcion') }}</p>
           <div class="hero-actions">
             <a href="#categorias" @click.prevent="scrollTo('categorias')" class="btn btn-primary btn-lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -64,10 +63,42 @@
             </a>
           </div>
         </div>
-        <div class="hero-image-wrapper">
-          <div class="hero-image-frame">
-            <img src="/imagenes/logo-principal.jpg" alt="Artesanias Idea Ancestral" />
-          </div>
+      </div>
+      <div class="hero-scroll-indicator">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- Productos Destacados -->
+    <section class="destacados-section" v-if="productosDestacados.length > 0">
+      <div class="container">
+        <div class="section-header" data-animate>
+          <span class="section-label">✦ Selección especial</span>
+          <h2>Productos Destacados</h2>
+          <p>Piezas únicas seleccionadas por su calidad artesanal</p>
+        </div>
+        <div class="destacados-grid">
+          <router-link
+            v-for="(prod, i) in productosDestacados"
+            :key="prod.id"
+            :to="`/producto/${prod.id}`"
+            class="destacado-card"
+            :class="i === 0 ? 'destacado-card-main' : ''"
+            data-animate
+            :data-animate-delay="String(i)"
+          >
+            <div class="destacado-img">
+              <img :src="obtenerImagenDestacado(prod)" :alt="prod.nombre" loading="lazy" @error="handleImageError" />
+              <div class="destacado-overlay">
+                <span class="destacado-overlay-btn">Ver producto</span>
+              </div>
+            </div>
+            <div class="destacado-info">
+              <span class="destacado-cat">{{ prod.categoria_nombre || 'Artesanía' }}</span>
+              <h3>{{ prod.nombre }}</h3>
+              <span class="destacado-precio">${{ Number(prod.precio).toFixed(2) }}</span>
+            </div>
+          </router-link>
         </div>
       </div>
     </section>
@@ -113,17 +144,19 @@
     <!-- Navegacion de Categorias -->
     <section id="categorias" class="categorias-nav-section">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" data-animate>
           <span class="section-label">{{ t('categories.label') }}</span>
           <h2>{{ t('categories.title') }}</h2>
           <p>{{ t('categories.subtitle') }}</p>
         </div>
         <div class="categorias-nav-grid">
-          <router-link 
-            v-for="cat in categoriasParaMostrar" 
+          <router-link
+            v-for="(cat, index) in categoriasParaMostrar"
             :key="cat.id"
             :to="`/categoria/${cat.id}`"
             class="categoria-nav-card"
+            data-animate
+            :data-animate-delay="String(index + 1)"
           >
             <div class="cat-nav-img">
               <img :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
@@ -137,7 +170,7 @@
     <!-- Promociones por Temporada -->
     <section id="promociones" class="promociones-section">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" data-animate>
           <span class="section-label">{{ t('promos.label') }}</span>
           <h2>{{ t('promos.title') }}</h2>
         </div>
@@ -164,7 +197,7 @@
     <!-- Nosotros / Ubicacion -->
     <section id="nosotros" class="nosotros-section">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header" data-animate>
           <span class="section-label">{{ t('about.label') }}</span>
           <h2>{{ t('about.title') }}</h2>
           <p>{{ t('about.subtitle') }}</p>
@@ -324,6 +357,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
 import { useLanguageStore } from '../stores/language'
+import { useScrollAnimation } from '../composables/useScrollAnimation'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
@@ -338,8 +372,11 @@ export default {
     const { t } = useLanguageStore()
     const menuOpen = ref(false)
     const isScrolled = ref(false)
+    const heroRef = ref(null)
+    const parallaxOffset = ref(0)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+    const productosDestacados = ref([])
     const whatsappGeneral = computed(() => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoGeneral'))}`)
 
     // Categorias desde API (para cards de navegacion)
@@ -417,6 +454,7 @@ export default {
 
     const handleScroll = () => {
       isScrolled.value = window.scrollY > 50
+      parallaxOffset.value = window.scrollY * 0.4
     }
 
     const handleImageError = (event) => {
@@ -462,16 +500,45 @@ export default {
       }
     }
 
+    const cargarDestacados = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/productos`, { params: { destacado: true, limit: 5 } })
+        const data = res.data
+        productosDestacados.value = (data.productos || data || []).slice(0, 5)
+      } catch (e) {
+        console.error('Error cargando destacados:', e)
+      }
+    }
+
+    const obtenerImagenDestacado = (prod) => {
+      if (prod.imagenes && prod.imagenes.length > 0) {
+        const principal = prod.imagenes.find(img => img.es_principal) || prod.imagenes[0]
+        return principal.url?.startsWith('http') ? principal.url : `${API_URL.replace('/api', '')}${principal.url}`
+      }
+      return '/imagenes/logo-principal.jpg'
+    }
+
+    const cartBouncing = ref(false)
+    const handleCartAdded = () => {
+      cartBouncing.value = true
+      setTimeout(() => { cartBouncing.value = false }, 600)
+    }
+
+    useScrollAnimation()
+
     onMounted(() => {
       resetBannerAutoAdvance()
       cargarCategorias()
       cargarPromociones()
+      cargarDestacados()
       window.addEventListener('scroll', handleScroll)
+      window.addEventListener('cart-item-added', handleCartAdded)
     })
 
     onUnmounted(() => {
       if (bannerInterval) clearInterval(bannerInterval)
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('cart-item-added', handleCartAdded)
       cancelarLongPress()
     })
 
@@ -479,6 +546,8 @@ export default {
       t,
       menuOpen,
       isScrolled,
+      heroRef,
+      parallaxOffset,
       whatsappGeneral,
       categoriasParaMostrar,
       imagenCategoria,
@@ -502,7 +571,10 @@ export default {
       actualizarCantidad,
       quitarDelCarrito,
       vaciarCarrito,
-      enviarPedidoWhatsApp
+      enviarPedidoWhatsApp,
+      productosDestacados,
+      obtenerImagenDestacado,
+      cartBouncing
     }
   }
 }
@@ -631,62 +703,94 @@ export default {
 /* ===== HERO ===== */
 .hero {
   position: relative;
-  min-height: 90vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
-  padding: 120px 24px 80px;
-  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-warm) 50%, var(--color-bg-warm) 100%);
+  justify-content: center;
   overflow: hidden;
+  background: var(--color-dark);
 }
-
+.hero-bg {
+  position: absolute;
+  inset: -20%;
+  will-change: transform;
+}
+.hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+  filter: saturate(0.8);
+}
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 80% 50%, rgba(123, 63, 0, 0.05) 0%, transparent 60%);
+  background: linear-gradient(
+    160deg,
+    rgba(44, 34, 24, 0.75) 0%,
+    rgba(123, 63, 0, 0.5) 50%,
+    rgba(44, 34, 24, 0.8) 100%
+  );
 }
-
 .hero-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: center;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  text-align: center;
+  padding: 0 24px;
+  max-width: 800px;
 }
-
-.hero-title {
-  font-size: 3.5rem;
-  color: var(--color-primary);
-  margin-bottom: 1.5rem;
-  line-height: 1.15;
-}
-
-.hero-title-small {
-  display: block;
-  font-size: 1rem;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  color: var(--color-text-light);
-  letter-spacing: 3px;
+.hero-badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+  color: var(--color-accent);
+  margin-bottom: 1.5rem;
+  font-family: var(--font-sans);
 }
-
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 8vw, 7rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.4);
+  letter-spacing: -0.02em;
+}
 .hero-description {
-  font-size: 1.05rem;
-  line-height: 1.9;
-  color: var(--color-text-light);
-  margin-bottom: 2.5rem;
-  max-width: 500px;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: rgba(255,255,255,0.85);
+  max-width: 560px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
 }
-
 .hero-actions {
   display: flex;
   gap: 1rem;
+  justify-content: center;
   flex-wrap: wrap;
+}
+.hero-scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.hero-scroll-indicator span {
+  display: block;
+  width: 1.5px;
+  height: 50px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);
+  margin: 0 auto;
+  animation: scrollLine 1.8s ease-in-out infinite;
+}
+@keyframes scrollLine {
+  0% { transform: scaleY(0); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  51% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
 }
 
 .btn-lg {
@@ -697,27 +801,6 @@ export default {
 .btn-sm {
   padding: 10px 20px;
   font-size: 14px;
-}
-
-.hero-image-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-.hero-image-frame {
-  position: relative;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: var(--shadow-xl);
-  border: 6px solid var(--color-frame-border);
-}
-
-.hero-image-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 /* ===== BANNER CARRUSEL ===== */
@@ -1420,8 +1503,6 @@ export default {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-  .hero-title { font-size: 2.8rem; }
-  .hero-image-frame { width: 340px; height: 340px; }
   .banner-title-main { font-size: 3.5rem; }
   .categorias-nav-grid { grid-template-columns: repeat(3, 1fr); }
   .productos-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1447,21 +1528,8 @@ export default {
   .nav-links.open { transform: translateX(0); }
   .menu-toggle { display: flex; }
 
-  .hero {
-    min-height: auto;
-    padding: 100px 20px 60px;
-  }
-
-  .hero-content {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-    text-align: center;
-  }
-
-  .hero-title { font-size: 2.2rem; }
-  .hero-description { margin: 0 auto 2rem; }
-  .hero-actions { justify-content: center; }
-  .hero-image-frame { width: 260px; height: 260px; margin: 0 auto; }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .hero-actions .btn { width: 100%; max-width: 320px; }
 
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
   .banner-subtitle { font-size: 1.2rem; }
@@ -1498,9 +1566,6 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .hero-title { font-size: 1.8rem; }
-  .hero-actions { flex-direction: column; }
-  .hero-actions .btn { width: 100%; }
   .banner-title-main { font-size: 2rem; }
   .banner-carousel-btn { width: 32px; height: 32px; }
   .banner-carousel-prev { left: 4px; }
@@ -1715,4 +1780,72 @@ export default {
 @media (max-width: 768px) {
   .carrito-sidebar { width: 100%; max-width: 100vw; }
 }
+
+/* ===== DESTACADOS ===== */
+.destacados-section { padding: 5rem 0; background: var(--color-bg-warm); }
+.destacados-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto;
+  gap: 1.25rem;
+}
+.destacado-card-main {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+.destacado-card {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  text-decoration: none;
+  color: inherit;
+}
+.destacado-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.destacado-img {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
+}
+.destacado-card-main .destacado-img { height: 320px; }
+.destacado-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.destacado-card:hover .destacado-img img { transform: scale(1.06); }
+.destacado-overlay {
+  position: absolute; inset: 0;
+  background: rgba(44,34,24,0.5);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.destacado-card:hover .destacado-overlay { opacity: 1; }
+.destacado-overlay-btn {
+  background: #fff; color: var(--color-dark);
+  font-size: 0.82rem; font-weight: 600;
+  padding: 0.5rem 1.2rem; border-radius: 50px;
+  transform: translateY(6px); transition: transform 0.3s ease;
+}
+.destacado-card:hover .destacado-overlay-btn { transform: translateY(0); }
+.destacado-info { padding: 1rem 1.25rem; }
+.destacado-cat { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-secondary); font-weight: 600; }
+.destacado-info h3 { font-size: 1rem; font-weight: 600; margin: 0.3rem 0 0.5rem; }
+.destacado-precio { font-size: 1rem; font-weight: 700; color: var(--color-primary); }
+
+@media (max-width: 768px) {
+  .destacados-grid { grid-template-columns: repeat(2, 1fr); }
+  .destacado-card-main { grid-column: span 2; }
+}
+@media (max-width: 480px) {
+  .destacados-grid { grid-template-columns: 1fr; }
+  .destacado-card-main { grid-column: span 1; }
+}
+
+/* ===== CART BOUNCE ===== */
+@keyframes cartBounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.15); }
+}
+.cart-bounce { animation: cartBounce 0.5s ease; }
 </style>

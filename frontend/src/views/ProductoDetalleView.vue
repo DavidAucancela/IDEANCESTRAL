@@ -14,7 +14,7 @@
             </ul>
             <ThemeToggle />
             <LanguageSwitcher />
-            <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')">
+            <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')" :class="{ 'cart-bounce': cartBouncing }">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
               <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
             </button>
@@ -44,9 +44,9 @@
         <div class="detalle-grid">
           <!-- Galería -->
           <div class="galeria">
-            <div class="galeria-principal">
-              <img 
-                :src="imagenActual" 
+            <div class="galeria-principal" @click="abrirLightbox(indexImagenActual)" style="cursor:zoom-in;">
+              <img
+                :src="imagenActual"
                 :alt="producto.nombre"
                 @error="handleImageError"
               />
@@ -105,6 +105,19 @@
                 {{ t('product.seguirExplorando') }}
               </router-link>
             </div>
+
+            <!-- Compartir -->
+            <div class="info-share">
+              <span class="share-label">Compartir:</span>
+              <button class="share-btn" @click="copiarLink" title="Copiar link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                Copiar link
+              </button>
+              <a :href="compartirWhatsApp" target="_blank" class="share-btn share-btn-wa" title="Compartir por WhatsApp">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </a>
+            </div>
           </div>
         </div>
 
@@ -140,6 +153,14 @@
       <p>{{ t('product.noEncontrado') }}</p>
       <router-link to="/" class="btn btn-primary">{{ t('product.volverCatalogo') }}</router-link>
     </div>
+
+    <!-- Lightbox -->
+    <LightboxModal
+      :visible="lightboxVisible"
+      :images="imagenesUrls"
+      :startIndex="lightboxIndex"
+      @close="lightboxVisible = false"
+    />
 
     <!-- Carrito Sidebar -->
     <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
@@ -200,7 +221,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useCarrito } from '../composables/useCarrito'
@@ -208,10 +229,11 @@ import { useToast } from '../composables/useToast'
 import { useLanguageStore } from '../stores/language'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import LightboxModal from '../components/LightboxModal.vue'
 
 export default {
   name: 'ProductoDetalleView',
-  components: { ThemeToggle, LanguageSwitcher },
+  components: { ThemeToggle, LanguageSwitcher, LightboxModal },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -312,13 +334,52 @@ export default {
       event.target.src = '/imagenes/logo-principal.jpg'
     }
 
+    // Lightbox
+    const lightboxVisible = ref(false)
+    const lightboxIndex = ref(0)
+
+    const imagenesUrls = computed(() => imagenes.value.map(img => obtenerUrlImagen(img.url)))
+
+    const abrirLightbox = (index) => {
+      lightboxIndex.value = index
+      lightboxVisible.value = true
+    }
+
+    // Share
+    const compartirWhatsApp = computed(() => {
+      if (!producto.value) return '#'
+      const url = window.location.href
+      const msg = `¡Mira este producto de Ideancestral! *${producto.value.nombre}* - $${Number(producto.value.precio).toFixed(2)}\n${url}`
+      return `https://wa.me/?text=${encodeURIComponent(msg)}`
+    })
+
+    const copiarLink = async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        toastSuccess('¡Link copiado al portapapeles!')
+      } catch {
+        toastSuccess('¡Link copiado!')
+      }
+    }
+
     // WATCH: Recargar cuando cambia el ID de la ruta (productos relacionados)
     watch(() => route.params.id, (newId) => {
       if (newId) obtenerProducto(newId)
     })
 
+    const cartBouncing = ref(false)
+    const handleCartAdded = () => {
+      cartBouncing.value = true
+      setTimeout(() => { cartBouncing.value = false }, 600)
+    }
+
     onMounted(() => {
       obtenerProducto(route.params.id)
+      window.addEventListener('cart-item-added', handleCartAdded)
+    })
+
+    onUnmounted(() => {
+      window.removeEventListener('cart-item-added', handleCartAdded)
     })
 
     return {
@@ -344,7 +405,16 @@ export default {
       actualizarCantidad,
       vaciarCarrito,
       toggleCarrito,
-      enviarPedidoWhatsApp
+      enviarPedidoWhatsApp,
+      // Lightbox
+      lightboxVisible,
+      lightboxIndex,
+      imagenesUrls,
+      abrirLightbox,
+      // Share
+      compartirWhatsApp,
+      copiarLink,
+      cartBouncing
     }
   }
 }
@@ -730,6 +800,35 @@ export default {
   width: 100%; margin-top: 0.5rem; padding: 0.6rem; font-size: 0.85rem;
 }
 
+.info-share {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-gray-light);
+  flex-wrap: wrap;
+}
+.share-label { font-size: 0.85rem; color: var(--color-text-muted); }
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-gray-light);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+.share-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.share-btn-wa { background: #25D366; border-color: #25D366; color: #fff; }
+.share-btn-wa:hover { background: #1DA851; border-color: #1DA851; color: #fff; }
+
 /* Responsive */
 @media (max-width: 968px) {
   .detalle-grid { grid-template-columns: 1fr; }
@@ -750,4 +849,13 @@ export default {
   .precio-valor { font-size: 1.8rem; }
   .relacionados-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
 }
+
+/* ===== CART BOUNCE ===== */
+@keyframes cartBounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(0.9); }
+  75% { transform: scale(1.15); }
+}
+.cart-bounce { animation: cartBounce 0.5s ease; }
 </style>

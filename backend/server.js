@@ -26,6 +26,7 @@ const logger = pino({
 });
 
 const app = express();
+app.set('trust proxy', 1); // Railway termina TLS en su proxy
 const PORT = process.env.PORT || 3000;
 
 // --- VALIDACIÓN CRÍTICA: JWT_SECRET ---

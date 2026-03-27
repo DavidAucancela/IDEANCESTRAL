@@ -39,6 +39,7 @@ export const useCarritoStore = defineStore('carrito', () => {
       })
     }
     abierto.value = true
+    window.dispatchEvent(new CustomEvent('cart-item-added'))
   }
 
   const quitarDelCarrito = (productoId) => {
