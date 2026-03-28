@@ -118,8 +118,6 @@
             :to="`/producto/${prod.id}`"
             class="destacado-card"
             :class="i === 0 ? 'destacado-card-main' : ''"
-            data-animate
-            :data-animate-delay="String(i)"
           >
             <div class="destacado-img">
               <img :src="obtenerImagenDestacado(prod)" :alt="prod.nombre" loading="lazy" @error="handleImageError" />
@@ -189,8 +187,6 @@
             :key="cat.id"
             :to="`/categoria/${cat.id}`"
             class="categoria-nav-card"
-            data-animate
-            :data-animate-delay="String(index + 1)"
           >
             <div class="cat-nav-img">
               <img :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
