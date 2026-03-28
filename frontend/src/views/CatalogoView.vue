@@ -118,17 +118,19 @@
             :to="`/producto/${prod.id}`"
             class="destacado-card"
             :class="i === 0 ? 'destacado-card-main' : ''"
+            @mousemove="(e) => onCardMouseMove(e, prod.id)"
+            @mouseleave="onCardMouseLeave(prod.id)"
           >
-            <div class="destacado-img">
-              <img :src="obtenerImagenDestacado(prod)" :alt="prod.nombre" loading="lazy" @error="handleImageError" />
-              <div class="destacado-overlay">
-                <span class="destacado-overlay-btn">Ver producto</span>
-              </div>
-            </div>
-            <div class="destacado-info">
+            <span class="destacado-badge">✦ Destacado</span>
+            <img class="destacado-img" :src="obtenerImagenDestacado(prod)" :alt="prod.nombre"
+              :style="parallaxStyle(prod.id)" loading="lazy" @error="handleImageError" />
+            <div class="destacado-info-overlay">
               <span class="destacado-cat">{{ prod.categoria_nombre || 'Artesanía' }}</span>
               <h3>{{ prod.nombre }}</h3>
-              <span class="destacado-precio">${{ Number(prod.precio).toFixed(2) }}</span>
+              <div class="destacado-precio-row">
+                <span class="destacado-precio">${{ Number(prod.precio).toFixed(2) }}</span>
+                <span class="destacado-hover-btn">Ver producto →</span>
+              </div>
             </div>
           </router-link>
         </div>
@@ -187,11 +189,15 @@
             :key="cat.id"
             :to="`/categoria/${cat.id}`"
             class="categoria-nav-card"
+            :class="index === 0 ? 'categoria-nav-card-featured' : ''"
           >
-            <div class="cat-nav-img">
-              <img :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
+            <img class="cat-nav-bg" :src="imagenCategoria(cat)" :alt="cat.nombre" loading="lazy" @error="handleImageError" />
+            <div class="cat-nav-overlay">
+              <h3>{{ cat.nombre }}</h3>
+              <div class="cat-nav-reveal">
+                <span class="cat-nav-btn">Ver colección →</span>
+              </div>
             </div>
-            <h3>{{ cat.nombre }}</h3>
           </router-link>
         </div>
       </div>
@@ -559,6 +565,27 @@ export default {
       return '/imagenes/logo-principal.jpg'
     }
 
+    // Parallax en cards destacados
+    const cardParallax = ref({})
+    const onCardMouseMove = (e, id) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 18
+      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 18
+      cardParallax.value = { ...cardParallax.value, [id]: { x, y } }
+    }
+    const onCardMouseLeave = (id) => {
+      cardParallax.value = { ...cardParallax.value, [id]: { x: 0, y: 0 } }
+    }
+    const parallaxStyle = (id) => {
+      const p = cardParallax.value[id]
+      if (!p) return { transition: 'transform 0.5s ease' }
+      const isResting = p.x === 0 && p.y === 0
+      return {
+        transform: `translate(${p.x}px, ${p.y}px) scale(1.12)`,
+        transition: isResting ? 'transform 0.5s ease' : 'transform 0.08s linear'
+      }
+    }
+
     const cartBouncing = ref(false)
     const handleCartAdded = () => {
       cartBouncing.value = true
@@ -647,6 +674,9 @@ export default {
       productosDestacados,
       loadingDestacados,
       obtenerImagenDestacado,
+      onCardMouseMove,
+      onCardMouseLeave,
+      parallaxStyle,
       contadoresRef,
       contadores,
       cartBouncing
@@ -1085,53 +1115,80 @@ export default {
 
 .categorias-nav-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
 }
 
 .categoria-nav-card {
-  background: var(--color-surface);
-  border: none;
-  border-radius: var(--radius-md);
+  position: relative;
   overflow: hidden;
-  cursor: pointer;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-  padding: 0;
-  font-family: var(--font-sans);
+  border-radius: var(--radius-md);
   text-decoration: none;
   color: inherit;
   display: block;
+  background: var(--color-dark);
+  box-shadow: var(--shadow-sm);
+  height: 250px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
 .categoria-nav-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-5px);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.28);
 }
 
-.cat-nav-img {
-  width: 100%;
-  height: 160px;
-  overflow: hidden;
+.categoria-nav-card-featured {
+  grid-column: span 2;
+  height: 320px;
 }
 
-.cat-nav-img img {
-  width: 100%;
-  height: 100%;
+.cat-nav-bg {
+  width: 100%; height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  display: block;
+  transition: transform 0.55s ease;
 }
 
-.categoria-nav-card:hover .cat-nav-img img {
-  transform: scale(1.08);
+.categoria-nav-card:hover .cat-nav-bg { transform: scale(1.08); }
+
+.cat-nav-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(transparent 30%, rgba(15,8,3,0.88) 100%);
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.2rem 1.2rem 1rem;
+  transition: background 0.35s ease;
 }
 
-.categoria-nav-card h3 {
-  font-size: 1rem;
-  color: var(--color-text);
-  margin: 1rem 0 0.25rem;
-  font-weight: 600;
+.categoria-nav-card:hover .cat-nav-overlay {
+  background: linear-gradient(transparent 0%, rgba(15,8,3,0.93) 100%);
+}
+
+.cat-nav-overlay h3 {
+  font-size: 1rem; font-weight: 700; color: #fff;
+  margin: 0 0 0.35rem;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease;
+}
+
+.categoria-nav-card-featured .cat-nav-overlay h3 { font-size: 1.35rem; }
+
+.categoria-nav-card:hover .cat-nav-overlay h3 { transform: translateY(-2px); }
+
+.cat-nav-reveal {
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+}
+
+.categoria-nav-card:hover .cat-nav-reveal { max-height: 60px; opacity: 1; }
+
+.cat-nav-btn {
+  display: inline-block;
+  background: rgba(255,255,255,0.13); backdrop-filter: blur(8px);
+  color: #fff; font-size: 0.78rem; font-weight: 600;
+  padding: 0.32rem 0.85rem; border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.25);
 }
 
 /* ===== CATEGORIA SECTION ===== */
@@ -1615,7 +1672,8 @@ export default {
   .banner-carousel-dots { bottom: 16px; }
 
   .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
-  .categoria-nav-card:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
+  .categoria-nav-card-featured { grid-column: span 2; height: 260px; }
+  .categoria-nav-card { height: 200px; }
 
   .categoria-header { flex-direction: column; }
   .categoria-header-deco { display: none; }
@@ -1647,8 +1705,9 @@ export default {
   .banner-carousel-next { right: 4px; }
   .banner-dot { width: 8px; height: 8px; }
 
-  .categorias-nav-grid { grid-template-columns: repeat(2, 1fr); }
-  .categoria-nav-card:last-child { grid-column: span 2; max-width: 100%; }
+  .categorias-nav-grid { grid-template-columns: 1fr; }
+  .categoria-nav-card-featured { grid-column: span 1; height: 240px; }
+  .categoria-nav-card { height: 180px; }
 
   .productos-grid { grid-template-columns: 1fr; }
   .producto-image { height: 260px; }
@@ -1860,59 +1919,82 @@ export default {
 .destacados-section { padding: 5rem 0; background: var(--color-bg-warm); }
 .destacados-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: auto;
-  gap: 1.25rem;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-rows: 270px 270px;
+  gap: 1rem;
 }
 .destacado-card-main {
-  grid-column: span 2;
-  grid-row: span 1;
+  grid-column: 1;
+  grid-row: 1 / 3;
 }
 .destacado-card {
-  display: block;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-  text-decoration: none;
-  color: inherit;
-}
-.destacado-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-.destacado-img {
   position: relative;
   overflow: hidden;
-  height: 220px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  background: var(--color-dark);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
-.destacado-card-main .destacado-img { height: 320px; }
-.destacado-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-.destacado-card:hover .destacado-img img { transform: scale(1.06); }
-.destacado-overlay {
-  position: absolute; inset: 0;
-  background: rgba(44,34,24,0.5);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity 0.3s ease;
+.destacado-card:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+.destacado-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 10;
+  background: var(--color-secondary); color: #fff;
+  font-size: 0.67rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 0.22rem 0.6rem; border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-.destacado-card:hover .destacado-overlay { opacity: 1; }
-.destacado-overlay-btn {
-  background: #fff; color: var(--color-dark);
-  font-size: 0.82rem; font-weight: 600;
-  padding: 0.5rem 1.2rem; border-radius: 50px;
-  transform: translateY(6px); transition: transform 0.3s ease;
+.destacado-img {
+  position: absolute;
+  inset: -8%;
+  width: 116%; height: 116%;
+  object-fit: cover;
+  will-change: transform;
 }
-.destacado-card:hover .destacado-overlay-btn { transform: translateY(0); }
-.destacado-info { padding: 1rem 1.25rem; }
-.destacado-cat { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-secondary); font-weight: 600; }
-.destacado-info h3 { font-size: 1rem; font-weight: 600; margin: 0.3rem 0 0.5rem; }
-.destacado-precio { font-size: 1rem; font-weight: 700; color: var(--color-primary); }
+.destacado-info-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+  background: linear-gradient(transparent 0%, rgba(15,8,3,0.85) 50%, rgba(15,8,3,0.97) 100%);
+  padding: 2.5rem 1.2rem 1.2rem;
+}
+.destacado-cat {
+  display: block; font-size: 0.67rem; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--color-secondary); font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.destacado-info-overlay h3 {
+  font-size: 0.95rem; font-weight: 600; color: #fff;
+  margin: 0 0 0.5rem; line-height: 1.3;
+}
+.destacado-card-main .destacado-info-overlay h3 { font-size: 1.25rem; }
+.destacado-precio-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.destacado-precio { font-size: 1rem; font-weight: 700; color: var(--color-secondary); }
+.destacado-card-main .destacado-precio { font-size: 1.15rem; }
+.destacado-hover-btn {
+  display: inline-block;
+  background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+  color: #fff; font-size: 0.75rem; font-weight: 600;
+  padding: 0.28rem 0.75rem; border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.22);
+  transform: translateY(6px); opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.destacado-card:hover .destacado-hover-btn { transform: translateY(0); opacity: 1; }
 
-@media (max-width: 768px) {
-  .destacados-grid { grid-template-columns: repeat(2, 1fr); }
-  .destacado-card-main { grid-column: span 2; }
+@media (max-width: 900px) {
+  .destacados-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 280px auto;
+  }
+  .destacado-card-main { grid-column: span 2; grid-row: auto; min-height: 300px; }
+  .destacado-card:not(.destacado-card-main) { min-height: 220px; }
 }
 @media (max-width: 480px) {
-  .destacados-grid { grid-template-columns: 1fr; }
-  .destacado-card-main { grid-column: span 1; }
+  .destacados-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .destacado-card-main { grid-column: span 1; min-height: 260px; }
+  .destacado-card { min-height: 220px; }
 }
 
 /* ===== CART BOUNCE ===== */
