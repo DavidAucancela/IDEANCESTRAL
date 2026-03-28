@@ -23,6 +23,8 @@ COPY backend/ .
 
 # Frontend compilado (server.js busca en ../frontend/dist)
 COPY --from=frontend-builder /frontend/dist /frontend/dist
+# Imágenes estáticas originales (con nombres exactos, incluyendo espacios)
+COPY --from=frontend-builder /frontend/public/imagenes /frontend/public/imagenes
 
 EXPOSE 3000
 

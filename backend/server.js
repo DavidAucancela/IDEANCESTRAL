@@ -163,7 +163,8 @@ const distPath = path.join(__dirname, '..', 'frontend', 'dist');
 if (process.env.NODE_ENV === 'production' && fs.existsSync(distPath)) {
   app.use(express.static(distPath));
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
+    // No interceptar rutas de API ni de imágenes estáticas
+    if (req.path.startsWith('/api') || req.path.startsWith('/imagenes') || req.path.startsWith('/uploads')) return next();
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
