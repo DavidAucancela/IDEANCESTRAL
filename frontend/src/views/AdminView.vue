@@ -124,6 +124,8 @@
             <div v-if="loadingCategorias" class="loading">{{ t('admin.cargandoCategorias') }}</div>
             <div v-else class="categorias-grid">
               <div v-for="categoria in categorias" :key="categoria.id" class="categoria-card">
+                <img v-if="categoria.imagen_url" :src="obtenerUrlPromocion(categoria.imagen_url)" class="categoria-card-img" :alt="categoria.nombre" />
+                <div class="categoria-card-placeholder" v-else>📷</div>
                 <h3>{{ categoria.nombre }}</h3>
                 <p>{{ categoria.descripcion || t('admin.sinDescripcion') }}</p>
                 <div class="categoria-actions">
@@ -280,8 +282,14 @@
             </div>
           </div>
           <div class="form-group">
-            <label>{{ t('admin.urlImagen') }}</label>
-            <input v-model="formPromocion.imagen_url" type="text" placeholder="/imagenes/promo1.jpg" />
+            <label>{{ t('admin.imagen') }}</label>
+            <div class="upload-section">
+              <img v-if="formPromocion.imagen_url" :src="obtenerUrlPromocion(formPromocion.imagen_url)" class="upload-preview" alt="preview" />
+              <label class="btn btn-secondary">
+                {{ formPromocion.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
+                <input type="file" @change="subirImagenPromocion" accept="image/*" style="display:none" />
+              </label>
+            </div>
           </div>
           <div class="form-group">
             <label>{{ t('admin.orden') }}</label>
@@ -317,7 +325,17 @@
           </div>
           <div class="form-group">
             <label>{{ t('admin.descripcion') }}</label>
-            <textarea v-model="formCategoria.descripcion" rows="4"></textarea>
+            <textarea v-model="formCategoria.descripcion" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>{{ t('admin.imagen') }}</label>
+            <div class="upload-section">
+              <img v-if="formCategoria.imagen_url" :src="obtenerUrlPromocion(formCategoria.imagen_url)" class="upload-preview" alt="preview" />
+              <label class="btn btn-secondary">
+                {{ formCategoria.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
+                <input type="file" @change="subirImagenCategoria" accept="image/*" style="display:none" />
+              </label>
+            </div>
           </div>
           <div class="form-group checkbox-group">
             <label>
@@ -394,6 +412,7 @@ export default {
     const formCategoria = reactive({
       nombre: '',
       descripcion: '',
+      imagen_url: '',
       activa: true
     })
 
@@ -644,12 +663,14 @@ export default {
         Object.assign(formCategoria, {
           nombre: categoria.nombre,
           descripcion: categoria.descripcion || '',
+          imagen_url: categoria.imagen_url || '',
           activa: categoria.activa
         })
       } else {
         Object.assign(formCategoria, {
           nombre: '',
           descripcion: '',
+          imagen_url: '',
           activa: true
         })
       }
@@ -748,6 +769,38 @@ export default {
       }
     }
 
+    const subirImagenCategoria = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+      const formData = new FormData()
+      formData.append('imagen', file)
+      try {
+        const response = await axios.post(`${API_URL}/imagenes/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        formCategoria.imagen_url = response.data.url
+      } catch (error) {
+        console.error('Error subiendo imagen:', error)
+        alert(t('admin.errorSubirImagen'))
+      }
+    }
+
+    const subirImagenPromocion = async (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+      const formData = new FormData()
+      formData.append('imagen', file)
+      try {
+        const response = await axios.post(`${API_URL}/imagenes/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        formPromocion.imagen_url = response.data.url
+      } catch (error) {
+        console.error('Error subiendo imagen:', error)
+        alert(t('admin.errorSubirImagen'))
+      }
+    }
+
     const obtenerUrlPromocion = (url) => {
       if (!url) return '/imagenes/logo-principal.jpg'
       if (url.startsWith('http')) return url
@@ -818,7 +871,9 @@ export default {
       eliminarPromocion,
       obtenerUrlPromocion,
       obtenerImagenPrincipal,
-      obtenerUrlImagen
+      obtenerUrlImagen,
+      subirImagenCategoria,
+      subirImagenPromocion
     }
   }
 }
@@ -1018,10 +1073,35 @@ tbody tr:hover {
 
 .categoria-card {
   background: var(--color-surface);
-  padding: 1.5rem;
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
+
+.categoria-card-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.categoria-card-placeholder {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: var(--color-bg-warm);
+}
+
+.categoria-card h3,
+.categoria-card p,
+.categoria-actions {
+  padding: 0 1.25rem;
+}
+
+.categoria-card h3 { padding-top: 1rem; }
 
 .categoria-card h3 {
   margin-bottom: 0.5rem;
@@ -1221,7 +1301,19 @@ tbody tr:hover {
 }
 
 .upload-section {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.upload-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--color-gray-light);
 }
 
 .modal-footer {

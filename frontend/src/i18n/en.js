@@ -110,6 +110,7 @@ export default {
     principal: 'Main',
     marcarPrincipal: 'Set as Main',
     subirImagen: 'Upload Image',
+    cambiarImagen: 'Change Image',
     cancelar: 'Cancel',
     guardando: 'Saving...',
     guardar: 'Save',

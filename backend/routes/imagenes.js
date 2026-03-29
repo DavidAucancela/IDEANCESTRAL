@@ -44,6 +44,24 @@ const upload = multer({
   }
 });
 
+// POST /api/imagenes/upload - Subir imagen genérica (categorías, promociones)
+router.post('/upload', authenticateToken, upload.single('imagen'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+    const mimeCheck = await validateImageMime(req.file.path);
+    if (!mimeCheck.valid) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Tipo de archivo no permitido. Solo imágenes JPEG, PNG, GIF o WebP válidas.' });
+    }
+    const url = `/uploads/${req.file.filename}`;
+    await logAudit({ adminId: req.user.id, action: 'upload', entity: 'imagenes', req });
+    res.status(201).json({ url });
+  } catch (error) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: 'Error al subir imagen' });
+  }
+});
+
 // POST /api/imagenes - Subir imagen para un producto
 router.post('/', authenticateToken, upload.single('imagen'), async (req, res) => {
   try {
