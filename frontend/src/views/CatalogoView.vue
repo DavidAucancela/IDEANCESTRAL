@@ -44,7 +44,7 @@
     <!-- Hero Section -->
     <section id="inicio" class="hero" ref="heroRef">
       <div class="hero-bg" :style="{ transform: `translateY(${parallaxOffset}px)` }">
-        <img src="/imagenes/logo-principal.jpg" alt="Ideancestral" />
+        <img src="/imagenes/hero-cover.jpeg" alt="Ideancestral" />
       </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
@@ -817,15 +817,17 @@ export default {
 }
 .hero-bg {
   position: absolute;
-  inset: -20%;
+  inset: -10%;
   will-change: transform;
 }
 .hero-bg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.45;
-  filter: saturate(0.8);
+  object-position: center center;
+  opacity: 0.55;
+  filter: saturate(0.85);
+  image-rendering: auto;
 }
 .hero-overlay {
   position: absolute;
