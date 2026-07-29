@@ -15,7 +15,7 @@
   --color-accent-light: #F5DEB3;
   --color-text: #1A1A1A;
   --color-text-light: #555;
-  --color-text-muted: #888;
+  --color-text-muted: #6B6558;
   --color-bg: #FAF8F5;
   --color-bg-warm: #F5EDE4;
   --color-white: #FFFFFF;
@@ -36,7 +36,38 @@
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
+  --radius-full: 9999px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== ESCALA DE ESPACIADO ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* ===== ESCALA TIPOGRAFICA ===== */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
+
+  /* ===== TOKENS SEMANTICOS ===== */
+  --color-text-on-primary: var(--color-white);
+  --color-border: var(--color-gray-light);
+  --color-success: #2E7D32;
+  --color-error: #C0392B;
+  --color-info: #7B3F00;
+  --color-whatsapp: #178741;
+  --color-whatsapp-dark: #14793A;
+  --focus-ring: 0 0 0 3px rgba(123, 63, 0, 0.35);
 }
 
 /* ===== DARK MODE ===== */
@@ -65,6 +96,7 @@
   --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
   --shadow-xl: 0 20px 60px rgba(0,0,0,0.5);
+  --focus-ring: 0 0 0 3px rgba(212, 167, 106, 0.45);
 }
 
 html {
@@ -95,6 +127,12 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
 }
 
 .container {
@@ -144,14 +182,14 @@ img {
 }
 
 .btn-whatsapp {
-  background-color: #25D366;
+  background-color: var(--color-whatsapp);
   color: var(--color-white);
 }
 
 .btn-whatsapp:hover {
-  background-color: #1DA851;
+  background-color: var(--color-whatsapp-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+  box-shadow: 0 4px 15px rgba(23, 135, 65, 0.4);
 }
 
 /* Scrollbar personalizada */
