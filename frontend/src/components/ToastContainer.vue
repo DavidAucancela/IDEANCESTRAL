@@ -45,15 +45,15 @@ export default {
 }
 
 .toast.success {
-  background: #27ae60;
+  background: var(--color-success);
 }
 
 .toast.error {
-  background: #c0392b;
+  background: var(--color-error);
 }
 
 .toast.info {
-  background: var(--color-primary);
+  background: var(--color-info);
 }
 
 .toast-enter-active,
