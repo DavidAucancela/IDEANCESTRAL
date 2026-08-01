@@ -165,193 +165,153 @@
     </div>
 
     <!-- Modal Producto -->
-    <div v-if="mostrarModalProducto" class="modal-overlay" @click="cerrarModalProducto">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ productoEditar ? t('admin.editarProducto') : t('admin.nuevoProductoModal') }}</h3>
-          <button @click="cerrarModalProducto" class="btn-close">×</button>
+    <BaseModal
+      :visible="mostrarModalProducto"
+      :title="productoEditar ? t('admin.editarProducto') : t('admin.nuevoProductoModal')"
+      @close="cerrarModalProducto"
+    >
+      <form id="form-producto" @submit.prevent="guardarProducto">
+        <BaseInput v-model="formProducto.nombre" :label="t('admin.nombre')" required />
+        <BaseInput as="textarea" v-model="formProducto.descripcion" :label="t('admin.descripcion')" rows="4" />
+        <div class="form-row">
+          <BaseInput v-model="formProducto.precio" type="number" step="0.01" :label="t('admin.precio')" required />
+          <BaseInput v-model="formProducto.material" :label="t('admin.material')" />
+          <BaseInput v-model="formProducto.peso" :label="t('admin.peso')" />
         </div>
-        <form @submit.prevent="guardarProducto" class="modal-body">
-          <div class="form-group">
-            <label>{{ t('admin.nombre') }} *</label>
-            <input v-model="formProducto.nombre" type="text" required />
+        <BaseInput as="select" v-model="formProducto.categoria_id" :label="t('admin.categorias')">
+          <option :value="null">{{ t('admin.sinCategoria') }}</option>
+          <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
+            {{ cat.nombre }}
+          </option>
+        </BaseInput>
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <label>
+              <input v-model="formProducto.publicado" type="checkbox" />
+              {{ t('admin.publicado') }}
+            </label>
           </div>
-          <div class="form-group">
-            <label>{{ t('admin.descripcion') }}</label>
-            <textarea v-model="formProducto.descripcion" rows="4"></textarea>
+          <div class="form-group checkbox-group">
+            <label>
+              <input v-model="formProducto.destacado" type="checkbox" />
+              {{ t('admin.destacado') }}
+            </label>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>{{ t('admin.precio') }} *</label>
-              <input v-model.number="formProducto.precio" type="number" step="0.01" required />
-            </div>
-            <div class="form-group">
-              <label>{{ t('admin.material') }}</label>
-              <input v-model="formProducto.material" type="text" />
-            </div>
-            <div class="form-group">
-              <label>{{ t('admin.peso') }}</label>
-              <input v-model="formProducto.peso" type="text" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label>{{ t('admin.categorias') }}</label>
-            <select v-model.number="formProducto.categoria_id">
-              <option :value="null">{{ t('admin.sinCategoria') }}</option>
-              <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
-                {{ cat.nombre }}
-              </option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group checkbox-group">
-              <label>
-                <input v-model="formProducto.publicado" type="checkbox" />
-                {{ t('admin.publicado') }}
-              </label>
-            </div>
-            <div class="form-group checkbox-group">
-              <label>
-                <input v-model="formProducto.destacado" type="checkbox" />
-                {{ t('admin.destacado') }}
-              </label>
-            </div>
-          </div>
-          
-          <!-- Gestión de Imágenes -->
-          <div v-if="productoEditar" class="imagenes-section">
-            <h4>{{ t('admin.imagenesProducto') }}</h4>
-            <div class="imagenes-list">
-              <div v-for="imagen in imagenesProducto" :key="imagen.id" class="imagen-item">
-                <img :src="obtenerUrlImagen(imagen.url)" :alt="`Imagen ${imagen.id}`" />
-                <div class="imagen-actions">
-                  <button type="button" @click="marcarPrincipal(imagen.id)" 
-                    :class="['btn-small', imagen.es_principal ? 'btn-primary' : 'btn-secondary']">
-                    {{ imagen.es_principal ? t('admin.principal') : t('admin.marcarPrincipal') }}
-                  </button>
-                  <button type="button" @click="eliminarImagen(imagen.id)" class="btn-small btn-danger">
-                    {{ t('admin.eliminar') }}
-                  </button>
-                </div>
+        </div>
+
+        <!-- Gestión de Imágenes -->
+        <div v-if="productoEditar" class="imagenes-section">
+          <h4>{{ t('admin.imagenesProducto') }}</h4>
+          <div class="imagenes-list">
+            <div v-for="imagen in imagenesProducto" :key="imagen.id" class="imagen-item">
+              <img :src="obtenerUrlImagen(imagen.url)" :alt="`Imagen ${imagen.id}`" />
+              <div class="imagen-actions">
+                <button type="button" @click="marcarPrincipal(imagen.id)"
+                  :class="['btn-small', imagen.es_principal ? 'btn-primary' : 'btn-secondary']">
+                  {{ imagen.es_principal ? t('admin.principal') : t('admin.marcarPrincipal') }}
+                </button>
+                <button type="button" @click="eliminarImagen(imagen.id)" class="btn-small btn-danger">
+                  {{ t('admin.eliminar') }}
+                </button>
               </div>
             </div>
-            <div class="upload-section">
-              <label class="btn btn-secondary">
-                {{ t('admin.subirImagen') }}
-                <input type="file" @change="subirImagen" accept="image/*" style="display: none" />
-              </label>
-            </div>
           </div>
+          <div class="upload-section">
+            <label class="btn btn-secondary">
+              {{ t('admin.subirImagen') }}
+              <input type="file" @change="subirImagen" accept="image/*" style="display: none" />
+            </label>
+          </div>
+        </div>
+      </form>
 
-          <div class="modal-footer">
-            <button type="button" @click="cerrarModalProducto" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
-            <button type="submit" class="btn btn-primary" :disabled="guardando">
-              {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <template #footer>
+        <button type="button" @click="cerrarModalProducto" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
+        <button type="submit" form="form-producto" class="btn btn-primary" :disabled="guardando">
+          {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
+        </button>
+      </template>
+    </BaseModal>
 
     <!-- Modal Promoción -->
-    <div v-if="mostrarModalPromocion" class="modal-overlay" @click="cerrarModalPromocion">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ promocionEditar ? t('admin.editarPromocion') : t('admin.nuevaPromocionModal') }}</h3>
-          <button @click="cerrarModalPromocion" class="btn-close">×</button>
+    <BaseModal
+      :visible="mostrarModalPromocion"
+      :title="promocionEditar ? t('admin.editarPromocion') : t('admin.nuevaPromocionModal')"
+      @close="cerrarModalPromocion"
+    >
+      <form id="form-promocion" @submit.prevent="guardarPromocion">
+        <BaseInput v-model="formPromocion.nombre" :label="t('admin.nombre')" required />
+        <div class="form-row">
+          <BaseInput v-model="formPromocion.temporada" :label="t('admin.temporada')" required placeholder="Ej: Diciembre" />
+          <BaseInput as="select" v-model="formPromocion.tema" :label="t('admin.tema')">
+            <option value="navidad">{{ t('admin.temaNavidad') }}</option>
+            <option value="madre">{{ t('admin.temaMadre') }}</option>
+            <option value="cultural">{{ t('admin.temaCultural') }}</option>
+            <option value="inti">{{ t('admin.temaInti') }}</option>
+            <option value="general">{{ t('admin.temaGeneral') }}</option>
+          </BaseInput>
         </div>
-        <form @submit.prevent="guardarPromocion" class="modal-body">
-          <div class="form-group">
-            <label>{{ t('admin.nombre') }} *</label>
-            <input v-model="formPromocion.nombre" type="text" required />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>{{ t('admin.temporada') }} *</label>
-              <input v-model="formPromocion.temporada" type="text" required placeholder="Ej: Diciembre" />
-            </div>
-            <div class="form-group">
-              <label>{{ t('admin.tema') }}</label>
-              <select v-model="formPromocion.tema">
-                <option value="navidad">{{ t('admin.temaNavidad') }}</option>
-                <option value="madre">{{ t('admin.temaMadre') }}</option>
-                <option value="cultural">{{ t('admin.temaCultural') }}</option>
-                <option value="inti">{{ t('admin.temaInti') }}</option>
-                <option value="general">{{ t('admin.temaGeneral') }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>{{ t('admin.imagen') }}</label>
-            <div class="upload-section">
-              <img v-if="formPromocion.imagen_url" :src="obtenerUrlPromocion(formPromocion.imagen_url)" class="upload-preview" alt="preview" />
-              <label class="btn btn-secondary">
-                {{ formPromocion.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
-                <input type="file" @change="subirImagenPromocion" accept="image/*" style="display:none" />
-              </label>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>{{ t('admin.orden') }}</label>
-            <input v-model.number="formPromocion.orden" type="number" min="0" />
-          </div>
-          <div class="form-group checkbox-group">
-            <label>
-              <input v-model="formPromocion.activa" type="checkbox" />
-              {{ t('admin.activa') }}
+        <div class="form-group">
+          <label>{{ t('admin.imagen') }}</label>
+          <div class="upload-section">
+            <img v-if="formPromocion.imagen_url" :src="obtenerUrlPromocion(formPromocion.imagen_url)" class="upload-preview" alt="preview" />
+            <label class="btn btn-secondary">
+              {{ formPromocion.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
+              <input type="file" @change="subirImagenPromocion" accept="image/*" style="display:none" />
             </label>
           </div>
-          <div class="modal-footer">
-            <button type="button" @click="cerrarModalPromocion" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
-            <button type="submit" class="btn btn-primary" :disabled="guardando">
-              {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <BaseInput v-model="formPromocion.orden" type="number" min="0" :label="t('admin.orden')" />
+        <div class="form-group checkbox-group">
+          <label>
+            <input v-model="formPromocion.activa" type="checkbox" />
+            {{ t('admin.activa') }}
+          </label>
+        </div>
+      </form>
+
+      <template #footer>
+        <button type="button" @click="cerrarModalPromocion" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
+        <button type="submit" form="form-promocion" class="btn btn-primary" :disabled="guardando">
+          {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
+        </button>
+      </template>
+    </BaseModal>
 
     <!-- Modal Categoría -->
-    <div v-if="mostrarModalCategoria" class="modal-overlay" @click="cerrarModalCategoria">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ categoriaEditar ? t('admin.editarCategoria') : t('admin.nuevaCategoriaModal') }}</h3>
-          <button @click="cerrarModalCategoria" class="btn-close">×</button>
-        </div>
-        <form @submit.prevent="guardarCategoria" class="modal-body">
-          <div class="form-group">
-            <label>{{ t('admin.nombre') }} *</label>
-            <input v-model="formCategoria.nombre" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>{{ t('admin.descripcion') }}</label>
-            <textarea v-model="formCategoria.descripcion" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>{{ t('admin.imagen') }}</label>
-            <div class="upload-section">
-              <img v-if="formCategoria.imagen_url" :src="obtenerUrlPromocion(formCategoria.imagen_url)" class="upload-preview" alt="preview" />
-              <label class="btn btn-secondary">
-                {{ formCategoria.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
-                <input type="file" @change="subirImagenCategoria" accept="image/*" style="display:none" />
-              </label>
-            </div>
-          </div>
-          <div class="form-group checkbox-group">
-            <label>
-              <input v-model="formCategoria.activa" type="checkbox" />
-              {{ t('admin.activa') }}
+    <BaseModal
+      :visible="mostrarModalCategoria"
+      :title="categoriaEditar ? t('admin.editarCategoria') : t('admin.nuevaCategoriaModal')"
+      @close="cerrarModalCategoria"
+    >
+      <form id="form-categoria" @submit.prevent="guardarCategoria">
+        <BaseInput v-model="formCategoria.nombre" :label="t('admin.nombre')" required />
+        <BaseInput as="textarea" v-model="formCategoria.descripcion" :label="t('admin.descripcion')" rows="3" />
+        <div class="form-group">
+          <label>{{ t('admin.imagen') }}</label>
+          <div class="upload-section">
+            <img v-if="formCategoria.imagen_url" :src="obtenerUrlPromocion(formCategoria.imagen_url)" class="upload-preview" alt="preview" />
+            <label class="btn btn-secondary">
+              {{ formCategoria.imagen_url ? t('admin.cambiarImagen') : t('admin.subirImagen') }}
+              <input type="file" @change="subirImagenCategoria" accept="image/*" style="display:none" />
             </label>
           </div>
-          <div class="modal-footer">
-            <button type="button" @click="cerrarModalCategoria" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
-            <button type="submit" class="btn btn-primary" :disabled="guardando">
-              {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input v-model="formCategoria.activa" type="checkbox" />
+            {{ t('admin.activa') }}
+          </label>
+        </div>
+      </form>
+
+      <template #footer>
+        <button type="button" @click="cerrarModalCategoria" class="btn btn-secondary">{{ t('admin.cancelar') }}</button>
+        <button type="submit" form="form-categoria" class="btn btn-primary" :disabled="guardando">
+          {{ guardando ? t('admin.guardando') : t('admin.guardar') }}
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -361,10 +321,12 @@ import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import BaseModal from '../components/BaseModal.vue'
+import BaseInput from '../components/BaseInput.vue'
 
 export default {
   name: 'AdminView',
-  components: { ThemeToggle, LanguageSwitcher },
+  components: { ThemeToggle, LanguageSwitcher, BaseModal, BaseInput },
   setup() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const { t } = useLanguageStore()
@@ -1163,54 +1125,7 @@ tbody tr:hover {
   gap: 0.5rem;
 }
 
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 2rem;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: 8px;
-  max-width: 700px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--color-gray-light);
-}
-
-.modal-header h3 {
-  color: var(--color-text);
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: var(--color-text-light);
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
+/* Formularios (usados dentro de BaseModal y en el login) */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -1316,14 +1231,6 @@ tbody tr:hover {
   border: 1px solid var(--color-gray-light);
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-gray-light);
-}
-
 .loading {
   text-align: center;
   padding: 2rem;
@@ -1340,10 +1247,6 @@ tbody tr:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-  }
-
-  .modal-overlay {
-    padding: 1rem;
   }
 
   .form-row {

@@ -1499,7 +1499,7 @@ export default {
 
 .social-whatsapp {
   background: #E8FAF0;
-  color: #25D366;
+  color: var(--color-whatsapp);
 }
 
 .social-whatsapp:hover {
@@ -1599,20 +1599,21 @@ export default {
   right: 24px;
   width: 60px;
   height: 60px;
-  background: #25D366;
+  background: var(--color-whatsapp);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
+  box-shadow: 0 4px 20px rgba(23, 135, 65, 0.5);
   z-index: 999;
   transition: var(--transition);
 }
 
 .whatsapp-float:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
+  background: var(--color-whatsapp-dark);
+  box-shadow: 0 6px 25px rgba(23, 135, 65, 0.6);
 }
 
 /* ===== LOADING / EMPTY ===== */
@@ -1886,7 +1887,7 @@ export default {
   transition: var(--transition);
   font-size: 1.2rem;
 }
-.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+.carrito-item-remove:hover { background: #FEE; color: var(--color-error); }
 
 .carrito-footer {
   padding: 1.25rem 1.5rem;

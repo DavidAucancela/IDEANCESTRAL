@@ -99,40 +99,44 @@
             {{ productosFiltrados.length }} {{ productosFiltrados.length === 1 ? 'producto' : 'productos' }} encontrados
           </p>
           <div class="productos-grid">
-            <div
+            <BaseCard
               v-for="(producto, index) in productosFiltrados"
               :key="producto.id"
               class="producto-card"
               :style="{ animationDelay: `${index * 0.05}s` }"
               data-animate
             >
-              <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
-                <img
-                  :src="obtenerImagenProducto(producto)"
-                  :alt="producto.nombre"
-                  @error="handleImageError"
-                  loading="lazy"
-                />
-                <span v-if="producto.destacado" class="badge-card badge-destacado-card">✦ Destacado</span>
-                <div class="producto-overlay">
-                  <span class="producto-overlay-btn">Ver detalle</span>
-                </div>
-              </router-link>
-              <div class="producto-info">
-                <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-nombre-link">
-                  <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+              <template #image>
+                <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
+                  <img
+                    :src="obtenerImagenProducto(producto)"
+                    :alt="producto.nombre"
+                    @error="handleImageError"
+                    loading="lazy"
+                  />
+                  <span v-if="producto.destacado" class="badge-card badge-destacado-card">✦ Destacado</span>
+                  <div class="producto-overlay">
+                    <span class="producto-overlay-btn">Ver detalle</span>
+                  </div>
                 </router-link>
-                <h3 v-else class="producto-nombre">{{ producto.nombre }}</h3>
-                <p v-if="producto.material" class="producto-material">{{ producto.material }}</p>
-                <p v-if="producto.precio != null" class="producto-precio">${{ Number(producto.precio).toFixed(2) }}</p>
-              </div>
-            </div>
+              </template>
+              <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-nombre-link">
+                <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+              </router-link>
+              <h3 v-else class="producto-nombre">{{ producto.nombre }}</h3>
+              <p v-if="producto.material" class="producto-material">{{ producto.material }}</p>
+              <p v-if="producto.precio != null" class="producto-precio">${{ Number(producto.precio).toFixed(2) }}</p>
+            </BaseCard>
           </div>
 
-          <div v-if="!loading && productosFiltrados.length === 0" class="empty-state">
-            <p>{{ t('categoryView.noProductos') }}</p>
-            <router-link to="/" class="btn btn-primary">{{ t('categoryView.volverCatalogo') }}</router-link>
-          </div>
+          <EmptyState
+            v-if="!loading && productosFiltrados.length === 0"
+            :description="t('categoryView.noProductos')"
+          >
+            <template #action>
+              <router-link to="/" class="btn btn-primary">{{ t('categoryView.volverCatalogo') }}</router-link>
+            </template>
+          </EmptyState>
         </div>
       </div>
     </main>
@@ -190,6 +194,8 @@ import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import BaseCard from '../components/BaseCard.vue'
+import EmptyState from '../components/EmptyState.vue'
 
 const DEFAULT_IMAGENES = {
   'Madera': '/imagenes/sol madera.jpg',
@@ -203,7 +209,7 @@ const DEFAULT_IMAGENES = {
 
 export default {
   name: 'CategoriaView',
-  components: { ThemeToggle, LanguageSwitcher },
+  components: { ThemeToggle, LanguageSwitcher, BaseCard, EmptyState },
   setup() {
     const route = useRoute()
     const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
@@ -702,7 +708,7 @@ export default {
   color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
   transition: var(--transition);
 }
-.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+.carrito-item-remove:hover { background: #FEE; color: var(--color-error); }
 
 .carrito-footer {
   padding: 1rem 1.25rem; border-top: 1px solid var(--color-gray-light);
