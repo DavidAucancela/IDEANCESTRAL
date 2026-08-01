@@ -226,21 +226,22 @@
             <h2>{{ t('product.relacionados') }}</h2>
           </div>
           <div class="relacionados-grid">
-            <router-link
+            <BaseCard
               v-for="prod in productosRelacionados"
               :key="prod.id"
+              tag="router-link"
               :to="`/producto/${prod.id}`"
               class="rel-card"
             >
-              <div class="rel-image">
-                <img :src="obtenerImagenPrincipal(prod)" :alt="prod.nombre" />
-              </div>
-              <div class="rel-info">
-                <span class="rel-cat">{{ prod.categoria_nombre || t('product.artesania') }}</span>
-                <h4>{{ prod.nombre }}</h4>
-                <span class="rel-precio">${{ Number(prod.precio).toFixed(2) }}</span>
-              </div>
-            </router-link>
+              <template #image>
+                <div class="rel-image">
+                  <img :src="obtenerImagenPrincipal(prod)" :alt="prod.nombre" />
+                </div>
+              </template>
+              <span class="rel-cat">{{ prod.categoria_nombre || t('product.artesania') }}</span>
+              <h4>{{ prod.nombre }}</h4>
+              <span class="rel-precio">${{ Number(prod.precio).toFixed(2) }}</span>
+            </BaseCard>
           </div>
         </div>
       </div>
@@ -329,10 +330,11 @@ import { useLanguageStore } from '../stores/language'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import LightboxModal from '../components/LightboxModal.vue'
+import BaseCard from '../components/BaseCard.vue'
 
 export default {
   name: 'ProductoDetalleView',
-  components: { ThemeToggle, LanguageSwitcher, LightboxModal },
+  components: { ThemeToggle, LanguageSwitcher, LightboxModal, BaseCard },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -885,8 +887,8 @@ export default {
   color: var(--color-text); cursor: pointer; transition: var(--transition); text-decoration: none;
 }
 .share-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
-.share-btn-wa { background: #25D366; border-color: #25D366; color: #fff; }
-.share-btn-wa:hover { background: #1DA851; border-color: #1DA851; color: #fff; }
+.share-btn-wa { background: var(--color-whatsapp); border-color: var(--color-whatsapp); color: #fff; }
+.share-btn-wa:hover { background: var(--color-whatsapp-dark); border-color: var(--color-whatsapp-dark); color: #fff; }
 
 /* ── Proceso artesanal ────────────────────────────────── */
 .proceso-section {
@@ -994,9 +996,8 @@ export default {
 .rel-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
 .rel-card:hover .rel-image img { transform: scale(1.06); }
 
-.rel-info { padding: 1rem 1.25rem; }
 .rel-cat { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--color-secondary); }
-.rel-info h4 { font-size: 1rem; margin: 0.3rem 0 0.5rem; color: var(--color-text); font-weight: 600; }
+.rel-card h4 { font-size: 1rem; margin: 0.3rem 0 0.5rem; color: var(--color-text); font-weight: 600; }
 .rel-precio { font-size: 1.1rem; font-weight: 700; color: var(--color-primary); }
 
 /* ── Carrito Sidebar ──────────────────────────────────── */
@@ -1068,7 +1069,7 @@ export default {
   color: var(--color-text-muted); cursor: pointer; border-radius: 50%;
   flex-shrink: 0; transition: var(--transition);
 }
-.carrito-item-remove:hover { background: #FEE; color: #C0392B; }
+.carrito-item-remove:hover { background: #FEE; color: var(--color-error); }
 
 .carrito-footer { padding: 1.25rem 1.5rem; border-top: 1px solid var(--color-gray-light); background: var(--color-bg); }
 .carrito-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 1.1rem; }
