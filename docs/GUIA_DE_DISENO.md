@@ -1,7 +1,7 @@
 # Guía de Diseño — Ideancestral
 
-> Fuente de verdad de marca y tokens visuales. Última actualización: 2026-07-28
-> Estado: Fase 1 completa (tokens semánticos + accesibilidad)
+> Fuente de verdad de marca y tokens visuales. Última actualización: 2026-08-01
+> Estado: Fases 1–3 completadas y mergeadas a `main` (tokens + librería de componentes + migración de vistas)
 
 ## Referencia rápida
 
@@ -133,35 +133,182 @@ Igual que la escala tipográfica: disponible para uso en componentes nuevos y en
 
 ---
 
-## 5. Componentes actuales
+## 5. Componentes — estado actual
 
-| Componente | Archivo | Notas |
-|------------|---------|-------|
-| Botones | `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-whatsapp` (en `style.css`) | Sin variantes de tamaño ni estado `disabled`/`loading` todavía |
-| Toast | `ToastContainer.vue` | Ahora usa tokens de estado en vez de hex hardcodeado |
-| Lightbox | `LightboxModal.vue` | Único modal existente; no generalizado como modal base |
-| Theme/Language toggles | `ThemeToggle.vue`, `LanguageSwitcher.vue` | — |
+### Componentes de base (Fase 2, nuevos)
 
-**Diagnóstico:** `style.css` global tiene ~230 líneas, pero las 4 vistas principales suman más de 5,300 líneas de `<style scoped>`, en gran parte reimplementando patrones de card/badge/grid/modal por vista en vez de reutilizar componentes. Esa es la brecha entre "tengo tokens" y "tengo un sistema de diseño".
+| Componente | Archivo | Descripción |
+|------------|---------|------------|
+| **BaseCard** | `frontend/src/components/BaseCard.vue` | Card genérica con slots para imagen, contenido y footer. Soporta `tag` prop para renderizar como `div`, `router-link`, `a` o custom. Hover elevation. |
+| **BaseInput** | `frontend/src/components/BaseInput.vue` | Form field reutilizable. Soporta `input`, `textarea`, `select` vía prop `as`. Label con asterisco para `required`. Error y hint text. Manejo de `type="number"` con conversión de valor. |
+| **BaseModal** | `frontend/src/components/BaseModal.vue` | Modal base generalizando `LightboxModal`. Header con título y botón de cierre (×). Footer con slot. Escape key dismissal y click-outside. Teleport a body. Restricción de scroll en body. |
+| **BaseBadge** | `frontend/src/components/BaseBadge.vue` | Badge con 6 variantes: `primary`, `secondary`, `success`, `error`, `info`, `neutral`. Usa `--radius-full`. |
+| **EmptyState** | `frontend/src/components/EmptyState.vue` | Empty state reutilizable con icon slot (search por defecto), title, description y action slot. |
+| **SkeletonLoader** | `frontend/src/components/SkeletonLoader.vue` | Shimmer animation para loading states. Respeta `prefers-reduced-motion`. |
+| **BasePagination** | `frontend/src/components/BasePagination.vue` | Componente de paginación con Previous/Next, números de página y ellipsis. Aria-current para accesibilidad. |
+
+### Variantes de botones (Fase 2, nuevas)
+
+En `style.css`, se agregaron:
+- `.btn-sm`, `.btn-lg` — tamaños
+- `.btn-icon` — icon-only circular
+- `.btn:disabled` / `.btn.btn-disabled` — estado deshabilitado
+- `.btn.btn-loading` — estado cargando con spinner
+
+### Componentes existentes (refactor)
+
+| Componente | Cambios |
+|------------|---------|
+| `ToastContainer.vue` | Ahora usa tokens de estado (`--color-success`, `--color-error`, `--color-info`) en vez de hex hardcodeado. |
+| `LightboxModal.vue` | Sigue en uso para la galería de ProductoDetalleView; no se migró a `BaseModal` para no romper funcionamiento específico del lightbox. |
+
+### Diagnóstico de antes de Fase 2
+
+`style.css` global tenía ~230 líneas de CSS base, pero las 4 vistas principales sumaban más de 5,300 líneas de `<style scoped>`, en gran parte reimplementando patrones de card/badge/grid/modal por vista en vez de reutilizar componentes. Esa era la brecha entre "tengo tokens" y "tengo un sistema de diseño".
 
 ---
 
-## 6. Roadmap
+## 6. Roadmap — Estado de implementación
 
-### Fase 1 — Tokens + accesibilidad ✅ (este documento)
-- Capa semántica de tokens (espaciado, tipografía, estado, foco).
-- 4 fallos de contraste AA corregidos.
-- Esta guía como fuente de verdad.
+### Fase 1 — Tokens + accesibilidad ✅ COMPLETA
+**Rama:** `design-system/fase-1-tokens-accesibilidad` → PR #2 → mergeado a `main` (2026-07-29)
 
-### Fase 2 — Librería de componentes (pendiente)
-- Extraer patrones repetidos a componentes Vue: `Card`, `Badge`, `Input`/`FormField`, `Modal` base (generalizar `LightboxModal`), `Skeleton`, `EmptyState`, `Pagination`, `Tabs`.
-- Expandir sistema de botones: tamaños (`sm`/`md`/`lg`), estados `disabled`/`loading`, variante icon-only.
+- ✅ Capa semántica de tokens (espaciado `--space-1..8`, tipografía `--text-xs..4xl`, estado `--color-success/error/info/whatsapp`).
+- ✅ 4 fallos de contraste AA corregidos (texto-muted, WhatsApp, toast.success, toast.info).
+- ✅ Focus ring global (`:focus-visible`) con `--focus-ring` que respeta tema claro/oscuro.
+- ✅ Esta guía como fuente de verdad.
+- ✅ Documentación en `docs/GUIA_DE_DISENO.md`.
 
-### Fase 3 — Migración y gobernanza (pendiente)
-- Reemplazar el CSS scoped duplicado de `CatalogoView.vue`, `AdminView.vue`, `ProductoDetalleView.vue` y `CategoriaView.vue` por los componentes de Fase 2.
-- Migrar tamaños de fuente y espaciados ad-hoc a `--text-*` / `--space-*`.
-- Aplicar el checklist de consistencia de marca por vista.
+**Archivos en `main`:**
+- `frontend/src/style.css` — línea 1 a 136: tokens primitivos, semánticos y dark mode overrides
 
 ---
 
-*Documento vivo — actualizar junto con `frontend/src/style.css` cada vez que cambien los tokens.*
+### Fase 2 — Librería de componentes ✅ COMPLETA
+**Rama:** `design-system/fase-2-3-componentes-migracion` → PR #3 → mergeado a `main` (2026-08-01)
+
+**Componentes creados:**
+- ✅ `BaseCard.vue` — Card genérica con slots, soporta `router-link`, hover lift
+- ✅ `BaseInput.vue` — Form field con label/error/hint, tipo-aware (number conversion), `:focus-visible`
+- ✅ `BaseModal.vue` — Modal base teleportado a body, Escape key, click-outside dismissal
+- ✅ `BaseBadge.vue` — 6 variantes de badge, `--radius-full`
+- ✅ `EmptyState.vue` — Empty state con icon/title/description/action slots
+- ✅ `SkeletonLoader.vue` — Shimmer animation con `prefers-reduced-motion`
+- ✅ `BasePagination.vue` — Pagination con Previous/Next/números, `aria-current`
+
+**Variantes de botones:**
+- ✅ `.btn-sm`, `.btn-lg` — tamaños
+- ✅ `.btn-icon` — icon-only circular
+- ✅ `.btn:disabled` / `.btn-disabled` — estado deshabilitado
+- ✅ `.btn-loading` — estado cargando con spinner CSS
+
+**Archivos en `main`:**
+- `frontend/src/components/Base*.vue` — 7 nuevos componentes
+- `frontend/src/style.css` — línea 144–248: botones, variantes y animaciones
+
+---
+
+### Fase 3 — Migración de vistas y verificación ✅ COMPLETA
+**Rama:** `design-system/fase-2-3-componentes-migracion` → PR #3 → mergeado a `main` (2026-08-01)
+
+**Migraciones a componentes:**
+- ✅ **AdminView.vue** — 3 modales (Producto, Categoría, Promoción) → `BaseModal` + `BaseInput`
+  - Reemplazado `.modal-overlay` + `.modal-content` + `.form-group` con `<BaseModal>` y `<BaseInput>`
+  - Eliminadas ~50 líneas de CSS duplicado
+  - Verificado en navegador: login real, PUT persistido ($36.50 guardado), select preseleccionado, checkboxes, `required` validation
+  
+- ✅ **CategoriaView.vue** — Grid de productos + empty state
+  - Reemplazado `.producto-card` grid con `<BaseCard>` (en `<router-link>`)
+  - Empty state → `<EmptyState>`
+  - Verificado: 10 productos reales con datos de DB, badges "Destacado", hover overlay, navegación funcional
+  
+- ✅ **ProductoDetalleView.vue** — "También te puede interesar" grid
+  - Reemplazado `.rel-card` + `.rel-image` + `.rel-info` con `<BaseCard>` (como `router-link`)
+  - Limpieza de CSS duplicado (`.rel-info`, `.rel-image`, etc.)
+  - Verificado: clic en card navega a otro producto, hover lift animation funciona
+
+**Decisiones de arquitectura documentadas:**
+- ❌ **CatalogoView.vue NO se migró** — su sección de destacados es diseño editorial hecho a mano (magazine + parallax), no patrón genérico de card. Forzarlo a `BaseCard` lo habría aplanado sin valor.
+
+**Bugs corregidos en el camino:**
+- ❌→✅ Double asterisk en labels requeridos (`BaseInput` agrega `*`, AdminView no debía agregarlo manualmente)
+- ❌→✅ Redundancia de padding (`.rel-info` padding duplicado si se hubiera aplicado)
+
+**Infraestructura de verificación:**
+- Postgres 16 en Docker (puerto 5435), backend Node 20 (puerto 3002), frontend Vite (puerto 5175)
+- Admin local: `admin` / `DevLocal2026!Temp` (`.env.local`, gitignorado)
+- Todos los cambios probados en el navegador contra datos reales de DB (no mocks)
+
+**Archivos en `main`:**
+- `frontend/src/views/AdminView.vue` — ~367 líneas, estructura simplificada con `BaseModal`/`BaseInput`
+- `frontend/src/views/CategoriaView.vue` — ~60 líneas más de template/script cleanups
+- `frontend/src/views/ProductoDetalleView.vue` — ~33 líneas cleanups
+
+---
+
+## 7. Lo pendiente
+
+### Corto plazo (improvement debt, no requisitos MVP)
+1. **Migración tipográfica de vistas grandes** — Las vistas aún usan `font-size` ad-hoc en sus `<style scoped>`. Reemplazar por `--text-xs`, `--text-sm`, etc. (Ej: búsqueda de `font-size:` en cada vista, reemplazar con tokens correspondientes)
+2. **Migración de espaciados** — Similarmente, reemplazar `margin`, `padding`, `gap` hardcodeado con `--space-*`
+3. **Consistencia de CatalogoView** — Aunque no se migró su layout editorial, sus colores deberían referenciarse desde tokens (ej: `var(--color-whatsapp)` en vez de `#25D366`)
+4. **Documentación de accesibilidad** — Crear `docs/ACCESIBILIDAD.md` con la auditoría completa, recomendaciones WCAG AA, y cómo verificar nuevos cambios
+
+### Mediano plazo (nuevas características del sistema de diseño)
+1. **Sistema de colores para temas personalizados** — Actualmente solo hay light/dark. Explorar si hay casos de uso para "sepia", "high-contrast", etc.
+2. **Componentes faltantes** — Tabs, Dropdown/Select mejorado (el `<select>` nativo en `BaseInput` es funcional pero básico), Accordion, Tooltip
+3. **Documentación interactiva** — Storybook o similar para mostrar todos los componentes y tokens en un solo lugar
+4. **Testing de a11y** — Integrar `axe-core` o `vitest-axe` para auditorías automáticas en CI
+
+### Largo plazo (sostenibilidad)
+1. **Gobernanza de cambios** — Crear un proceso de PR review específico para cambios en tokens o componentes
+2. **Versionado del sistema de diseño** — Separar versión de la librería de componentes (ej: `@ideancestral/ui@1.0.0`) si escala
+3. **Monorepo** — Si la librería crece, considerar estructura monorepo para frontend + librería separada
+
+---
+
+---
+
+## 8. Cómo trabajar con este sistema
+
+### Agregar un token nuevo
+
+1. Define la variable en `:root` de `frontend/src/style.css` (línea 9–71)
+2. Si aplica, redefine el token en `[data-theme="dark"]` (línea 74–100)
+3. Documenta el token en esta guía con su valor hex, uso, y si cambia entre temas
+4. Referencia el token en componentes/vistas usando `var(--token-name)`, nunca hardcodees hex
+
+### Crear un componente nuevo
+
+1. Crea el archivo en `frontend/src/components/Base*.vue`
+2. Usa tokens de `style.css` para colores, spacing, tipografía, bordes y sombras
+3. Expón props para variación (ej: `variant`, `size`, `disabled`), no hardcodees
+4. Prueba con tema claro y oscuro (`data-theme="dark"` en `<html>`)
+5. Prueba con teclado — `:focus-visible` debe ser visible, Escape en modales, Enter en botones
+6. Documenta en esta guía bajo sección "Componentes"
+
+### Migrar una vista a componentes
+
+1. Identifica patrones repetidos (cards, modales, form groups, badges)
+2. Reemplaza con componentes de Fase 2 o crea uno nuevo si el patrón es único
+3. Elimina CSS scoped duplicado una vez que los componentes lo manejan
+4. **Prueba en el navegador** contra datos reales de la DB, no mocks
+5. Verifica que no se rompió nada: busca errores en la consola, prueba interacción
+6. Documenta cambios y decisiones en esta guía
+
+### Auditar accesibilidad
+
+```bash
+# En la consola del navegador, copia/pega:
+(async() => {
+  const { default: axe } = await import('https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.7.0/axe.min.js');
+  const results = await axe.run();
+  console.table(results.violations);
+})();
+```
+
+O usa Chrome DevTools → Lighthouse → Accesibilidad.
+
+---
+
+*Documento vivo — actualizar junto con `frontend/src/style.css` cada vez que cambien los tokens. Última actualización: 2026-08-01 (Fases 1–3 completas).*
