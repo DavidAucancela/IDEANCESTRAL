@@ -69,30 +69,6 @@
       </div>
     </section>
 
-    <!-- Stats Bar -->
-    <section class="stats-bar">
-      <div class="container">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <span class="stat-number">15<sup>+</sup></span>
-            <span class="stat-label">Años de tradición</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">18</span>
-            <span class="stat-label">Tipos de artesanía</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">100<sup>+</sup></span>
-            <span class="stat-label">Piezas únicas</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-number">100<sup>%</sup></span>
-            <span class="stat-label">Hecho a mano</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Productos Destacados -->
     <section class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
       <div class="container">
@@ -170,7 +146,6 @@
         <p class="banner-pre">{{ t('banner.pre') }}</p>
         <h2 class="banner-title-main">{{ t('banner.titulo') }}</h2>
         <div class="banner-divider"></div>
-        <p class="banner-subtitle">-Mary Cecy-</p>
         <p class="banner-tagline">{{ t('banner.tagline') }}</p>
       </div>
     </section>
@@ -238,13 +213,6 @@
           <h2>{{ t('about.title') }}</h2>
           <p>{{ t('about.subtitle') }}</p>
         </div>
-        <div class="nosotros-counters" ref="contadoresRef">
-          <div class="nosotros-counter" v-for="(c, i) in contadores" :key="i">
-            <span class="counter-num">{{ c.display }}<sup v-if="c.suffix">{{ c.suffix }}</sup></span>
-            <span class="counter-label">{{ c.label }}</span>
-          </div>
-        </div>
-
         <div class="nosotros-grid">
           <div class="nosotros-info">
             <div class="info-cards">
@@ -592,32 +560,6 @@ export default {
       setTimeout(() => { cartBouncing.value = false }, 600)
     }
 
-    // Contadores animados en la sección Nosotros
-    const contadoresRef = ref(null)
-    const contadores = ref([
-      { target: 15, display: '0', suffix: '+', label: 'Años de tradición' },
-      { target: 18, display: '0', suffix: '', label: 'Tipos de artesanía' },
-      { target: 100, display: '0', suffix: '+', label: 'Piezas únicas' },
-      { target: 1000, display: '0', suffix: '+', label: 'Clientes satisfechos' },
-    ])
-    let contadoresAnimados = false
-    const animarContadores = () => {
-      if (contadoresAnimados) return
-      contadoresAnimados = true
-      contadores.value.forEach((c) => {
-        const duration = 1800
-        const start = performance.now()
-        const update = (now) => {
-          const progress = Math.min((now - start) / duration, 1)
-          const eased = 1 - Math.pow(1 - progress, 3)
-          c.display = Math.round(eased * c.target).toLocaleString()
-          if (progress < 1) requestAnimationFrame(update)
-          else c.display = c.target.toLocaleString()
-        }
-        requestAnimationFrame(update)
-      })
-    }
-
     useScrollAnimation()
 
     onMounted(() => {
@@ -627,11 +569,6 @@ export default {
       cargarDestacados()
       window.addEventListener('scroll', handleScroll)
       window.addEventListener('cart-item-added', handleCartAdded)
-      const observer = new IntersectionObserver(
-        (entries) => { if (entries[0].isIntersecting) animarContadores() },
-        { threshold: 0.3 }
-      )
-      if (contadoresRef.value) observer.observe(contadoresRef.value)
     })
 
     onUnmounted(() => {
@@ -677,8 +614,6 @@ export default {
       onCardMouseMove,
       onCardMouseLeave,
       parallaxStyle,
-      contadoresRef,
-      contadores,
       cartBouncing
     }
   }
@@ -1030,14 +965,6 @@ export default {
   height: 2px;
   background: var(--color-accent);
   margin: 1.5rem auto;
-}
-
-.banner-subtitle {
-  font-family: var(--font-serif);
-  font-size: 1.5rem;
-  color: var(--color-accent-light);
-  font-style: italic;
-  margin-bottom: 0.5rem;
 }
 
 .banner-tagline {
@@ -1667,7 +1594,6 @@ export default {
   .hero-actions .btn { width: 100%; max-width: 320px; }
 
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
-  .banner-subtitle { font-size: 1.2rem; }
   .banner-central { padding: 4rem 20px; }
   .banner-carousel-btn { width: 36px; height: 36px; }
   .banner-carousel-prev { left: 8px; }
@@ -2009,57 +1935,6 @@ export default {
 }
 .cart-bounce { animation: cartBounce 0.5s ease; }
 
-/* ===== STATS BAR ===== */
-.stats-bar {
-  background: var(--color-dark);
-  padding: 2.5rem 0;
-  border-bottom: 1px solid rgba(212, 167, 106, 0.15);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  text-align: center;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 1rem;
-  border-right: 1px solid rgba(255,255,255,0.08);
-}
-.stat-item:last-child { border-right: none; }
-
-.stat-number {
-  font-family: var(--font-serif);
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: var(--color-accent);
-  line-height: 1;
-}
-.stat-number sup {
-  font-size: 1.2rem;
-  vertical-align: super;
-  color: var(--color-secondary);
-}
-
-.stat-label {
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-}
-
-@media (max-width: 768px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .stat-item:nth-child(3), .stat-item:nth-child(4) { border-bottom: none; }
-}
-
 /* ===== SKELETON LOADERS ===== */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
@@ -2101,53 +1976,4 @@ export default {
 .skeleton-line.short { width: 45%; }
 .skeleton-line.xshort { width: 30%; }
 
-/* ===== NOSOTROS COUNTERS ===== */
-.nosotros-counters {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 3.5rem;
-  padding: 2rem;
-  background: var(--color-bg-warm);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-gray-light);
-}
-
-.nosotros-counter {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem;
-}
-
-.counter-num {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  line-height: 1;
-}
-.counter-num sup {
-  font-size: 1.1rem;
-  vertical-align: super;
-  color: var(--color-secondary);
-}
-
-.counter-label {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-}
-
-@media (max-width: 768px) {
-  .nosotros-counters { grid-template-columns: repeat(2, 1fr); padding: 1.5rem; }
-}
-@media (max-width: 480px) {
-  .nosotros-counters { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-  .counter-num { font-size: 2rem; }
-}
 </style>
