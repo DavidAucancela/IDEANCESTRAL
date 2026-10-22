@@ -101,3 +101,43 @@ describe('Stock en la tienda', () => {
     expect(root.querySelector('.badge-agotado-card')?.textContent).toContain('Agotado')
   })
 })
+
+describe('Sección de inicio (HeroSection)', () => {
+  const casos = [
+    ['editorial', '.hero__collage'],
+    ['inmersivo', '.hero__fondo'],
+    ['ilustrado', '.hero__ilustracion'],
+    ['minimal', '.hero__tira']
+  ]
+
+  it.each(casos)('variante %s: un solo h1, su visual propio y los dos botones', async (variante, visual) => {
+    await montarEn(`/?hero=${variante}`)
+    const hero = root.querySelector('#inicio')
+    expect(hero.classList).toContain(`hero--${variante}`)
+    expect(root.querySelectorAll('h1')).toHaveLength(1)
+    expect(hero.querySelector(visual)).not.toBeNull()
+    // Las otras variantes no dejan su visual en el DOM
+    for (const [, otro] of casos.filter(([v]) => v !== variante)) {
+      expect(hero.querySelector(otro)).toBeNull()
+    }
+    expect(hero.querySelector('.btn-primary').getAttribute('href')).toBe('/#categorias')
+    expect(hero.querySelector('.btn-whatsapp').getAttribute('href')).toMatch(/^https:\/\/wa\.me\/\d+/)
+  })
+
+  it('una variante desconocida usa la de por defecto', async () => {
+    await montarEn('/?hero=no-existe')
+    expect(root.querySelector('#inicio').classList).toContain('hero--editorial')
+  })
+
+  it('las imágenes con contenido tienen texto alternativo', async () => {
+    for (const [variante] of casos) {
+      await montarEn(`/?hero=${variante}`)
+      root.querySelectorAll('#inicio img').forEach((img) => {
+        const decorativa = img.closest('[aria-hidden="true"]')
+        if (!decorativa) expect(img.getAttribute('alt')).toBeTruthy()
+      })
+      app.unmount()
+      root.remove()
+    }
+  })
+})
