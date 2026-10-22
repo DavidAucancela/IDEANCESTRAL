@@ -1,46 +1,5 @@
 <template>
   <div class="catalogo-view">
-    <!-- Header -->
-    <header class="header" :class="{ scrolled: isScrolled }">
-      <nav class="nav">
-        <div class="nav-container">
-          <router-link to="/" class="logo">
-            <span 
-              class="logo-icon"
-              @mousedown.prevent="iniciarLongPress"
-              @mouseup="cancelarLongPress"
-              @mouseleave="cancelarLongPress"
-              @touchstart.prevent="iniciarLongPress"
-              @touchend="cancelarLongPress"
-              @touchcancel="cancelarLongPress"
-            >IA</span>
-            <span class="logo-text">Ideancestral</span>
-          </router-link>
-          <ul class="nav-links" :class="{ open: menuOpen }">
-            <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
-            <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
-            <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
-            <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
-            <li class="nav-utilities">
-              <ThemeToggle />
-              <LanguageSwitcher />
-            </li>
-            <li>
-              <button class="cart-toggle" @click="toggleCarrito" :title="t('cart.miCarrito')" :class="{ 'cart-bounce': cartBouncing }">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-                <span v-if="carritoCount > 0" class="cart-badge">{{ carritoCount }}</span>
-              </button>
-            </li>
-          </ul>
-          <button class="menu-toggle" @click="toggleMenu" :class="{ active: menuOpen }">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-        </div>
-      </nav>
-    </header>
-
     <!-- Hero Section -->
     <section id="inicio" class="hero" ref="heroRef">
       <div class="hero-bg" :style="{ transform: `translateY(${parallaxOffset}px)` }">
@@ -233,9 +192,9 @@
                 </div>
                 <div>
                   <strong>{{ t('about.telefono') }}</strong>
-                  <p>(02) 2227781</p>
-                  <p>+593 987 999 136</p>
-                  <p>+593 978 752 422</p>
+                  <p v-for="tel in TELEFONOS" :key="tel">
+                    <a :href="`tel:${tel.replace(/[^\d+]/g, '')}`">{{ tel }}</a>
+                  </p>
                 </div>
               </div>
               <div class="info-card">
@@ -244,12 +203,12 @@
                 </div>
                 <div>
                   <strong>{{ t('about.email') }}</strong>
-                  <p>mary_cecy_ma@hotmail.com</p>
+                  <p><a :href="`mailto:${EMAIL}`">{{ EMAIL }}</a></p>
                 </div>
               </div>
             </div>
             <div class="nosotros-social">
-              <a href="https://www.instagram.com/ideancestral/" target="_blank" class="social-btn">
+              <a :href="INSTAGRAM_URL" target="_blank" rel="noopener" class="social-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
                 Instagram
               </a>
@@ -275,121 +234,28 @@
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="container">
-        <div class="footer-top">
-          <div class="footer-brand">
-            <div class="footer-logo">
-              <span class="logo-icon">IA</span>
-              <span class="logo-text">Ideancestral</span>
-            </div>
-            <p>{{ t('footer.slogan') }}</p>
-          </div>
-          <div class="footer-links-grid">
-            <div>
-              <h4>{{ t('footer.navegacion') }}</h4>
-              <ul>
-                <li><a href="#inicio" @click.prevent="scrollTo('inicio')">{{ t('nav.inicio') }}</a></li>
-                <li><a href="#categorias" @click.prevent="scrollTo('categorias')">{{ t('nav.categorias') }}</a></li>
-                <li><a href="#promociones" @click.prevent="scrollTo('promociones')">{{ t('nav.promociones') }}</a></li>
-                <li><a href="#nosotros" @click.prevent="scrollTo('nosotros')">{{ t('nav.nosotros') }}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4>{{ t('footer.contacto') }}</h4>
-              <ul>
-                <li>(02) 2227781</li>
-                <li>+593 987 999 136</li>
-                <li>+593 978 752 422</li>
-                <li>mary_cecy_ma@hotmail.com</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <p>Idea Ancestral &copy; {{ new Date().getFullYear() }}. {{ t('footer.derechos') }}</p>
-        </div>
-      </div>
-    </footer>
-
-    <!-- Carrito Sidebar -->
-    <div class="carrito-overlay" :class="{ visible: carritoAbierto }" @click="toggleCarrito"></div>
-    <aside class="carrito-sidebar" :class="{ open: carritoAbierto }">
-      <div class="carrito-header">
-        <h3>{{ t('cart.miCarrito') }} <span v-if="carritoCount > 0" class="carrito-count">({{ carritoCount }})</span></h3>
-        <button class="carrito-close" @click="toggleCarrito">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div v-if="carrito.length === 0" class="carrito-empty">
-        <p>{{ t('cart.vacio') }}</p>
-        <router-link to="/#categorias" @click="toggleCarrito" class="btn btn-primary">{{ t('cart.explorar') }}</router-link>
-      </div>
-      <div v-else class="carrito-body">
-        <div class="carrito-items">
-          <div v-for="item in carrito" :key="item.id" class="carrito-item">
-            <img :src="item.imagen" :alt="item.nombre" class="carrito-item-img" @error="handleImageError" />
-            <div class="carrito-item-info">
-              <h4>{{ item.nombre }}</h4>
-              <span class="carrito-item-precio">${{ item.precio.toFixed(2) }}</span>
-              <div class="carrito-item-qty">
-                <button @click="actualizarCantidad(item.id, item.cantidad - 1)">−</button>
-                <span>{{ item.cantidad }}</span>
-                <button @click="actualizarCantidad(item.id, item.cantidad + 1)" :disabled="item.stock != null && item.cantidad >= item.stock" :title="item.stock != null && item.cantidad >= item.stock ? t('cart.sinMasStock') : undefined">+</button>
-              </div>
-            </div>
-            <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)">×</button>
-          </div>
-        </div>
-        <div class="carrito-footer">
-          <div class="carrito-total">
-            <span>{{ t('cart.total') }}</span>
-            <strong>${{ carritoTotal.toFixed(2) }}</strong>
-          </div>
-          <button class="btn btn-whatsapp carrito-btn-pedido" @click="enviarPedidoWhatsApp">
-            {{ t('cart.enviarWhatsApp') }}
-          </button>
-          <button class="btn btn-secondary carrito-btn-vaciar" @click="vaciarCarrito">{{ t('cart.vaciar') }}</button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- WhatsApp floating button -->
-    <a :href="whatsappGeneral" target="_blank" class="whatsapp-float" :title="t('whatsapp.escribenos')">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-    </a>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from 'axios'
-import { useCarrito } from '../composables/useCarrito'
 import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
-import ThemeToggle from '../components/ThemeToggle.vue'
-import LanguageSwitcher from '../components/LanguageSwitcher.vue'
-
-const WHATSAPP_NUMBER = '593987999136'
+import { scrollASeccion } from '../composables/useSecciones'
+import { TELEFONOS, EMAIL, INSTAGRAM_URL, whatsappLink } from '../config/contacto'
 
 export default {
   name: 'CatalogoView',
-  components: { ThemeToggle, LanguageSwitcher },
   setup() {
-    const router = useRouter()
-    const { carrito, carritoAbierto, carritoCount, carritoTotal, toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp } = useCarrito()
     const { t } = useLanguageStore()
-    const menuOpen = ref(false)
-    const isScrolled = ref(false)
     const heroRef = ref(null)
     const parallaxOffset = ref(0)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const productosDestacados = ref([])
     const loadingDestacados = ref(true)
-    const whatsappGeneral = computed(() => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoGeneral'))}`)
+    const whatsappGeneral = computed(() => whatsappLink(t('whatsapp.saludoGeneral')))
 
     // Categorias desde API (para cards de navegacion)
     const categoriasParaMostrar = ref([])
@@ -465,7 +331,6 @@ export default {
     }
 
     const handleScroll = () => {
-      isScrolled.value = window.scrollY > 50
       parallaxOffset.value = window.scrollY * 0.4
     }
 
@@ -473,43 +338,15 @@ export default {
       event.target.src = '/imagenes/logo-principal.jpg'
     }
 
-    const scrollTo = (elementId) => {
-      const element = document.getElementById(elementId)
-      if (element) {
-        const offset = 80
-        const y = element.getBoundingClientRect().top + window.pageYOffset - offset
-        window.scrollTo({ top: y, behavior: 'smooth' })
-      }
-      menuOpen.value = false
-    }
-
-    const toggleMenu = () => {
-      menuOpen.value = !menuOpen.value
-    }
+    const scrollTo = (id) => scrollASeccion(id)
 
     // WhatsApp helpers
     const whatsappProducto = (nombre) => {
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoProducto', { nombre }))}`
+      return whatsappLink(t('whatsapp.saludoProducto', { nombre }))
     }
 
     const whatsappPromo = (nombre) => {
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsapp.saludoPromo', { nombre }))}`
-    }
-
-    // Long press para acceso admin
-    let longPressTimer = null
-
-    const iniciarLongPress = () => {
-      longPressTimer = setTimeout(() => {
-        router.push('/admin')
-      }, 5000)
-    }
-
-    const cancelarLongPress = () => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer)
-        longPressTimer = null
-      }
+      return whatsappLink(t('whatsapp.saludoPromo', { nombre }))
     }
 
     const cargarDestacados = async () => {
@@ -554,12 +391,6 @@ export default {
       }
     }
 
-    const cartBouncing = ref(false)
-    const handleCartAdded = () => {
-      cartBouncing.value = true
-      setTimeout(() => { cartBouncing.value = false }, 600)
-    }
-
     useScrollAnimation()
 
     onMounted(() => {
@@ -567,21 +398,16 @@ export default {
       cargarCategorias()
       cargarPromociones()
       cargarDestacados()
-      window.addEventListener('scroll', handleScroll)
-      window.addEventListener('cart-item-added', handleCartAdded)
+      window.addEventListener('scroll', handleScroll, { passive: true })
     })
 
     onUnmounted(() => {
       if (bannerInterval) clearInterval(bannerInterval)
       window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('cart-item-added', handleCartAdded)
-      cancelarLongPress()
     })
 
     return {
       t,
-      menuOpen,
-      isScrolled,
       heroRef,
       parallaxOffset,
       whatsappGeneral,
@@ -594,27 +420,17 @@ export default {
       bannerNext,
       handleImageError,
       scrollTo,
-      toggleMenu,
       whatsappProducto,
       whatsappPromo,
-      iniciarLongPress,
-      cancelarLongPress,
-      carrito,
-      carritoAbierto,
-      carritoCount,
-      carritoTotal,
-      toggleCarrito,
-      actualizarCantidad,
-      quitarDelCarrito,
-      vaciarCarrito,
-      enviarPedidoWhatsApp,
       productosDestacados,
       loadingDestacados,
       obtenerImagenDestacado,
       onCardMouseMove,
       onCardMouseLeave,
       parallaxStyle,
-      cartBouncing
+      TELEFONOS,
+      EMAIL,
+      INSTAGRAM_URL
     }
   }
 }
@@ -632,113 +448,6 @@ export default {
   margin: 0 auto;
   padding: 0 24px;
 }
-
-/* ===== HEADER ===== */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background: var(--color-header-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: var(--transition);
-}
-
-.header.scrolled {
-  background: var(--color-header-bg-scrolled);
-  box-shadow: var(--shadow-sm);
-}
-
-.nav-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0.8rem 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  border-radius: 6px;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 12px;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: pointer;
-}
-
-.logo-text {
-  font-family: var(--font-serif);
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.nav-links {
-  display: flex;
-  list-style: none;
-  gap: 0.25rem;
-  align-items: center;
-}
-
-.nav-links a {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-}
-
-.nav-links a:hover {
-  color: var(--color-primary);
-  background: var(--color-bg-warm);
-}
-
-.nav-utilities {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.menu-toggle {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  z-index: 1001;
-  padding: 4px;
-}
-
-.menu-toggle span {
-  width: 24px;
-  height: 2px;
-  background-color: var(--color-text);
-  transition: var(--transition);
-  border-radius: 2px;
-}
-
-.menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-.menu-toggle.active span:nth-child(2) { opacity: 0; }
-.menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
 /* ===== HERO ===== */
 .hero {
@@ -976,38 +685,6 @@ export default {
 }
 
 /* ===== SECTION HEADER (reutilizable) ===== */
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 400px;
-  margin: 1.5rem auto 0;
-  padding: 0.6rem 1rem;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-gray-light);
-  border-radius: var(--radius-md);
-  transition: var(--transition);
-}
-.search-bar:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(123, 63, 0, 0.1);
-}
-.search-bar svg {
-  flex-shrink: 0;
-  color: var(--color-text-muted);
-}
-.search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 0.95rem;
-  background: transparent;
-  color: var(--color-text);
-}
-.search-input::placeholder {
-  color: var(--color-text-muted);
-}
-
 .section-header {
   text-align: center;
   margin-bottom: 3rem;
@@ -1118,158 +795,6 @@ export default {
   color: #fff; font-size: 0.78rem; font-weight: 600;
   padding: 0.32rem 0.85rem; border-radius: 50px;
   border: 1px solid rgba(255,255,255,0.25);
-}
-
-/* ===== CATEGORIA SECTION ===== */
-.categoria-section {
-  padding: 5rem 0;
-}
-
-.categoria-section.bg-alt {
-  background: var(--color-bg-warm);
-}
-
-.categoria-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 3rem;
-}
-
-.categoria-header-text {
-  max-width: 600px;
-}
-
-.categoria-header-text .section-label {
-  display: block;
-  text-align: left;
-  margin-bottom: 0.5rem;
-}
-
-.categoria-header-text h2 {
-  font-size: 2rem;
-  color: var(--color-text);
-  margin-bottom: 0.75rem;
-}
-
-.categoria-header-text p {
-  color: var(--color-text-light);
-  font-size: 1rem;
-  line-height: 1.8;
-}
-
-.categoria-header-deco {
-  flex-shrink: 0;
-  width: 80px;
-  height: 3px;
-  background: linear-gradient(to right, var(--color-accent), transparent);
-  margin-top: 1.5rem;
-}
-
-/* ===== PRODUCTOS GRID ===== */
-.productos-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-.producto-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-  animation: fadeInUp 0.5s ease forwards;
-  opacity: 0;
-}
-
-.producto-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
-.producto-image {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  background-color: var(--color-gray-light);
-}
-
-.producto-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.producto-card:hover .producto-image img {
-  transform: scale(1.05);
-}
-
-.producto-info {
-  padding: 1.5rem;
-}
-
-.producto-nombre-link {
-  text-decoration: none;
-  color: inherit;
-}
-.producto-nombre-link:hover .producto-nombre {
-  color: var(--color-primary);
-}
-.producto-image a {
-  display: block;
-  height: 100%;
-}
-.producto-nombre {
-  font-size: 1.1rem;
-  color: var(--color-text);
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
-}
-
-.producto-material {
-  font-size: 0.88rem;
-  color: var(--color-text-muted);
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
-
-.producto-precio {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-top: 0.5rem;
-}
-
-/* ===== CATEGORIA ACTIONS ===== */
-.categoria-actions {
-  text-align: center;
-  margin-top: 2.5rem;
-}
-
-.btn-ver-todos {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.85rem 2rem;
-  background: transparent;
-  color: var(--color-primary);
-  border: 2px solid var(--color-primary);
-  border-radius: 100px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-ver-todos:hover {
-  background: var(--color-primary);
-  color: var(--color-white);
 }
 
 /* ===== PROMOCIONES ===== */
@@ -1447,149 +972,13 @@ export default {
   display: block;
 }
 
-/* ===== FOOTER ===== */
-.footer {
-  background-color: var(--color-dark);
-  color: rgba(255,255,255,0.7);
-  padding: 4rem 0 0;
-}
-
-.footer-top {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 4rem;
-  padding-bottom: 3rem;
-}
-
-.footer-brand .logo-icon {
-  background: var(--color-accent);
-}
-
-.footer-brand .logo-text {
-  color: #FFFFFF;
-}
-
-.footer-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.footer-brand > p {
-  margin-top: 1rem;
-  font-size: 0.95rem;
-  line-height: 1.7;
-}
-
-.footer-links-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-}
-
-.footer-links-grid h4 {
-  color: #FFFFFF;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.footer-links-grid ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.footer-links-grid li {
-  font-size: 0.9rem;
-}
-
-.footer-links-grid a {
-  transition: var(--transition);
-}
-
-.footer-links-grid a:hover {
-  color: var(--color-accent);
-}
-
-.footer-bottom {
-  text-align: center;
-  padding: 1.5rem 0;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  font-size: 0.85rem;
-}
-
-/* ===== WHATSAPP FLOATING ===== */
-.whatsapp-float {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 60px;
-  height: 60px;
-  background: var(--color-whatsapp);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 4px 20px rgba(23, 135, 65, 0.5);
-  z-index: 999;
-  transition: var(--transition);
-}
-
-.whatsapp-float:hover {
-  transform: scale(1.1);
-  background: var(--color-whatsapp-dark);
-  box-shadow: 0 6px 25px rgba(23, 135, 65, 0.6);
-}
-
-/* ===== LOADING / EMPTY ===== */
-.loading-state {
-  text-align: center;
-  padding: 5rem 0;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-gray-light);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .banner-title-main { font-size: 3.5rem; }
   .categorias-nav-grid { grid-template-columns: repeat(3, 1fr); }
-  .productos-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .nav-links {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 280px;
-    height: 100vh;
-    background: var(--color-surface);
-    flex-direction: column;
-    padding: 5rem 2rem 2rem;
-    box-shadow: var(--shadow-xl);
-    transform: translateX(100%);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
-    gap: 0.25rem;
-  }
-
-  .nav-links.open { transform: translateX(0); }
-  .menu-toggle { display: flex; }
-
   .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 100%; max-width: 320px; }
 
@@ -1604,27 +993,14 @@ export default {
   .categoria-nav-card-featured { grid-column: span 2; height: 260px; }
   .categoria-nav-card { height: 200px; }
 
-  .categoria-header { flex-direction: column; }
-  .categoria-header-deco { display: none; }
-
-  .productos-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-
-  .producto-image { height: 220px; }
-
   .promos-grid-horizontal { grid-template-columns: repeat(2, 1fr); }
 
   .nosotros-grid { grid-template-columns: 1fr; }
   .nosotros-mapa { height: 300px; }
 
   .section-header h2 { font-size: 1.8rem; }
-  .categoria-section { padding: 3.5rem 0; }
   .categorias-nav-section { padding: 3.5rem 0 2rem; }
   .promociones-section { padding: 3.5rem 0; }
-
-  .footer-top { grid-template-columns: 1fr; gap: 2rem; }
 }
 
 @media (max-width: 480px) {
@@ -1638,210 +1014,11 @@ export default {
   .categoria-nav-card-featured { grid-column: span 1; height: 240px; }
   .categoria-nav-card { height: 180px; }
 
-  .productos-grid { grid-template-columns: 1fr; }
-  .producto-image { height: 260px; }
-
   .promos-grid-horizontal { grid-template-columns: 1fr; }
   .promo-card-horizontal .promo-image { height: 200px; }
 
   .nosotros-social { flex-direction: column; }
-  .footer-links-grid { grid-template-columns: 1fr; }
   .nosotros-mapa { height: 250px; }
-}
-
-/* Carrito */
-.cart-toggle {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: 1.5px solid var(--color-gray-light);
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--color-text);
-  transition: var(--transition);
-}
-.cart-toggle:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-bg-warm);
-}
-.cart-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  background: var(--color-secondary);
-  color: var(--color-white);
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carrito-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1100;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-.carrito-overlay.visible { opacity: 1; visibility: visible; }
-
-.carrito-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 400px;
-  max-width: 90vw;
-  height: 100vh;
-  background: var(--color-surface);
-  z-index: 1200;
-  display: flex;
-  flex-direction: column;
-  box-shadow: -4px 0 30px rgba(0,0,0,0.15);
-  transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.carrito-sidebar.open { transform: translateX(0); }
-
-.carrito-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--color-gray-light);
-}
-.carrito-header h3 { font-size: 1.1rem; color: var(--color-text); margin: 0; }
-.carrito-count { font-weight: 400; color: var(--color-text-muted); font-size: 0.9rem; }
-.carrito-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: 50%;
-  transition: var(--transition);
-}
-.carrito-close:hover { background: var(--color-bg); color: var(--color-text); }
-
-.carrito-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 2rem;
-  color: var(--color-text-muted);
-}
-.carrito-empty p { font-size: 1.05rem; font-weight: 600; color: var(--color-text-light); margin: 0; }
-
-.carrito-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.carrito-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
-
-.carrito-item {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--color-gray-light);
-}
-.carrito-item:last-child { border-bottom: none; }
-.carrito-item-img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-.carrito-item-info { flex: 1; min-width: 0; }
-.carrito-item-info h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0 0 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.carrito-item-precio { font-size: 0.85rem; color: var(--color-primary); font-weight: 600; }
-.carrito-item-qty {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-}
-.carrito-item-qty button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border: 1.5px solid var(--color-gray-light);
-  background: var(--color-surface);
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--color-text);
-  transition: var(--transition);
-}
-.carrito-item-qty button:hover { border-color: var(--color-primary); color: var(--color-primary); }
-.carrito-item-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: var(--transition);
-  font-size: 1.2rem;
-}
-.carrito-item-remove:hover { background: #FEE; color: var(--color-error); }
-
-.carrito-footer {
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid var(--color-gray-light);
-  background: var(--color-bg);
-}
-.carrito-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-.carrito-total span { color: var(--color-text-light); }
-.carrito-total strong { font-size: 1.4rem; color: var(--color-primary); }
-.carrito-btn-pedido {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0.85rem;
-  font-size: 0.95rem;
-}
-.carrito-btn-vaciar { width: 100%; margin-top: 0.5rem; padding: 0.6rem; font-size: 0.85rem; }
-
-@media (max-width: 768px) {
-  .carrito-sidebar { width: 100%; max-width: 100vw; }
 }
 
 /* ===== DESTACADOS ===== */
@@ -1926,15 +1103,6 @@ export default {
   .destacado-card { min-height: 220px; }
 }
 
-/* ===== CART BOUNCE ===== */
-@keyframes cartBounce {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.3); }
-  50% { transform: scale(0.9); }
-  75% { transform: scale(1.15); }
-}
-.cart-bounce { animation: cartBounce 0.5s ease; }
-
 /* ===== SKELETON LOADERS ===== */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
@@ -1976,5 +1144,4 @@ export default {
 .skeleton-line.short { width: 45%; }
 .skeleton-line.xshort { width: 30%; }
 
-.carrito-item-qty button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>

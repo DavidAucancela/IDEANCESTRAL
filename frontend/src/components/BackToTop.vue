@@ -27,8 +27,9 @@ export default {
 <style scoped>
 .back-to-top {
   position: fixed;
-  bottom: 5rem;
-  right: 1.5rem;
+  /* Centrado sobre el botón flotante de WhatsApp (60px, a 24px del borde) */
+  bottom: 96px;
+  right: 32px;
   z-index: 900;
   width: 44px;
   height: 44px;
@@ -45,5 +46,8 @@ export default {
   animation: fadeInUp 0.3s ease;
 }
 .back-to-top:hover { background: var(--color-primary-dark); transform: translateY(-3px); }
+@media (max-width: 480px) {
+  .back-to-top { bottom: 80px; right: 20px; }
+}
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
