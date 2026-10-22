@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import pino from 'pino';
+import PinoPretty from 'pino-pretty';
 import pool from './database/connection.js';
 import { httpsRedirect } from './middleware/httpsRedirect.js';
 import productosRoutes from './routes/productos.js';
@@ -20,10 +21,10 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV === 'development' ? { target: 'pino-pretty', options: { colorize: true } } : undefined
-});
+const logger = pino(
+  { level: process.env.LOG_LEVEL || 'info' },
+  process.env.NODE_ENV === 'development' ? PinoPretty({ colorize: true }) : undefined
+);
 
 const app = express();
 app.set('trust proxy', 1); // Railway termina TLS en su proxy
