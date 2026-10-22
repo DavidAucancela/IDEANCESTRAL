@@ -1,26 +1,22 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import pool from '../database/connection.js';
 import fs from 'fs';
 import { authenticateToken } from '../middleware/auth.js';
 import { validateImageMime } from '../utils/validateMime.js';
 import { logAudit } from '../middleware/auditLog.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { UPLOAD_DIR, uploadPathFromUrl } from '../utils/uploadDir.js';
 
 const router = express.Router();
 
 // Configurar multer para subir imágenes
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
-    cb(null, uploadDir);
+    cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -123,13 +119,13 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     const url = imagenResult.rows[0].url;
-    const filePath = path.join(__dirname, '..', url);
+    const filePath = url.startsWith('/uploads/') ? uploadPathFromUrl(url) : null;
 
     // Eliminar de la base de datos
     await pool.query('DELETE FROM imagenes_productos WHERE id = $1', [id]);
 
     // Eliminar archivo físico
-    if (fs.existsSync(filePath)) {
+    if (filePath && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 

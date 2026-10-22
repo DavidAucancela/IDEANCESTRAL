@@ -153,9 +153,9 @@
 
             <!-- Botón Agregar al carrito -->
             <div class="info-actions">
-              <button class="btn btn-primary btn-full btn-agregar" @click="handleAgregarAlCarrito">
+              <button class="btn btn-primary btn-full btn-agregar" :disabled="agotado" @click="handleAgregarAlCarrito">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-                {{ productoEnCarrito ? t('cart.agregado') : t('cart.agregar') }}
+                {{ agotado ? t('product.agotado') : productoEnCarrito ? t('cart.agregado') : t('cart.agregar') }}
               </button>
               <router-link to="/" class="btn btn-secondary btn-full">
                 {{ t('product.seguirExplorando') }}
@@ -292,7 +292,7 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
                 <span>{{ item.cantidad }}</span>
-                <button @click="actualizarCantidad(item.id, item.cantidad + 1)">
+                <button @click="actualizarCantidad(item.id, item.cantidad + 1)" :disabled="item.stock != null && item.cantidad >= item.stock" :title="item.stock != null && item.cantidad >= item.stock ? t('cart.sinMasStock') : undefined">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
               </div>
@@ -352,7 +352,7 @@ export default {
       agregarAlCarrito, quitarDelCarrito, actualizarCantidad,
       vaciarCarrito, toggleCarrito, enviarPedidoWhatsApp
     } = useCarrito()
-    const { success: toastSuccess } = useToast()
+    const { success: toastSuccess, info: toastInfo } = useToast()
 
     const productoEnCarrito = computed(() => {
       if (!producto.value) return false
@@ -361,13 +361,15 @@ export default {
 
     const handleAgregarAlCarrito = () => {
       if (!producto.value) return
-      agregarAlCarrito({
+      const agregado = agregarAlCarrito({
         id: producto.value.id,
         nombre: producto.value.nombre,
         precio: producto.value.precio,
-        imagen: imagenActual.value
+        imagen: imagenActual.value,
+        stock: producto.value.stock
       })
-      toastSuccess(t('toast.productoAgregado'))
+      if (agregado) toastSuccess(t('toast.productoAgregado'))
+      else toastInfo(t('cart.sinMasStock'))
     }
 
     const imagenes = computed(() => {
@@ -428,11 +430,14 @@ export default {
     const stockStatus = computed(() => {
       const s = producto.value?.stock
       if (s === undefined || s === null) return null
-      if (s === 0) return { clase: 'agotado', texto: 'Agotado', sub: 'Este producto no está disponible' }
-      if (s <= 3) return { clase: 'critico', texto: `Solo ${s} disponible${s > 1 ? 's' : ''}`, sub: '¡Date prisa!' }
-      if (s <= 8) return { clase: 'bajo', texto: `Últimas ${s} unidades`, sub: 'Stock limitado' }
-      return { clase: 'disponible', texto: 'En stock', sub: 'Listo para envío' }
+      if (s === 0) return { clase: 'agotado', texto: t('product.agotado'), sub: t('product.agotadoSub') }
+      if (s === 1) return { clase: 'critico', texto: t('product.stockCriticoUno'), sub: t('product.stockCriticoSub') }
+      if (s <= 3) return { clase: 'critico', texto: t('product.stockCritico', { n: s }), sub: t('product.stockCriticoSub') }
+      if (s <= 8) return { clase: 'bajo', texto: t('product.stockBajo', { n: s }), sub: t('product.stockBajoSub') }
+      return { clase: 'disponible', texto: t('product.stockDisponible'), sub: t('product.stockDisponibleSub') }
     })
+
+    const agotado = computed(() => producto.value?.stock === 0)
 
     // ── API ───────────────────────────────────────────────
     const obtenerProducto = async (id) => {
@@ -549,6 +554,7 @@ export default {
       scrollThumbs,
       // Stock
       stockStatus,
+      agotado,
       // Carrito
       carrito,
       carritoAbierto,
@@ -1113,4 +1119,5 @@ export default {
   75% { transform: scale(1.15); }
 }
 .cart-bounce { animation: cartBounce 0.5s ease; }
+.carrito-item-qty button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>

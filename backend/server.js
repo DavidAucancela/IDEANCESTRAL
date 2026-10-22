@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import pino from 'pino';
 import PinoPretty from 'pino-pretty';
 import pool from './database/connection.js';
+import { UPLOAD_DIR, uploadPathFromUrl } from './utils/uploadDir.js';
 import { httpsRedirect } from './middleware/httpsRedirect.js';
 import productosRoutes from './routes/productos.js';
 import categoriasRoutes from './routes/categorias.js';
@@ -127,7 +128,7 @@ app.use('/uploads', async (req, res, next) => {
       pool.query('SELECT 1 FROM categorias WHERE imagen_url = $1', [urlPath])
     ]);
     if (img.rows.length > 0 || promo.rows.length > 0 || cat.rows.length > 0) {
-      const filePath = path.join(__dirname, 'uploads', path.basename(urlPath));
+      const filePath = uploadPathFromUrl(urlPath);
       if (fs.existsSync(filePath)) {
         return res.sendFile(filePath);
       }
@@ -183,6 +184,11 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   logger.info(`Servidor corriendo en http://localhost:${PORT}`);
   logger.info(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Uploads en: ${UPLOAD_DIR}`);
+  // Railway define RAILWAY_VOLUME_MOUNT_PATH solo si el servicio tiene un Volume
+  if (process.env.RAILWAY_ENVIRONMENT && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    logger.warn('Sin Railway Volume: las imágenes subidas se perderán en el próximo deploy. Ver docs/RAILWAY_DEPLOY.md');
+  }
 });
 
 server.on('error', (err) => {

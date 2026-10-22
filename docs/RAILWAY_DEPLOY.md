@@ -253,6 +253,8 @@ Luego agrega la variable:
 UPLOAD_DIR=/app/uploads
 ```
 
+El backend usa `UPLOAD_DIR` para guardar y servir los uploads (relativa a `backend/` o absoluta; por defecto `backend/uploads`). Al arrancar, el log muestra `Uploads en: <ruta>`; si el servicio corre en Railway sin Volume, aparece un aviso `Sin Railway Volume: las imágenes subidas se perderán en el próximo deploy`.
+
 ---
 
 ## Variables de entorno: resumen final

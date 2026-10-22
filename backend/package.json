@@ -8,7 +8,8 @@
     "check-env": "node scripts/check-env.js",
     "init-db": "node scripts/init-db.js",
     "init-db:seed": "node scripts/init-db.js --seed",
-    "migrate-promociones": "node scripts/migrate-promociones.js"
+    "migrate-promociones": "node scripts/migrate-promociones.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
