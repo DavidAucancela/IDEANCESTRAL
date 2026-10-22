@@ -336,7 +336,7 @@
               <div class="carrito-item-qty">
                 <button @click="actualizarCantidad(item.id, item.cantidad - 1)">−</button>
                 <span>{{ item.cantidad }}</span>
-                <button @click="actualizarCantidad(item.id, item.cantidad + 1)">+</button>
+                <button @click="actualizarCantidad(item.id, item.cantidad + 1)" :disabled="item.stock != null && item.cantidad >= item.stock" :title="item.stock != null && item.cantidad >= item.stock ? t('cart.sinMasStock') : undefined">+</button>
               </div>
             </div>
             <button class="carrito-item-remove" @click="quitarDelCarrito(item.id)">×</button>
@@ -1976,4 +1976,5 @@ export default {
 .skeleton-line.short { width: 45%; }
 .skeleton-line.xshort { width: 30%; }
 
+.carrito-item-qty button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 </style>

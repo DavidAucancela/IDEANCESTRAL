@@ -81,6 +81,7 @@
                     <th>{{ t('admin.nombre') }}</th>
                     <th>{{ t('admin.categorias') }}</th>
                     <th>{{ t('admin.precio') }}</th>
+                    <th>{{ t('admin.stock') }}</th>
                     <th>{{ t('admin.estado') }}</th>
                     <th>{{ t('admin.acciones') }}</th>
                   </tr>
@@ -97,6 +98,7 @@
                     <td>{{ producto.nombre }}</td>
                     <td>{{ producto.categoria_nombre || t('admin.sinCategoria') }}</td>
                     <td>${{ producto.precio }}</td>
+                    <td>{{ producto.stock ?? t('admin.sinControlStock') }}</td>
                     <td>
                       <span :class="['badge', producto.publicado ? 'badge-success' : 'badge-warning']">
                         {{ producto.publicado ? t('admin.publicado') : t('admin.oculto') }}
@@ -178,6 +180,14 @@
           <BaseInput v-model="formProducto.material" :label="t('admin.material')" />
           <BaseInput v-model="formProducto.peso" :label="t('admin.peso')" />
         </div>
+        <BaseInput
+          v-model="formProducto.stock"
+          type="number"
+          min="0"
+          step="1"
+          :label="t('admin.stock')"
+          :hint="t('admin.stockHint')"
+        />
         <BaseInput as="select" v-model="formProducto.categoria_id" :label="t('admin.categorias')">
           <option :value="null">{{ t('admin.sinCategoria') }}</option>
           <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
@@ -367,6 +377,7 @@ export default {
       material: '',
       peso: '',
       categoria_id: null,
+      stock: '',
       publicado: true,
       destacado: false
     })
@@ -518,6 +529,7 @@ export default {
           material: producto.material || '',
           peso: producto.peso || '',
           categoria_id: producto.categoria_id,
+          stock: producto.stock ?? '',
           publicado: producto.publicado,
           destacado: producto.destacado || false
         })
@@ -530,6 +542,7 @@ export default {
           material: '',
           peso: '',
           categoria_id: null,
+          stock: '',
           publicado: true,
           destacado: false
         })
@@ -555,7 +568,13 @@ export default {
         cerrarModalProducto()
       } catch (error) {
         console.error('Error guardando producto:', error)
-        alert(t('admin.errorGuardarProducto'))
+        if (error.response?.status === 400) {
+          const { detalles, error: mensaje } = error.response.data || {}
+          const campos = Object.keys(detalles?.fieldErrors || {}).join(', ')
+          alert(t('admin.errorDatosProducto', { detalle: campos || mensaje || '' }))
+        } else {
+          alert(t('admin.errorGuardarProducto'))
+        }
       } finally {
         guardando.value = false
       }

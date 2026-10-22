@@ -25,21 +25,35 @@ export const useCarritoStore = defineStore('carrito', () => {
     items.value.reduce((total, item) => total + (item.precio * item.cantidad), 0)
   )
 
+  // stock null/undefined = sin control de stock
+  const hayStockPara = (stock, cantidad) => stock == null || cantidad <= stock
+
+  /**
+   * Agrega una unidad. Devuelve false si el producto está agotado
+   * o ya no quedan más unidades para agregar.
+   */
   const agregarAlCarrito = (producto) => {
+    const stock = producto.stock ?? null
     const existente = items.value.find(item => item.id === producto.id)
+    const cantidadNueva = (existente?.cantidad ?? 0) + 1
+    if (!hayStockPara(stock, cantidadNueva)) return false
+
     if (existente) {
-      existente.cantidad++
+      existente.cantidad = cantidadNueva
+      existente.stock = stock
     } else {
       items.value.push({
         id: producto.id,
         nombre: producto.nombre,
         precio: Number(producto.precio),
         imagen: producto.imagen || '/imagenes/logo-principal.jpg',
-        cantidad: 1
+        cantidad: 1,
+        stock
       })
     }
     abierto.value = true
     window.dispatchEvent(new CustomEvent('cart-item-added'))
+    return true
   }
 
   const quitarDelCarrito = (productoId) => {
@@ -49,10 +63,13 @@ export const useCarritoStore = defineStore('carrito', () => {
   const actualizarCantidad = (productoId, cantidad) => {
     if (cantidad <= 0) {
       quitarDelCarrito(productoId)
-    } else {
-      const item = items.value.find(i => i.id === productoId)
-      if (item) item.cantidad = cantidad
+      return true
     }
+    const item = items.value.find(i => i.id === productoId)
+    if (!item) return false
+    if (!hayStockPara(item.stock, cantidad)) return false
+    item.cantidad = cantidad
+    return true
   }
 
   const vaciarCarrito = () => {
