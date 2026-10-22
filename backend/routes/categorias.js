@@ -1,13 +1,16 @@
 import express from 'express';
 import pool from '../database/connection.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authenticateIf, optionalAuth } from '../middleware/auth.js';
 import { sanitizeString } from '../utils/sanitize.js';
 import { logAudit } from '../middleware/auditLog.js';
 
 const router = express.Router();
 
+// incluir_inactivas solo para admins autenticados
+const pideInactivas = (req) => req.query.incluir_inactivas === 'true';
+
 // GET /api/categorias - Obtener todas las categorías activas
-router.get('/', async (req, res) => {
+router.get('/', authenticateIf(pideInactivas), async (req, res) => {
   try {
     const { incluir_inactivas } = req.query;
     let query = 'SELECT * FROM categorias';
@@ -27,10 +30,16 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/categorias/:id - Obtener una categoría por ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM categorias WHERE id = $1', [id]);
+    if (!/^\d+$/.test(id) || Number(id) > 2147483647) {
+      return res.status(404).json({ error: 'Categoría no encontrada' });
+    }
+    const result = await pool.query(
+      'SELECT * FROM categorias WHERE id = $1 AND (activa = true OR $2)',
+      [id, Boolean(req.user)]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Categoría no encontrada' });
