@@ -1,5 +1,8 @@
 export default {
   nav: {
+    principal: 'Navegação principal',
+    menu: 'Abrir menu',
+    saltarContenido: 'Pular para o conteúdo',
     inicio: 'Início',
     categorias: 'Categorias',
     promociones: 'Promoções',
@@ -42,6 +45,9 @@ export default {
     derechos: 'Todos os direitos reservados.',
   },
   cart: {
+    cerrar: 'Fechar carrinho',
+    aumentar: 'Aumentar quantidade',
+    disminuir: 'Diminuir quantidade',
     sinMasStock: 'Não há mais unidades disponíveis',
     miCarrito: 'Meu Carrinho',
     vacio: 'Seu carrinho está vazio',

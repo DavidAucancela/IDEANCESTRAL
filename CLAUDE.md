@@ -29,10 +29,12 @@ IDEANCESTRAL/
 ├── frontend/
 │   ├── src/
 │   │   ├── views/           # CatalogoView, CategoriaView, ProductoDetalleView, AdminView, NotFoundView
-│   │   ├── components/      # ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
-│   │   ├── stores/          # carrito.js, language.js, theme.js
-│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation
-│   │   ├── router/index.js  # 4 rutas + fallback 404
+│   │   ├── components/      # Base* (librería), ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
+│   │   │   └── layout/      # AppHeader, AppFooter, CartDrawer, WhatsAppFloat (montados una vez en App.vue)
+│   │   ├── config/          # contacto.js: WhatsApp, teléfonos, email, Instagram
+│   │   ├── stores/          # carrito.js, language.js (i18n propio, no vue-i18n), theme.js
+│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones
+│   │   ├── router/index.js  # 4 rutas (lazy salvo la portada) + 404; /admin con meta.layout=false
 │   │   └── i18n/            # es.js, en.js, pt.js
 │   ├── public/imagenes/     # ~40+ imágenes estáticas de productos
 │   ├── nginx.conf           # Config Nginx para Docker
