@@ -106,6 +106,60 @@ describe('Layout compartido', () => {
   })
 })
 
+describe('Navbar', () => {
+  it('sobre el inicio va transparente y toma el acento del fondo activo', async () => {
+    await montarEn('/')
+    const header = root.querySelector('header.header')
+    const hero = root.querySelector('#inicio')
+    expect(header.classList).toContain('header--transparente')
+    expect(header.style.getPropertyValue('--nav-acento')).toBe(hero.style.getPropertyValue('--hero-acento'))
+
+    hero.querySelectorAll('.hero__indicador')[1].click()
+    await nextTick()
+    expect(header.style.getPropertyValue('--nav-acento')).toBe(hero.style.getPropertyValue('--hero-acento'))
+  })
+
+  it('en otras páginas es sólida', async () => {
+    await montarEn('/producto/7')
+    expect(root.querySelector('header.header').classList).not.toContain('header--transparente')
+  })
+
+  it('el menú móvil muestra las secciones numeradas y se cierra con un enlace o con Escape', async () => {
+    await montarEn('/')
+    const boton = root.querySelector('.menu-toggle')
+    boton.click()
+    await esperar()
+    let menu = document.getElementById('nav-menu')
+    expect(menu.getAttribute('role')).toBe('dialog')
+    expect(boton.getAttribute('aria-expanded')).toBe('true')
+    const numeros = [...menu.querySelectorAll('.menu-movil__num')].map((n) => n.textContent)
+    expect(numeros).toEqual(['01', '02', '03', '04'])
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    menu.querySelectorAll('.menu-movil__enlace')[1].click()
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
+    expect(document.documentElement.style.overflow).toBe('')
+
+    boton.click()
+    await esperar()
+    menu = document.getElementById('nav-menu')
+    menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
+  })
+})
+
+describe('Títulos de sección', () => {
+  it('el título de destacados está traducido', async () => {
+    localStorage.setItem('ideancestral_lang', 'en')
+    await montarEn('/')
+    const titulos = [...root.querySelectorAll('.seccion-encabezado__titulo')].map((h) => h.textContent.trim())
+    expect(titulos).toContain('Featured pieces')
+    expect(root.textContent).not.toContain('Selección especial')
+  })
+})
+
 describe('Stock en la tienda', () => {
   it('la página de un producto agotado bloquea el botón de agregar', async () => {
     await montarEn('/producto/7')

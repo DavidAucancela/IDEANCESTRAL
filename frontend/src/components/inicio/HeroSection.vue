@@ -143,6 +143,7 @@ import { HEADER_OFFSET } from '../../composables/useSecciones'
 import { whatsappLink } from '../../config/contacto'
 import { imagenPrincipal } from '../../utils/imagenes'
 import { HERO_FONDOS, HERO_SEGUNDOS_POR_FONDO } from '../../config/inicio'
+import { useEstadoInicio } from '../../composables/useEstadoInicio'
 
 const props = defineProps({
   // Categorías sugeridas, de la que tiene más productos a la que menos: [{ id, nombre }]
@@ -366,9 +367,20 @@ const detener = () => {
 
 watch(animando, (si) => (si ? animar() : detener()), { immediate: true })
 
-// Pausa la animación cuando el inicio no está en pantalla
+/* ===== Estado compartido con la navbar ===== */
+const estadoInicio = useEstadoInicio()
+
+watch(fondo, (i) => {
+  const { acento, texto, fondo: tono } = fondos[i]
+  estadoInicio.paleta = { acento, texto, fondo: tono }
+}, { immediate: true })
+
+// Pausa la animación cuando el inicio no está en pantalla.
+// La navbar calcula sola, al hacer scroll, si el inicio sigue debajo de ella.
 let observador = null
 onMounted(() => {
+  estadoInicio.montado = true
+  estadoInicio.bajoHeader = true
   mqChips?.addEventListener?.('change', onCambioChips)
   if (typeof IntersectionObserver !== 'undefined' && seccion.value) {
     observador = new IntersectionObserver(([e]) => { heroVisible.value = e.isIntersecting })
@@ -381,6 +393,7 @@ onUnmounted(() => {
   clearTimeout(temporizadorSaliente)
   detener()
   observador?.disconnect()
+  estadoInicio.montado = false
   mqChips?.removeEventListener?.('change', onCambioChips)
 })
 </script>
@@ -388,7 +401,6 @@ onUnmounted(() => {
 <style scoped>
 /* ===== Base ===== */
 .hero {
-  --hero-header: 72px;
   /* La paleta llega del fondo activo (estiloPaleta); estos son los valores iniciales */
   --hero-acento: #E8C38C;
   --hero-texto: #FFF6EC;
@@ -407,7 +419,7 @@ onUnmounted(() => {
   height: 100svh;
   min-height: fit-content;
   z-index: 1; /* la lista de resultados queda sobre la sección siguiente */
-  padding-top: var(--hero-header);
+  padding-top: var(--header-alto);
   color: var(--hero-texto);
   background: var(--hero-fondo);
   transition: background-color var(--hero-cambio), color var(--hero-cambio);
@@ -872,7 +884,7 @@ onUnmounted(() => {
 @media (max-width: 900px) {
   /* En móvil: foto a pantalla completa y el contenido abajo, sobre el degradado */
   .hero {
-    padding-top: 64px;
+    padding-top: var(--header-alto);
   }
 
   .hero__slide img {
@@ -926,7 +938,7 @@ onUnmounted(() => {
 
   /* Los indicadores pasan arriba, bajo el encabezado */
   .hero__fondos {
-    top: calc(64px + var(--space-3));
+    top: calc(var(--header-alto) + var(--space-3));
     bottom: auto;
     left: 20px;
   }

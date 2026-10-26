@@ -25,6 +25,7 @@
   --color-header-bg: rgba(255,255,255,0.85);
   --color-header-bg-scrolled: rgba(255,255,255,0.95);
   --color-frame-border: rgba(255,255,255,0.8);
+  --header-alto: 72px; /* alto de la navbar fija */
   --font-serif: 'Playfair Display', 'Georgia', serif;
   --font-sans: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
@@ -69,6 +70,10 @@
 }
 
 /* ===== DARK MODE ===== */
+@media (max-width: 900px) {
+  :root { --header-alto: 64px; }
+}
+
 [data-theme="dark"] {
   --color-primary: #D4A76A;
   --color-primary-dark: #C4853A;

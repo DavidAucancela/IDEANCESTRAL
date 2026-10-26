@@ -5,11 +5,12 @@
     <!-- Productos Destacados -->
     <section id="destacados" class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">✦ Selección especial</span>
-          <h2>Productos Destacados</h2>
-          <p>Piezas únicas seleccionadas por su calidad artesanal</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('featured.label')"
+          :titulo="t('featured.title')"
+          :acento="t('featured.titleAcento')"
+          :descripcion="t('featured.subtitle')"
+        />
         <div v-if="loadingDestacados" class="destacados-grid">
           <div v-for="i in 5" :key="i" class="skeleton-card" :class="i === 1 ? 'skeleton-card-main' : ''">
             <div class="skeleton-img"></div>
@@ -86,11 +87,12 @@
     <!-- Navegacion de Categorias -->
     <section id="categorias" class="categorias-nav-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('categories.label') }}</span>
-          <h2>{{ t('categories.title') }}</h2>
-          <p>{{ t('categories.subtitle') }}</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('categories.label')"
+          :titulo="t('categories.title')"
+          :acento="t('categories.titleAcento')"
+          :descripcion="t('categories.subtitle')"
+        />
         <div class="categorias-nav-grid">
           <router-link
             v-for="(cat, index) in categoriasParaMostrar"
@@ -114,10 +116,11 @@
     <!-- Promociones por Temporada -->
     <section id="promociones" class="promociones-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('promos.label') }}</span>
-          <h2>{{ t('promos.title') }}</h2>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('promos.label')"
+          :titulo="t('promos.title')"
+          :acento="t('promos.titleAcento')"
+        />
 
         <div class="promos-grid-horizontal">
           <a 
@@ -141,11 +144,12 @@
     <!-- Nosotros / Ubicacion -->
     <section id="nosotros" class="nosotros-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('about.label') }}</span>
-          <h2>{{ t('about.title') }}</h2>
-          <p>{{ t('about.subtitle') }}</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('about.label')"
+          :titulo="t('about.title')"
+          :acento="t('about.titleAcento')"
+          :descripcion="t('about.subtitle')"
+        />
         <div class="nosotros-grid">
           <div class="nosotros-info">
             <div class="info-cards">
@@ -218,11 +222,12 @@ import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
 import { imagenPrincipal } from '../utils/imagenes'
 import HeroSection from '../components/inicio/HeroSection.vue'
+import SeccionEncabezado from '../components/SeccionEncabezado.vue'
 import { TELEFONOS, EMAIL, INSTAGRAM_URL, whatsappLink } from '../config/contacto'
 
 export default {
   name: 'CatalogoView',
-  components: { HeroSection },
+  components: { HeroSection, SeccionEncabezado },
   setup() {
     const { t } = useLanguageStore()
 
@@ -547,36 +552,6 @@ export default {
   margin-top: 1rem;
 }
 
-/* ===== SECTION HEADER (reutilizable) ===== */
-.section-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.section-label {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: var(--color-secondary);
-  margin-bottom: 0.75rem;
-}
-
-.section-header h2 {
-  font-size: 2.2rem;
-  color: var(--color-text);
-  margin-bottom: 0.75rem;
-}
-
-.section-header p {
-  color: var(--color-text-muted);
-  font-size: 1.05rem;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.7;
-}
-
 /* ===== CATEGORIAS NAV ===== */
 .categorias-nav-section {
   padding: 5rem 0 3rem;
@@ -857,8 +832,6 @@ export default {
 
   .nosotros-grid { grid-template-columns: 1fr; }
   .nosotros-mapa { height: 300px; }
-
-  .section-header h2 { font-size: 1.8rem; }
   .categorias-nav-section { padding: 3.5rem 0 2rem; }
   .promociones-section { padding: 3.5rem 0; }
 }
