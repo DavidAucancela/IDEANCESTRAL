@@ -8,11 +8,21 @@ const productoAgotado = {
   categoria_id: 1, categoria_nombre: 'Madera', imagenes: []
 }
 
+const otroDestacado = {
+  id: 8, nombre: 'Sol de madera', precio: '40.00', stock: 3,
+  categoria_id: 1, categoria_nombre: 'Madera', imagenes: []
+}
+
 vi.mock('axios', () => ({
   default: {
-    get: vi.fn(async (url) => {
+    get: vi.fn(async (url, config = {}) => {
+      const params = config.params || {}
       if (url.includes('/productos/7')) return { data: productoAgotado }
-      if (url.includes('/productos')) return { data: { productos: [productoAgotado], paginacion: {} } }
+      if (url.includes('/productos')) {
+        const lista = params.destacado ? [productoAgotado, otroDestacado] : [productoAgotado]
+        return { data: { productos: lista, paginacion: {} } }
+      }
+      if (url.endsWith('/categorias')) return { data: [{ id: 1, nombre: 'Madera', imagen_url: null }] }
       if (url.includes('/categorias/')) return { data: { id: 1, nombre: 'Madera' } }
       return { data: [] }
     }),
@@ -104,40 +114,72 @@ describe('Stock en la tienda', () => {
 
 describe('Sección de inicio (HeroSection)', () => {
   const casos = [
-    ['editorial', '.hero__collage'],
-    ['inmersivo', '.hero__fondo'],
-    ['ilustrado', '.hero__ilustracion'],
-    ['minimal', '.hero__tira']
+    ['categorias', '.hero__banda'],
+    ['buscador', '#hero-buscar'],
+    ['destacados', '.hero__vitrina'],
+    ['indice', '.hero__indice']
   ]
 
-  it.each(casos)('variante %s: un solo h1, su visual propio y los dos botones', async (variante, visual) => {
-    await montarEn(`/?hero=${variante}`)
+  it.each(casos)('opción %s: un solo h1 y su módulo, sin los botones ni la ubicación', async (opcion, modulo) => {
+    await montarEn(`/?hero=${opcion}`)
     const hero = root.querySelector('#inicio')
-    expect(hero.classList).toContain(`hero--${variante}`)
+    expect(hero.classList).toContain(`hero--${opcion}`)
     expect(root.querySelectorAll('h1')).toHaveLength(1)
-    expect(hero.querySelector(visual)).not.toBeNull()
-    // Las otras variantes no dejan su visual en el DOM
-    for (const [, otro] of casos.filter(([v]) => v !== variante)) {
+    expect(hero.querySelector(modulo)).not.toBeNull()
+    for (const [, otro] of casos.filter(([o]) => o !== opcion)) {
       expect(hero.querySelector(otro)).toBeNull()
     }
-    expect(hero.querySelector('.btn-primary').getAttribute('href')).toBe('/#categorias')
-    expect(hero.querySelector('.btn-whatsapp').getAttribute('href')).toMatch(/^https:\/\/wa\.me\/\d+/)
+    expect(hero.querySelector('.btn')).toBeNull()
+    expect(hero.textContent).not.toContain('Mariscal')
   })
 
-  it('una variante desconocida usa la de por defecto', async () => {
+  it('una opción desconocida usa la de por defecto', async () => {
     await montarEn('/?hero=no-existe')
-    expect(root.querySelector('#inicio').classList).toContain('hero--editorial')
+    expect(root.querySelector('#inicio').classList).toContain('hero--categorias')
   })
 
-  it('las imágenes con contenido tienen texto alternativo', async () => {
-    for (const [variante] of casos) {
-      await montarEn(`/?hero=${variante}`)
-      root.querySelectorAll('#inicio img').forEach((img) => {
-        const decorativa = img.closest('[aria-hidden="true"]')
-        if (!decorativa) expect(img.getAttribute('alt')).toBeTruthy()
-      })
-      app.unmount()
-      root.remove()
+  it('categorías: cada tarjeta lleva a su categoría', async () => {
+    await montarEn('/?hero=categorias')
+    const enlace = root.querySelector('.hero__categoria')
+    expect(enlace.getAttribute('href')).toBe('/categoria/1')
+    expect(enlace.textContent).toContain('Madera')
+  })
+
+  it('buscador: muestra resultados y Enter abre el producto', async () => {
+    await montarEn('/?hero=buscador')
+    const input = root.querySelector('#hero-buscar')
+    input.dispatchEvent(new Event('focus'))
+    input.value = 'más'
+    input.dispatchEvent(new Event('input'))
+    await new Promise((r) => setTimeout(r, 400))
+    await esperar()
+    const opciones = root.querySelectorAll('[role="option"]')
+    expect(opciones).toHaveLength(1)
+    expect(opciones[0].textContent).toContain('Máscara de prueba')
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+    await nextTick()
+    expect(input.getAttribute('aria-activedescendant')).toBe('hero-resultado-0')
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    await esperar()
+    expect(router.currentRoute.value.path).toBe('/producto/7')
+  })
+
+  it('destacados: los controles cambian la pieza visible', async () => {
+    await montarEn('/?hero=destacados')
+    const vitrina = root.querySelector('.hero__vitrina')
+    expect(vitrina.querySelector('.hero__pieza').getAttribute('href')).toBe('/producto/7')
+    vitrina.querySelector('[aria-label="Pieza siguiente"]').click()
+    await esperar()
+    expect(vitrina.querySelector('.hero__pieza').getAttribute('href')).toBe('/producto/8')
+    expect(vitrina.querySelectorAll('.hero__miniatura')).toHaveLength(2)
+  })
+
+  it('índice: enlaza a las secciones que existen en la página', async () => {
+    await montarEn('/?hero=indice')
+    const destinos = [...root.querySelectorAll('.hero__indice-item')].map((a) => a.getAttribute('href'))
+    expect(destinos).toEqual(['/#destacados', '/#categorias', '/#promociones', '/#nosotros'])
+    for (const d of destinos) {
+      expect(root.querySelector(d.replace('/', ''))).not.toBeNull()
     }
   })
 })

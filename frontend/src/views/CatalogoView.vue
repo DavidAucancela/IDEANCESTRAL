@@ -1,9 +1,9 @@
 <template>
   <div class="catalogo-view">
-    <HeroSection :variante="heroVariante" />
+    <HeroSection :interaccion="heroInteraccion" :categorias="heroCategorias" :destacados="heroDestacados" />
 
     <!-- Productos Destacados -->
-    <section class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
+    <section id="destacados" class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
       <div class="container">
         <div class="section-header" data-animate>
           <span class="section-label">✦ Selección especial</span>
@@ -217,7 +217,8 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
-import { HERO_VARIANTES, HERO_VARIANTE_POR_DEFECTO } from '../config/inicio'
+import { HERO_INTERACCIONES, HERO_INTERACCION_POR_DEFECTO } from '../config/inicio'
+import { imagenPrincipal } from '../utils/imagenes'
 import HeroSection from '../components/inicio/HeroSection.vue'
 import { TELEFONOS, EMAIL, INSTAGRAM_URL, whatsappLink } from '../config/contacto'
 
@@ -228,9 +229,9 @@ export default {
     const { t } = useLanguageStore()
     const route = useRoute()
 
-    // Variante del inicio; ?hero=<variante> permite comparar en el navegador
-    const heroVariante = computed(() =>
-      HERO_VARIANTES.includes(route.query.hero) ? route.query.hero : HERO_VARIANTE_POR_DEFECTO
+    // Interacción del inicio; ?hero=<opción> permite comparar en el navegador
+    const heroInteraccion = computed(() =>
+      HERO_INTERACCIONES.includes(route.query.hero) ? route.query.hero : HERO_INTERACCION_POR_DEFECTO
     )
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
@@ -338,13 +339,15 @@ export default {
       }
     }
 
-    const obtenerImagenDestacado = (prod) => {
-      if (prod.imagenes && prod.imagenes.length > 0) {
-        const principal = prod.imagenes.find(img => img.es_principal) || prod.imagenes[0]
-        return principal.url?.startsWith('http') ? principal.url : `${API_URL.replace('/api', '')}${principal.url}`
-      }
-      return '/imagenes/logo-principal.jpg'
-    }
+    const obtenerImagenDestacado = imagenPrincipal
+
+    // Datos para el inicio, con la imagen ya resuelta
+    const heroCategorias = computed(() =>
+      categoriasParaMostrar.value.map((c) => ({ id: c.id, nombre: c.nombre, imagen: imagenCategoria(c) }))
+    )
+    const heroDestacados = computed(() =>
+      productosDestacados.value.map((p) => ({ id: p.id, nombre: p.nombre, precio: p.precio, imagen: imagenPrincipal(p) }))
+    )
 
     // Parallax en cards destacados
     const cardParallax = ref({})
@@ -382,7 +385,9 @@ export default {
 
     return {
       t,
-      heroVariante,
+      heroInteraccion,
+      heroCategorias,
+      heroDestacados,
       whatsappGeneral,
       categoriasParaMostrar,
       imagenCategoria,
