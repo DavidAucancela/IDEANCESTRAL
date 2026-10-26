@@ -81,13 +81,21 @@ export const useCarritoStore = defineStore('carrito', () => {
     abierto.value = !abierto.value
   }
 
-  const enviarPedidoWhatsApp = () => {
+  /**
+   * Abre WhatsApp con el pedido. `detalles` es opcional:
+   * { nombre, entrega, nota } (textos ya traducidos) se agregan al final.
+   */
+  const enviarPedidoWhatsApp = (detalles = {}) => {
     const { t } = useLanguageStore()
     let mensaje = t('whatsapp.pedido') + '\n\n'
     items.value.forEach(item => {
       mensaje += `• ${item.nombre} x${item.cantidad} - $${(item.precio * item.cantidad).toFixed(2)}\n`
     })
     mensaje += `\n${t('whatsapp.total')} $${carritoTotal.value.toFixed(2)}`
+    const { nombre, entrega, nota } = detalles
+    if (entrega) mensaje += `\n${t('whatsapp.entrega')} ${entrega}`
+    if (nombre?.trim()) mensaje += `\n${t('whatsapp.nombre')} ${nombre.trim()}`
+    if (nota?.trim()) mensaje += `\n${t('whatsapp.nota')} ${nota.trim()}`
     window.open(whatsappLink(mensaje), '_blank')
   }
 

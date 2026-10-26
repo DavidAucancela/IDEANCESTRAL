@@ -168,6 +168,54 @@ describe('Títulos de sección', () => {
   })
 })
 
+describe('Carrito (opciones de diseño)', () => {
+  const conPiezas = () =>
+    localStorage.setItem('ideancestral_carrito', JSON.stringify([
+      { id: 7, nombre: 'Máscara de prueba', precio: 20, imagen: '/x.jpg', cantidad: 2, stock: 5 },
+      { id: 8, nombre: 'Sol de prueba', precio: 15, imagen: '/y.jpg', cantidad: 1, stock: null }
+    ]))
+
+  it.each(['ventana', 'panel', 'hoja', 'pasos'])('opción %s: muestra las piezas y el total', async (opcion) => {
+    conPiezas()
+    await montarEn(`/?carrito=${opcion}`)
+    root.querySelector('.cart-toggle').click()
+    await esperar()
+    const carrito = root.querySelector('.carrito-sidebar')
+    expect(carrito.classList).toContain(`carrito--${opcion}`)
+    expect(carrito.classList).toContain('open')
+    expect(carrito.querySelectorAll('.carrito-item')).toHaveLength(2)
+    expect(carrito.querySelector('.carrito-total strong').textContent).toBe('$55.00')
+    expect(carrito.textContent).toContain('3 piezas')
+  })
+
+  it('pasos: la entrega, el nombre y la nota van en el mensaje de WhatsApp', async () => {
+    conPiezas()
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null)
+    await montarEn('/?carrito=pasos')
+    root.querySelector('.cart-toggle').click()
+    await esperar()
+    const carrito = root.querySelector('.carrito-sidebar')
+    carrito.querySelector('.carrito-btn--principal').click()
+    await esperar()
+    carrito.querySelector('input[value="envio"]').click()
+    const nombre = carrito.querySelector('.carrito-campo input')
+    nombre.value = 'Ana'
+    nombre.dispatchEvent(new Event('input'))
+    await esperar()
+    carrito.querySelector('.carrito-btn--whatsapp').click()
+    const mensaje = decodeURIComponent(abrir.mock.calls[0][0])
+    expect(mensaje).toContain('Máscara de prueba x2')
+    expect(mensaje).toContain('Entrega: Envío a domicilio')
+    expect(mensaje).toContain('Nombre: Ana')
+    abrir.mockRestore()
+  })
+
+  it('una opción desconocida usa la de por defecto', async () => {
+    await montarEn('/?carrito=no-existe')
+    expect(root.querySelector('.carrito-sidebar').classList).toContain('carrito--ventana')
+  })
+})
+
 describe('Stock en la tienda', () => {
   it('la página de un producto agotado bloquea el botón de agregar', async () => {
     await montarEn('/producto/7')
