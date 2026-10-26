@@ -3,18 +3,28 @@
     id="inicio"
     ref="seccion"
     class="hero"
+    :style="estiloPaleta"
     aria-labelledby="hero-titulo"
   >
+    <!-- Fondos que rotan: la nueva foto aparece sobre la anterior -->
     <div class="hero__fondo">
-      <img
-        src="/imagenes/inicio/diablo-huma-1600.jpg"
-        srcset="/imagenes/inicio/diablo-huma-900.jpg 900w, /imagenes/inicio/diablo-huma-1600.jpg 1600w"
-        sizes="100vw"
-        width="1600"
-        height="1068"
-        :alt="t('hero.altDiablo')"
-        fetchpriority="high"
-      />
+      <div
+        v-for="(f, i) in fondos"
+        :key="f.id"
+        :class="['hero__slide', { 'hero__slide--activa': i === fondo, 'hero__slide--saliente': i === fondoSaliente }]"
+        :style="{ '--slide-fondo': f.fondo, '--pos': f.posicion, '--pos-movil': f.posicionMovil }"
+      >
+        <img
+          v-if="cargados.includes(i)"
+          :src="f.imagenes[f.ancho]"
+          :srcset="srcsetDe(f)"
+          sizes="(max-aspect-ratio: 3/2) 150vh, 100vw"
+          :width="f.ancho"
+          :height="f.alto"
+          :alt="i === fondo ? t(f.alt) : ''"
+          :fetchpriority="i === 0 ? 'high' : undefined"
+        />
+      </div>
     </div>
 
     <div class="hero__inner">
@@ -97,6 +107,26 @@
       </div>
     </div>
 
+    <div class="hero__fondos" role="group" :aria-label="t('hero.fondos')">
+      <button
+        v-for="(f, i) in fondos"
+        :key="f.id"
+        type="button"
+        :class="['hero__indicador', { 'hero__indicador--activo': i === fondo }]"
+        :aria-label="t(f.alt)"
+        :aria-current="i === fondo ? 'true' : undefined"
+        @click="irAFondo(i)"
+      >
+        <!-- La barra marca el tiempo; al llenarse pasa al siguiente fondo -->
+        <span
+          v-if="i === fondo"
+          :key="vueltaFondo"
+          :class="['hero__indicador-progreso', { 'hero__indicador-progreso--pausado': !rotando }]"
+          @animationend="siguienteFondo"
+        ></span>
+      </button>
+    </div>
+
     <button type="button" class="hero__ver-mas" @click="verMas">
       {{ t('hero.verMas') }}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
@@ -112,6 +142,7 @@ import { useLanguageStore } from '../../stores/language'
 import { HEADER_OFFSET } from '../../composables/useSecciones'
 import { whatsappLink } from '../../config/contacto'
 import { imagenPrincipal } from '../../utils/imagenes'
+import { HERO_FONDOS, HERO_SEGUNDOS_POR_FONDO } from '../../config/inicio'
 
 const props = defineProps({
   // Categorías sugeridas, de la que tiene más productos a la que menos: [{ id, nombre }]
@@ -134,6 +165,40 @@ const media = (q) => (typeof window !== 'undefined' && window.matchMedia ? windo
 const mqChips = media('(max-width: 600px)')
 const mqMovil = media('(max-width: 900px)')
 const reducirMovimiento = !!media('(prefers-reduced-motion: reduce)')?.matches
+
+/* ===== Fondos y paleta ===== */
+const fondos = HERO_FONDOS
+const fondo = ref(0)
+const fondoSaliente = ref(-1) // se queda debajo mientras aparece la nueva
+const vueltaFondo = ref(0)
+const cargados = ref([0, 1]) // la actual y la siguiente; el resto se carga al acercarse
+let temporizadorSaliente = null
+
+const srcsetDe = (f) => Object.entries(f.imagenes).map(([w, url]) => `${url} ${w}w`).join(', ')
+
+const estiloPaleta = computed(() => {
+  const f = fondos[fondo.value]
+  return {
+    '--hero-acento': f.acento,
+    '--hero-texto': f.texto,
+    '--hero-fondo-rgb': f.fondo,
+    '--hero-duracion': `${HERO_SEGUNDOS_POR_FONDO}s`
+  }
+})
+
+const irAFondo = (i) => {
+  if (i === fondo.value) return
+  fondoSaliente.value = fondo.value
+  fondo.value = i
+  vueltaFondo.value++
+  for (const k of [i, (i + 1) % fondos.length]) {
+    if (!cargados.value.includes(k)) cargados.value.push(k)
+  }
+  clearTimeout(temporizadorSaliente)
+  temporizadorSaliente = setTimeout(() => { fondoSaliente.value = -1 }, 1600)
+}
+
+const siguienteFondo = () => irAFondo((fondo.value + 1) % fondos.length)
 
 const buscador = ref(null)
 const campo = ref(null)
@@ -234,20 +299,28 @@ const ejemploChip = ref(-1)
 const heroVisible = ref(true)
 let ciclo = 0
 
+// Una sola petición: se agrupan por categoría hasta 4 nombres de cada una
 const cargarEjemplos = async (categorias) => {
   if (reducirMovimiento || !categorias.length) return
-  const pares = await Promise.all(
-    categorias.map((c) =>
-      axios
-        .get(`${API_URL}/productos`, { params: { categoria_id: c.id, limit: 4 } })
-        .then((res) => [c.id, (res.data?.productos || []).map((p) => p.nombre)])
-        .catch(() => [c.id, []])
-    )
-  )
-  ejemplos.value = Object.fromEntries(pares.filter(([, nombres]) => nombres.length))
+  try {
+    const res = await axios.get(`${API_URL}/productos`, { params: { limit: 50 } })
+    const ids = new Set(categorias.map((c) => c.id))
+    const porCategoria = {}
+    for (const p of res.data?.productos || []) {
+      if (!ids.has(p.categoria_id)) continue
+      const lista = (porCategoria[p.categoria_id] ||= [])
+      if (lista.length < 4) lista.push(p.nombre)
+    }
+    ejemplos.value = porCategoria
+  } catch {
+    ejemplos.value = {}
+  }
 }
 
 watch(() => props.categorias.map((c) => c.id).join(','), () => cargarEjemplos(props.categorias), { immediate: true })
+
+// La rotación se pausa mientras se busca o si el inicio no está en pantalla
+const rotando = computed(() => heroVisible.value && !enfocado.value && !consulta.value)
 
 const animando = computed(() =>
   !reducirMovimiento &&
@@ -305,6 +378,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimeout(temporizador)
+  clearTimeout(temporizadorSaliente)
   detener()
   observador?.disconnect()
   mqChips?.removeEventListener?.('change', onCambioChips)
@@ -315,8 +389,12 @@ onUnmounted(() => {
 /* ===== Base ===== */
 .hero {
   --hero-header: 72px;
-  --hero-oro: #E8C38C;
-  --hero-fondo: #1C140C;
+  /* La paleta llega del fondo activo (estiloPaleta); estos son los valores iniciales */
+  --hero-acento: #E8C38C;
+  --hero-texto: #FFF6EC;
+  --hero-fondo-rgb: 20, 14, 8;
+  --hero-fondo: rgb(var(--hero-fondo-rgb));
+  --hero-cambio: 1.2s ease;
   --hero-vidrio: rgba(255, 255, 255, 0.08);
   --hero-vidrio-hover: rgba(255, 255, 255, 0.16);
   --hero-borde: rgba(255, 255, 255, 0.18);
@@ -324,12 +402,15 @@ onUnmounted(() => {
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100svh;
+  /* Una sola pantalla; solo crece si el contenido no cabe (pantallas muy bajas) */
+  height: 100vh;
+  height: 100svh;
+  min-height: fit-content;
   z-index: 1; /* la lista de resultados queda sobre la sección siguiente */
   padding-top: var(--hero-header);
-  color: #FFFFFF;
+  color: var(--hero-texto);
   background: var(--hero-fondo);
+  transition: background-color var(--hero-cambio), color var(--hero-cambio);
 }
 
 .sr-only {
@@ -350,22 +431,43 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.hero__fondo img {
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.hero__slide--activa {
+  z-index: 1;
+  opacity: 1;
+}
+
+.hero__slide--saliente {
+  opacity: 1;
+  transition: none;
+}
+
+.hero__slide img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 28% 40%;
-  animation: heroAcercamiento 18s ease-out both;
+  object-position: var(--pos);
 }
 
-/* Oscurece el lado del texto para asegurar el contraste */
-.hero__fondo::after {
+.hero__slide--activa img,
+.hero__slide--saliente img {
+  animation: heroAcercamiento 9s ease-out both;
+}
+
+/* Oscurece el lado del texto con el tono de cada foto */
+.hero__slide::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(270deg, rgba(20, 14, 8, 0.92) 0%, rgba(20, 14, 8, 0.75) 40%, rgba(20, 14, 8, 0.12) 72%, transparent 100%),
-    linear-gradient(0deg, rgba(20, 14, 8, 0.7) 0%, transparent 38%);
+    linear-gradient(270deg, rgba(var(--slide-fondo), 0.92) 0%, rgba(var(--slide-fondo), 0.75) 40%, rgba(var(--slide-fondo), 0.12) 72%, transparent 100%),
+    linear-gradient(0deg, rgba(var(--slide-fondo), 0.7) 0%, transparent 38%);
 }
 
 @keyframes heroAcercamiento {
@@ -379,7 +481,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: clamp(var(--space-6), 5vw, 72px) 24px;
+  padding: clamp(var(--space-4), 4vh, 72px) 24px;
   display: grid;
   grid-template-columns: 1fr minmax(0, 540px);
   align-items: center;
@@ -389,17 +491,18 @@ onUnmounted(() => {
   grid-column: 2;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: clamp(var(--space-3), 2.6vh, var(--space-5));
 }
 
 .hero__titulo {
   font-family: var(--font-serif);
-  font-size: clamp(2.5rem, 5vw, 4.4rem);
+  font-size: clamp(2.25rem, min(5vw, 8.2vh), 4.4rem);
   font-weight: 700;
   line-height: 1.04;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
   text-wrap: balance;
+  transition: color var(--hero-cambio);
 }
 
 .hero__titulo span,
@@ -410,14 +513,16 @@ onUnmounted(() => {
 .hero__titulo em {
   font-style: italic;
   font-weight: 500;
-  color: var(--hero-oro);
+  color: var(--hero-acento);
+  transition: color var(--hero-cambio);
 }
 
 .hero__descripcion {
   max-width: 34em;
   font-size: clamp(var(--text-base), 1.3vw, var(--text-lg));
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--hero-texto) 88%, transparent);
+  transition: color var(--hero-cambio);
 }
 
 /* Entrada suave; el contenido es visible aunque la animación no corra */
@@ -438,7 +543,8 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--hero-oro);
+  color: var(--hero-acento);
+  transition: color var(--hero-cambio);
 }
 
 .hero__buscador {
@@ -468,9 +574,9 @@ onUnmounted(() => {
 }
 
 .hero__campo:focus-within {
-  border-color: var(--hero-oro);
+  border-color: var(--hero-acento);
   background: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 0 0 4px rgba(232, 195, 140, 0.18);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-acento) 18%, transparent);
 }
 
 .hero__campo--abierto {
@@ -480,7 +586,8 @@ onUnmounted(() => {
 
 .hero__lupa {
   flex-shrink: 0;
-  color: var(--hero-oro);
+  color: var(--hero-acento);
+  transition: color var(--hero-cambio);
 }
 
 .hero__entrada {
@@ -535,7 +642,7 @@ onUnmounted(() => {
   height: 1.1em;
   margin-left: 2px;
   vertical-align: -0.18em;
-  background: var(--hero-oro);
+  background: var(--hero-acento);
   animation: heroCursor 1s steps(1) infinite;
 }
 
@@ -560,7 +667,7 @@ onUnmounted(() => {
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: var(--hero-oro);
+  border-top-color: var(--hero-acento);
   border-radius: 50%;
   animation: heroGiro 0.7s linear infinite;
 }
@@ -571,7 +678,7 @@ onUnmounted(() => {
 
 .hero__resultados {
   position: absolute;
-  top: 60px;
+  top: 100%;
   left: 0;
   right: 0;
   z-index: 10;
@@ -579,7 +686,7 @@ onUnmounted(() => {
   overflow-y: auto;
   padding: var(--space-2);
   list-style: none;
-  border: 1px solid var(--hero-oro);
+  border: 1px solid var(--hero-acento);
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--hero-fondo);
@@ -596,7 +703,7 @@ onUnmounted(() => {
 }
 
 .hero__resultado--activo {
-  background: rgba(232, 195, 140, 0.14);
+  background: color-mix(in srgb, var(--hero-acento) 14%, transparent);
 }
 
 .hero__resultado img {
@@ -627,7 +734,7 @@ onUnmounted(() => {
 }
 
 .hero__resultado-precio {
-  color: var(--hero-oro);
+  color: var(--hero-acento);
   font-weight: 700;
   font-size: var(--text-sm);
 }
@@ -641,7 +748,7 @@ onUnmounted(() => {
 .hero__sin-resultados a {
   display: inline-block;
   margin-top: var(--space-1);
-  color: var(--hero-oro);
+  color: var(--hero-acento);
   font-weight: 600;
 }
 
@@ -659,20 +766,76 @@ onUnmounted(() => {
   border: 1px solid var(--hero-borde);
   border-radius: var(--radius-full);
   background: var(--hero-vidrio);
-  color: #FFFFFF;
+  color: var(--hero-texto);
   transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .hero__chip--ejemplo {
-  border-color: var(--hero-oro);
-  background: rgba(232, 195, 140, 0.18);
-  color: var(--hero-oro);
+  border-color: var(--hero-acento);
+  background: color-mix(in srgb, var(--hero-acento) 18%, transparent);
+  color: var(--hero-acento);
 }
 
 .hero__chip:hover,
 .hero__chip:focus-visible {
-  border-color: var(--hero-oro);
+  border-color: var(--hero-acento);
   background: var(--hero-vidrio-hover);
+}
+
+/* ===== Indicadores de fondo ===== */
+.hero__fondos {
+  position: absolute;
+  z-index: 2;
+  left: max(24px, calc((100% - 1280px) / 2 + 24px));
+  bottom: clamp(var(--space-4), 4vh, var(--space-6));
+  display: flex;
+  gap: var(--space-2);
+}
+
+.hero__indicador {
+  position: relative;
+  width: 36px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.hero__indicador::before,
+.hero__indicador-progreso {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+}
+
+.hero__indicador::before {
+  background: rgba(255, 255, 255, 0.3);
+  transition: background 0.2s ease;
+}
+
+.hero__indicador:hover::before {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.hero__indicador-progreso {
+  background: var(--hero-acento);
+  transform-origin: left;
+  animation: heroProgreso var(--hero-duracion) linear forwards;
+}
+
+.hero__indicador-progreso--pausado {
+  animation-play-state: paused;
+}
+
+@keyframes heroProgreso {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 /* ===== Ver más ===== */
@@ -688,7 +851,7 @@ onUnmounted(() => {
   padding: var(--space-2) var(--space-4);
   border: none;
   background: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: color-mix(in srgb, var(--hero-texto) 85%, transparent);
   font: inherit;
   font-size: var(--text-xs);
   letter-spacing: 0.14em;
@@ -707,35 +870,79 @@ onUnmounted(() => {
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
-  /* En móvil: la foto arriba y el contenido debajo, sobre fondo oscuro */
+  /* En móvil: foto a pantalla completa y el contenido abajo, sobre el degradado */
   .hero {
-    min-height: 0;
-    padding-top: 0;
+    padding-top: 64px;
   }
 
-  .hero__fondo {
-    position: relative;
-    height: 52svh;
-    min-height: 300px;
+  .hero__slide img {
+    object-position: var(--pos-movil);
   }
 
-  .hero__fondo::after {
-    background: linear-gradient(0deg, var(--hero-fondo) 0%, rgba(28, 20, 12, 0.6) 30%, transparent 60%);
+  .hero__slide::after {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--slide-fondo), 0.97) 0%,
+      rgba(var(--slide-fondo), 0.88) 40%,
+      rgba(var(--slide-fondo), 0.35) 62%,
+      rgba(var(--slide-fondo), 0) 82%
+    );
   }
 
   .hero__inner {
     grid-template-columns: 1fr;
-    margin-top: -110px;
-    padding-top: 0;
-    padding-bottom: var(--space-6);
+    align-items: end;
+    padding: 0 20px clamp(var(--space-4), 3svh, var(--space-6));
   }
 
   .hero__contenido {
     grid-column: 1;
+    gap: clamp(10px, 2svh, 20px);
+  }
+
+  .hero__titulo {
+    font-size: clamp(1.75rem, min(8.6vw, 4.8svh), 2.75rem);
+  }
+
+  .hero__descripcion {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .hero__campo {
+    height: 52px;
+  }
+
+  /* Dos categorías en una sola línea, sin llegar al botón flotante de WhatsApp */
+  .hero__sugerencias {
+    flex-wrap: nowrap;
+    max-width: calc(100% - 64px);
+    overflow: hidden;
+  }
+
+  .hero__chip {
+    white-space: nowrap;
+  }
+
+  /* Los indicadores pasan arriba, bajo el encabezado */
+  .hero__fondos {
+    top: calc(64px + var(--space-3));
+    bottom: auto;
+    left: 20px;
   }
 
   .hero__ver-mas {
     display: none;
+  }
+}
+
+/* Celulares bajos: la descripción se recorta a dos líneas */
+@media (max-width: 900px) and (max-height: 700px) {
+  .hero__descripcion {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -749,9 +956,19 @@ onUnmounted(() => {
 /* Sin animaciones para quien las desactiva en su sistema */
 @media (prefers-reduced-motion: reduce) {
   .hero__contenido > *,
-  .hero__fondo img,
+  .hero__slide img,
   .hero__ver-mas svg {
+    animation: none !important;
+  }
+
+  /* Sin rotación automática: se cambia de fondo solo con los indicadores */
+  .hero__indicador-progreso {
     animation: none;
+    transform: none;
+  }
+
+  .hero__slide {
+    transition: none;
   }
 }
 </style>

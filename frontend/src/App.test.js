@@ -138,6 +138,21 @@ describe('Sección de inicio (HeroSection)', () => {
     expect(root.querySelector('label[for="hero-buscar"]').textContent).toBe('Busca tu producto')
   })
 
+  it('los indicadores cambian el fondo y la paleta de colores', async () => {
+    await montarEn('/')
+    const hero = root.querySelector('#inicio')
+    const indicadores = hero.querySelectorAll('.hero__indicador')
+    expect(indicadores.length).toBeGreaterThan(1)
+    expect(indicadores[0].getAttribute('aria-current')).toBe('true')
+    const acentoInicial = hero.style.getPropertyValue('--hero-acento')
+
+    indicadores[1].click()
+    await nextTick()
+    expect(indicadores[1].getAttribute('aria-current')).toBe('true')
+    expect(hero.querySelectorAll('.hero__slide')[1].classList).toContain('hero__slide--activa')
+    expect(hero.style.getPropertyValue('--hero-acento')).not.toBe(acentoInicial)
+  })
+
   it('buscador: muestra resultados y Enter abre el producto', async () => {
     await montarEn('/')
     const input = root.querySelector('#hero-buscar')
