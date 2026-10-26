@@ -49,10 +49,11 @@
           <button
             ref="botonMenu"
             class="menu-toggle"
-            :aria-label="t('nav.menu')"
+            :class="{ 'menu-toggle--abierto': menuOpen }"
+            :aria-label="menuOpen ? t('nav.cerrarMenu') : t('nav.menu')"
             :aria-expanded="menuOpen"
             aria-controls="nav-menu"
-            @click="abrirMenu"
+            @click="menuOpen ? cerrarMenu(true) : abrirMenu()"
           >
             <span></span>
             <span></span>
@@ -62,60 +63,43 @@
     </nav>
   </header>
 
-  <!-- Menú móvil a pantalla completa, con el tono de la imagen del inicio -->
+  <!-- Menú móvil: ventana flotante bajo la barra, con los colores del tema claro/oscuro -->
   <Teleport to="body">
+    <transition name="fondo-menu">
+      <div v-if="menuOpen" class="menu-fondo" aria-hidden="true" @click="cerrarMenu(true)"></div>
+    </transition>
     <transition name="menu">
       <div
         v-if="menuOpen"
         id="nav-menu"
         ref="menu"
         class="menu-movil"
-        :style="estiloPaleta"
         role="dialog"
         aria-modal="true"
         :aria-label="t('nav.principal')"
         @keydown="onTeclaMenu"
       >
-        <div class="menu-movil__barra">
-          <router-link to="/" class="logo" @click="cerrarMenu()">
-            <img class="logo-icon" src="/imagenes/logo-96.png" alt="" width="40" height="40" draggable="false" />
-            <span class="logo-text">Ideancestral</span>
-          </router-link>
-          <button type="button" class="menu-movil__cerrar" :aria-label="t('nav.cerrarMenu')" @click="cerrarMenu(true)">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        <ol class="menu-movil__lista">
-          <li v-for="(s, i) in secciones" :key="s.id" :style="{ '--i': i }">
+        <ul class="menu-movil__lista">
+          <li v-for="s in secciones" :key="s.id">
             <a :href="`/#${s.id}`" class="menu-movil__enlace" @click.prevent="navegar(s.id)">
-              <span class="menu-movil__num">{{ String(i + 1).padStart(2, '0') }}</span>
-              <span class="menu-movil__texto">
-                <strong>{{ t(s.label) }}</strong>
-                <small>{{ t(s.descripcion) }}</small>
-              </span>
+              <strong>{{ t(s.label) }}</strong>
+              <small>{{ t(s.descripcion) }}</small>
             </a>
           </li>
-        </ol>
+        </ul>
 
-        <div class="menu-movil__pie">
-          <div class="menu-movil__ajustes">
-            <ThemeToggle />
-            <div class="menu-movil__idiomas" role="group" :aria-label="t('nav.idioma')">
-              <button
-                v-for="code in ['es', 'en', 'pt']"
-                :key="code"
-                type="button"
-                :aria-pressed="locale === code"
-                :aria-label="t('lang.' + code)"
-                @click="langStore.setLocale(code)"
-              >{{ code.toUpperCase() }}</button>
-            </div>
+        <div class="menu-movil__ajustes">
+          <ThemeToggle />
+          <div class="menu-movil__idiomas" role="group" :aria-label="t('nav.idioma')">
+            <button
+              v-for="code in ['es', 'en', 'pt']"
+              :key="code"
+              type="button"
+              :aria-pressed="locale === code"
+              :aria-label="t('lang.' + code)"
+              @click="langStore.setLocale(code)"
+            >{{ code.toUpperCase() }}</button>
           </div>
-          <a :href="whatsappGeneral" target="_blank" rel="noopener" class="menu-movil__whatsapp">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path :d="WHATSAPP_ICON_PATH"/></svg>
-            {{ t('nav.escribenos') }}
-          </a>
         </div>
       </div>
     </transition>
@@ -131,8 +115,6 @@ import { useIrASeccion } from '../../composables/useSecciones'
 import { useEstadoInicio } from '../../composables/useEstadoInicio'
 import { useLanguageStore } from '../../stores/language'
 import { HERO_FONDOS } from '../../config/inicio'
-import { whatsappLink } from '../../config/contacto'
-import { WHATSAPP_ICON_PATH } from './whatsappIcon'
 import ThemeToggle from '../ThemeToggle.vue'
 import LanguageSwitcher from '../LanguageSwitcher.vue'
 
@@ -152,12 +134,10 @@ const secciones = [
   { id: 'nosotros', label: 'nav.nosotros', descripcion: 'nav.nosotrosDesc' }
 ]
 
-const whatsappGeneral = computed(() => whatsappLink(t('whatsapp.saludoGeneral')))
-
 /* ===== Modo transparente sobre el inicio ===== */
 const transparente = computed(() => estadoInicio.montado && estadoInicio.bajoHeader)
 
-// Fuera del inicio se usa la paleta del primer fondo (para el menú móvil)
+// Fuera del inicio se usa la paleta del primer fondo
 const estiloPaleta = computed(() => {
   const { acento, texto, fondo } = estadoInicio.montado ? estadoInicio.paleta : HERO_FONDOS[0]
   return { '--nav-acento': acento, '--nav-texto': texto, '--nav-fondo': fondo }
@@ -495,172 +475,138 @@ onUnmounted(() => {
 }
 .cart-bounce { animation: cartBounce 0.5s ease; }
 
-/* ===== Menú móvil ===== */
-.menu-movil {
+/* La X del botón cuando el menú está abierto */
+.menu-toggle span {
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+.menu-toggle--abierto span:first-child {
+  transform: translateY(4px) rotate(45deg);
+}
+
+.menu-toggle--abierto span:last-child {
+  width: 100%;
+  transform: translateY(-4px) rotate(-45deg);
+}
+
+/* ===== Menú móvil: ventana flotante ===== */
+.menu-fondo {
   position: fixed;
   inset: 0;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  padding: 0 24px max(var(--space-6), env(safe-area-inset-bottom));
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.menu-movil {
+  position: fixed;
+  z-index: 1001;
+  top: calc(var(--header-alto) + var(--space-2));
+  right: 12px;
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100svh - var(--header-alto) - var(--space-6));
   overflow-y: auto;
-  color: var(--nav-texto);
-  background:
-    radial-gradient(120% 60% at 100% 0%, color-mix(in srgb, var(--nav-acento) 16%, transparent), transparent 60%),
-    rgb(var(--nav-fondo));
-}
-
-.menu-movil__barra {
-  flex-shrink: 0;
-  height: var(--header-alto);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.menu-movil .logo {
-  color: var(--nav-texto);
-}
-
-.menu-movil__cerrar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-right: -8px;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  color: inherit;
-  cursor: pointer;
+  padding: var(--space-2);
+  border: 1px solid var(--color-gray-light);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-xl);
+  transform-origin: top right;
 }
 
 .menu-movil__lista {
-  margin: var(--space-6) 0;
   list-style: none;
-  border-top: 1px solid color-mix(in srgb, var(--nav-texto) 14%, transparent);
-}
-
-.menu-movil__lista li {
-  border-bottom: 1px solid color-mix(in srgb, var(--nav-texto) 14%, transparent);
-  animation: menuEntrada 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: calc(var(--i) * 60ms + 80ms);
 }
 
 .menu-movil__enlace {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  color: inherit;
-}
-
-.menu-movil__num {
-  flex: 0 0 28px;
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: var(--text-lg);
-  color: var(--nav-acento);
-}
-
-.menu-movil__texto {
-  display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  color: inherit;
+  transition: background-color 0.2s ease;
 }
 
-.menu-movil__texto strong {
+.menu-movil__enlace strong {
   font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 8vw, 2.5rem);
+  font-size: var(--text-xl);
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.2;
+  transition: color 0.2s ease;
 }
 
-.menu-movil__texto small {
+.menu-movil__enlace small {
   font-size: var(--text-sm);
-  color: color-mix(in srgb, var(--nav-texto) 65%, transparent);
+  color: var(--color-text-muted);
+}
+
+.menu-movil__enlace:hover,
+.menu-movil__enlace:focus-visible {
+  background: var(--color-bg-warm);
 }
 
 .menu-movil__enlace:hover strong,
 .menu-movil__enlace:focus-visible strong {
-  color: var(--nav-acento);
-}
-
-.menu-movil__pie {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  color: var(--color-primary);
 }
 
 .menu-movil__ajustes {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.menu-movil :deep(.theme-toggle) {
-  width: 44px;
-  height: 44px;
-  color: inherit;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  border-top: 1px solid var(--color-gray-light);
 }
 
 .menu-movil__idiomas {
   display: flex;
   padding: 3px;
-  border: 1px solid color-mix(in srgb, var(--nav-texto) 28%, transparent);
+  border: 1px solid var(--color-gray-light);
   border-radius: var(--radius-full);
 }
 
 .menu-movil__idiomas button {
-  min-width: 48px;
-  height: 36px;
+  min-width: 44px;
+  height: 32px;
   padding: 0 var(--space-3);
   border: none;
   border-radius: var(--radius-full);
   background: none;
-  color: inherit;
+  color: var(--color-text-muted);
   font: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .menu-movil__idiomas button[aria-pressed="true"] {
-  background: var(--nav-acento);
-  color: rgb(var(--nav-fondo));
-}
-
-.menu-movil__whatsapp {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  height: 52px;
-  border-radius: var(--radius-md);
-  background: var(--nav-acento);
-  color: rgb(var(--nav-fondo));
-  font-weight: 600;
-}
-
-@keyframes menuEntrada {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
+  background: var(--color-primary);
+  color: var(--color-surface);
 }
 
 .menu-enter-active,
 .menu-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .menu-enter-from,
 .menu-leave-to {
   opacity: 0;
-  transform: translateY(-12px);
+  transform: translateY(-6px) scale(0.97);
+}
+
+.fondo-menu-enter-active,
+.fondo-menu-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fondo-menu-enter-from,
+.fondo-menu-leave-to {
+  opacity: 0;
 }
 
 /* ===== Responsive ===== */
@@ -685,13 +631,15 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cart-bounce,
-  .menu-movil__lista li {
+  .cart-bounce {
     animation: none;
   }
 
   .menu-enter-active,
   .menu-leave-active,
+  .fondo-menu-enter-active,
+  .fondo-menu-leave-active,
+  .menu-toggle span,
   .header--transparente .logo-icon {
     transition: none;
   }

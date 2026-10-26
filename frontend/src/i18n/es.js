@@ -6,7 +6,6 @@ export default {
     nosotrosDesc: 'Dónde estamos y cómo contactarnos',
     cerrarMenu: 'Cerrar menú',
     idioma: 'Idioma',
-    escribenos: 'Escríbenos por WhatsApp',
     principal: 'Navegación principal',
     menu: 'Abrir menú',
     saltarContenido: 'Saltar al contenido',

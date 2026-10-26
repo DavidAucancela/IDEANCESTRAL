@@ -6,7 +6,6 @@ export default {
     nosotrosDesc: 'Onde estamos e como nos contatar',
     cerrarMenu: 'Fechar menu',
     idioma: 'Idioma',
-    escribenos: 'Fale conosco no WhatsApp',
     principal: 'Navegação principal',
     menu: 'Abrir menu',
     saltarContenido: 'Pular para o conteúdo',

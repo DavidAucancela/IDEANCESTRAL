@@ -124,7 +124,7 @@ describe('Navbar', () => {
     expect(root.querySelector('header.header').classList).not.toContain('header--transparente')
   })
 
-  it('el menú móvil muestra las secciones numeradas y se cierra con un enlace o con Escape', async () => {
+  it('el menú móvil es una ventana con las 4 secciones y se cierra con un enlace, fuera o con Escape', async () => {
     await montarEn('/')
     const boton = root.querySelector('.menu-toggle')
     boton.click()
@@ -132,14 +132,22 @@ describe('Navbar', () => {
     let menu = document.getElementById('nav-menu')
     expect(menu.getAttribute('role')).toBe('dialog')
     expect(boton.getAttribute('aria-expanded')).toBe('true')
-    const numeros = [...menu.querySelectorAll('.menu-movil__num')].map((n) => n.textContent)
-    expect(numeros).toEqual(['01', '02', '03', '04'])
+    const titulos = [...menu.querySelectorAll('.menu-movil__enlace strong')].map((n) => n.textContent)
+    expect(titulos).toEqual(['Inicio', 'Categorías', 'Promociones', 'Nosotros'])
+    expect(menu.textContent).not.toMatch(/0[1-4]/)
+    expect(menu.textContent).not.toContain('WhatsApp')
     expect(document.documentElement.style.overflow).toBe('hidden')
 
     menu.querySelectorAll('.menu-movil__enlace')[1].click()
     await esperar()
     expect(document.getElementById('nav-menu')).toBeNull()
     expect(document.documentElement.style.overflow).toBe('')
+
+    boton.click()
+    await esperar()
+    document.querySelector('.menu-fondo').click()
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
 
     boton.click()
     await esperar()

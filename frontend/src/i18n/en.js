@@ -6,7 +6,6 @@ export default {
     nosotrosDesc: 'Where we are and how to reach us',
     cerrarMenu: 'Close menu',
     idioma: 'Language',
-    escribenos: 'Message us on WhatsApp',
     principal: 'Main navigation',
     menu: 'Open menu',
     saltarContenido: 'Skip to content',

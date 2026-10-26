@@ -4,7 +4,7 @@
       <div class="footer-top">
         <div class="footer-brand">
           <div class="footer-logo">
-            <span class="logo-icon">IA</span>
+            <img class="logo-icon" src="/imagenes/logo-96.png" alt="" width="44" height="44" loading="lazy" />
             <span class="logo-text">Ideancestral</span>
           </div>
           <p>{{ t('footer.slogan') }}</p>
@@ -91,17 +91,12 @@ const secciones = [
 }
 
 .logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--color-accent);
-  color: var(--color-white);
-  border-radius: 6px;
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: var(--text-xs);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .logo-text {
