@@ -1,6 +1,6 @@
 <template>
   <div class="catalogo-view">
-    <HeroSection :interaccion="heroInteraccion" :categorias="heroCategorias" :destacados="heroDestacados" />
+    <HeroSection :categorias="heroCategorias" />
 
     <!-- Productos Destacados -->
     <section id="destacados" class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
@@ -213,11 +213,9 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
-import { HERO_INTERACCIONES, HERO_INTERACCION_POR_DEFECTO } from '../config/inicio'
 import { imagenPrincipal } from '../utils/imagenes'
 import HeroSection from '../components/inicio/HeroSection.vue'
 import { TELEFONOS, EMAIL, INSTAGRAM_URL, whatsappLink } from '../config/contacto'
@@ -227,12 +225,6 @@ export default {
   components: { HeroSection },
   setup() {
     const { t } = useLanguageStore()
-    const route = useRoute()
-
-    // Interacción del inicio; ?hero=<opción> permite comparar en el navegador
-    const heroInteraccion = computed(() =>
-      HERO_INTERACCIONES.includes(route.query.hero) ? route.query.hero : HERO_INTERACCION_POR_DEFECTO
-    )
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const productosDestacados = ref([])
@@ -341,12 +333,9 @@ export default {
 
     const obtenerImagenDestacado = imagenPrincipal
 
-    // Datos para el inicio, con la imagen ya resuelta
+    // Categorías sugeridas bajo el buscador del inicio
     const heroCategorias = computed(() =>
-      categoriasParaMostrar.value.map((c) => ({ id: c.id, nombre: c.nombre, imagen: imagenCategoria(c) }))
-    )
-    const heroDestacados = computed(() =>
-      productosDestacados.value.map((p) => ({ id: p.id, nombre: p.nombre, precio: p.precio, imagen: imagenPrincipal(p) }))
+      categoriasParaMostrar.value.map((c) => ({ id: c.id, nombre: c.nombre }))
     )
 
     // Parallax en cards destacados
@@ -385,9 +374,7 @@ export default {
 
     return {
       t,
-      heroInteraccion,
       heroCategorias,
-      heroDestacados,
       whatsappGeneral,
       categoriasParaMostrar,
       imagenCategoria,

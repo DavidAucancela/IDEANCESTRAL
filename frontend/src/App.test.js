@@ -113,40 +113,24 @@ describe('Stock en la tienda', () => {
 })
 
 describe('Sección de inicio (HeroSection)', () => {
-  const casos = [
-    ['categorias', '.hero__banda'],
-    ['buscador', '#hero-buscar'],
-    ['destacados', '.hero__vitrina'],
-    ['indice', '.hero__indice']
-  ]
-
-  it.each(casos)('opción %s: un solo h1 y su módulo, sin los botones ni la ubicación', async (opcion, modulo) => {
-    await montarEn(`/?hero=${opcion}`)
+  it('muestra un solo h1 y el buscador, sin botones ni la ubicación', async () => {
+    await montarEn('/')
     const hero = root.querySelector('#inicio')
-    expect(hero.classList).toContain(`hero--${opcion}`)
     expect(root.querySelectorAll('h1')).toHaveLength(1)
-    expect(hero.querySelector(modulo)).not.toBeNull()
-    for (const [, otro] of casos.filter(([o]) => o !== opcion)) {
-      expect(hero.querySelector(otro)).toBeNull()
-    }
+    expect(hero.querySelector('#hero-buscar')).not.toBeNull()
     expect(hero.querySelector('.btn')).toBeNull()
     expect(hero.textContent).not.toContain('Mariscal')
   })
 
-  it('una opción desconocida usa la de por defecto', async () => {
-    await montarEn('/?hero=no-existe')
-    expect(root.querySelector('#inicio').classList).toContain('hero--categorias')
-  })
-
-  it('categorías: cada tarjeta lleva a su categoría', async () => {
-    await montarEn('/?hero=categorias')
-    const enlace = root.querySelector('.hero__categoria')
-    expect(enlace.getAttribute('href')).toBe('/categoria/1')
-    expect(enlace.textContent).toContain('Madera')
+  it('las categorías sugeridas llevan a su categoría', async () => {
+    await montarEn('/')
+    const chip = root.querySelector('.hero__chip')
+    expect(chip.getAttribute('href')).toBe('/categoria/1')
+    expect(chip.textContent).toContain('Madera')
   })
 
   it('buscador: muestra resultados y Enter abre el producto', async () => {
-    await montarEn('/?hero=buscador')
+    await montarEn('/')
     const input = root.querySelector('#hero-buscar')
     input.dispatchEvent(new Event('focus'))
     input.value = 'más'
@@ -162,24 +146,5 @@ describe('Sección de inicio (HeroSection)', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
     await esperar()
     expect(router.currentRoute.value.path).toBe('/producto/7')
-  })
-
-  it('destacados: los controles cambian la pieza visible', async () => {
-    await montarEn('/?hero=destacados')
-    const vitrina = root.querySelector('.hero__vitrina')
-    expect(vitrina.querySelector('.hero__pieza').getAttribute('href')).toBe('/producto/7')
-    vitrina.querySelector('[aria-label="Pieza siguiente"]').click()
-    await esperar()
-    expect(vitrina.querySelector('.hero__pieza').getAttribute('href')).toBe('/producto/8')
-    expect(vitrina.querySelectorAll('.hero__miniatura')).toHaveLength(2)
-  })
-
-  it('índice: enlaza a las secciones que existen en la página', async () => {
-    await montarEn('/?hero=indice')
-    const destinos = [...root.querySelectorAll('.hero__indice-item')].map((a) => a.getAttribute('href'))
-    expect(destinos).toEqual(['/#destacados', '/#categorias', '/#promociones', '/#nosotros'])
-    for (const d of destinos) {
-      expect(root.querySelector(d.replace('/', ''))).not.toBeNull()
-    }
   })
 })
