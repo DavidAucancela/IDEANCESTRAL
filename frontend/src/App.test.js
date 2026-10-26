@@ -22,7 +22,15 @@ vi.mock('axios', () => ({
         const lista = params.destacado ? [productoAgotado, otroDestacado] : [productoAgotado]
         return { data: { productos: lista, paginacion: {} } }
       }
-      if (url.endsWith('/categorias')) return { data: [{ id: 1, nombre: 'Madera', imagen_url: null }] }
+      if (url.endsWith('/categorias')) {
+        return {
+          data: [
+            { id: 2, nombre: 'Cerámica', imagen_url: null, total_productos: 3 },
+            { id: 1, nombre: 'Madera', imagen_url: null, total_productos: 10 },
+            { id: 5, nombre: 'Vacía', imagen_url: null, total_productos: 0 }
+          ]
+        }
+      }
       if (url.includes('/categorias/')) return { data: { id: 1, nombre: 'Madera' } }
       return { data: [] }
     }),
@@ -122,11 +130,12 @@ describe('Sección de inicio (HeroSection)', () => {
     expect(hero.textContent).not.toContain('Mariscal')
   })
 
-  it('las categorías sugeridas llevan a su categoría', async () => {
+  it('sugiere primero las categorías con más productos y omite las vacías', async () => {
     await montarEn('/')
-    const chip = root.querySelector('.hero__chip')
-    expect(chip.getAttribute('href')).toBe('/categoria/1')
-    expect(chip.textContent).toContain('Madera')
+    const chips = [...root.querySelectorAll('.hero__chip')]
+    expect(chips.map((c) => c.textContent.trim())).toEqual(['Madera', 'Cerámica'])
+    expect(chips[0].getAttribute('href')).toBe('/categoria/1')
+    expect(root.querySelector('label[for="hero-buscar"]').textContent).toBe('Busca tu producto')
   })
 
   it('buscador: muestra resultados y Enter abre el producto', async () => {

@@ -15,7 +15,7 @@ export default {
     descripcion: 'Difundimos la identidad cultural del Ecuador con piezas únicas, creadas a mano con saberes tradicionales y materiales auténticos.',
     verMas: 'Ver más',
     altDiablo: 'Danzante con máscara de Diablo Huma en una fiesta tradicional',
-    buscarLabel: 'Buscar artesanías',
+    buscarLabel: 'Busca tu producto',
     buscarPlaceholder: 'Busca máscaras, cerámica, tallados…',
     buscando: 'Buscando…',
     limpiarBusqueda: 'Borrar búsqueda',

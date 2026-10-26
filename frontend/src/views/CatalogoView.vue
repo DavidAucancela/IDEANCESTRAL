@@ -333,9 +333,13 @@ export default {
 
     const obtenerImagenDestacado = imagenPrincipal
 
-    // Categorías sugeridas bajo el buscador del inicio
+    // Categorías sugeridas bajo el buscador del inicio: las que tienen más productos
     const heroCategorias = computed(() =>
-      categoriasParaMostrar.value.map((c) => ({ id: c.id, nombre: c.nombre }))
+      categoriasParaMostrar.value
+        .filter((c) => c.total_productos > 0)
+        .sort((a, b) => b.total_productos - a.total_productos)
+        .slice(0, 4)
+        .map((c) => ({ id: c.id, nombre: c.nombre }))
     )
 
     // Parallax en cards destacados

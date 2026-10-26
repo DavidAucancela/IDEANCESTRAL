@@ -15,7 +15,7 @@ export default {
     descripcion: 'Divulgamos a identidade cultural do Equador com peças únicas, criadas à mão com saberes tradicionais e materiais autênticos.',
     verMas: 'Ver mais',
     altDiablo: 'Dançarino com máscara de Diablo Huma em uma festa tradicional',
-    buscarLabel: 'Buscar artesanato',
+    buscarLabel: 'Busque seu produto',
     buscarPlaceholder: 'Busque máscaras, cerâmica, entalhes…',
     buscando: 'Buscando…',
     limpiarBusqueda: 'Limpar busca',

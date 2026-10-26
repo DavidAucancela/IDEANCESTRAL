@@ -24,60 +24,72 @@
         </h1>
         <p class="hero__descripcion">{{ t('hero.descripcion') }}</p>
 
-        <div class="hero__buscador" role="search">
-          <label for="hero-buscar" class="sr-only">{{ t('hero.buscarLabel') }}</label>
-          <div class="hero__campo" :class="{ 'hero__campo--abierto': listaVisible }">
-            <svg class="hero__lupa" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input
-              id="hero-buscar"
-              ref="campo"
-              v-model="consulta"
-              type="search"
-              role="combobox"
-              autocomplete="off"
-              aria-autocomplete="list"
-              aria-controls="hero-resultados"
-              :aria-expanded="listaVisible"
-              :aria-activedescendant="activo >= 0 ? `hero-resultado-${activo}` : undefined"
-              :placeholder="t('hero.buscarPlaceholder')"
-              @keydown="onTecla"
-              @focus="enfocado = true"
-              @blur="enfocado = false"
-            />
-            <span v-if="buscando" class="hero__girando" :aria-label="t('hero.buscando')"></span>
-            <button v-else-if="consulta" type="button" class="hero__limpiar" :aria-label="t('hero.limpiarBusqueda')" @click="limpiar">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
+        <div ref="buscador" class="hero__buscador" role="search">
+          <label for="hero-buscar" class="hero__buscador-titulo">{{ t('hero.buscarLabel') }}</label>
+          <!-- La lista de resultados se posiciona respecto al campo -->
+          <div class="hero__caja">
+            <div class="hero__campo" :class="{ 'hero__campo--abierto': listaVisible }">
+              <svg class="hero__lupa" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+              <div class="hero__entrada">
+                <input
+                  id="hero-buscar"
+                  ref="campo"
+                  v-model="consulta"
+                  type="search"
+                  role="combobox"
+                  autocomplete="off"
+                  aria-autocomplete="list"
+                  aria-controls="hero-resultados"
+                  :aria-expanded="listaVisible"
+                  :aria-activedescendant="activo >= 0 ? `hero-resultado-${activo}` : undefined"
+                  :placeholder="animando ? '' : t('hero.buscarPlaceholder')"
+                  @keydown="onTecla"
+                  @focus="onFoco"
+                  @blur="enfocado = false"
+                />
+                <!-- Ejemplo que se escribe solo; desaparece al tocar el campo -->
+                <span v-if="animando" class="hero__ejemplo" aria-hidden="true">{{ ejemploTexto }}<span class="hero__cursor"></span></span>
+              </div>
+              <span v-if="buscando" class="hero__girando" :aria-label="t('hero.buscando')"></span>
+              <button v-else-if="consulta" type="button" class="hero__limpiar" :aria-label="t('hero.limpiarBusqueda')" @click="limpiar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+  
+            <ul v-show="listaVisible" id="hero-resultados" class="hero__resultados" role="listbox" :aria-label="t('hero.buscarLabel')">
+              <li
+                v-for="(prod, i) in resultados"
+                :id="`hero-resultado-${i}`"
+                :key="prod.id"
+                role="option"
+                :aria-selected="i === activo"
+                :class="['hero__resultado', { 'hero__resultado--activo': i === activo }]"
+                @mousedown.prevent="abrirProducto(prod)"
+                @mousemove="activo = i"
+              >
+                <img :src="imagenPrincipal(prod)" alt="" width="48" height="48" />
+                <span class="hero__resultado-texto">
+                  <strong>{{ prod.nombre }}</strong>
+                  <small v-if="prod.categoria_nombre">{{ prod.categoria_nombre }}</small>
+                </span>
+                <span class="hero__resultado-precio">${{ Number(prod.precio).toFixed(2) }}</span>
+              </li>
+              <li v-if="sinResultados" class="hero__sin-resultados" role="presentation">
+                {{ t('hero.sinResultados', { q: consultaLimpia }) }}
+                <a :href="whatsappBusqueda" target="_blank" rel="noopener" @mousedown.prevent>{{ t('hero.preguntarWhatsApp') }} →</a>
+              </li>
+            </ul>
           </div>
-
-          <ul v-show="listaVisible" id="hero-resultados" class="hero__resultados" role="listbox" :aria-label="t('hero.buscarLabel')">
-            <li
-              v-for="(prod, i) in resultados"
-              :id="`hero-resultado-${i}`"
-              :key="prod.id"
-              role="option"
-              :aria-selected="i === activo"
-              :class="['hero__resultado', { 'hero__resultado--activo': i === activo }]"
-              @mousedown.prevent="abrirProducto(prod)"
-              @mousemove="activo = i"
-            >
-              <img :src="imagenPrincipal(prod)" alt="" width="48" height="48" />
-              <span class="hero__resultado-texto">
-                <strong>{{ prod.nombre }}</strong>
-                <small v-if="prod.categoria_nombre">{{ prod.categoria_nombre }}</small>
-              </span>
-              <span class="hero__resultado-precio">${{ Number(prod.precio).toFixed(2) }}</span>
-            </li>
-            <li v-if="sinResultados" class="hero__sin-resultados" role="presentation">
-              {{ t('hero.sinResultados', { q: consultaLimpia }) }}
-              <a :href="whatsappBusqueda" target="_blank" rel="noopener" @mousedown.prevent>{{ t('hero.preguntarWhatsApp') }} →</a>
-            </li>
-          </ul>
           <p class="sr-only" aria-live="polite">{{ anuncioResultados }}</p>
 
-          <div v-if="categorias.length" class="hero__sugerencias">
+          <div v-if="chips.length" class="hero__sugerencias">
             <span>{{ t('hero.populares') }}</span>
-            <router-link v-for="cat in categorias.slice(0, 4)" :key="cat.id" :to="`/categoria/${cat.id}`" class="hero__chip">
+            <router-link
+              v-for="(cat, i) in chips"
+              :key="cat.id"
+              :to="`/categoria/${cat.id}`"
+              :class="['hero__chip', { 'hero__chip--ejemplo': i === ejemploChip }]"
+            >
               {{ cat.nombre }}
             </router-link>
           </div>
@@ -93,7 +105,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useLanguageStore } from '../../stores/language'
@@ -101,8 +113,8 @@ import { HEADER_OFFSET } from '../../composables/useSecciones'
 import { whatsappLink } from '../../config/contacto'
 import { imagenPrincipal } from '../../utils/imagenes'
 
-defineProps({
-  // Categorías sugeridas bajo el buscador: [{ id, nombre }]
+const props = defineProps({
+  // Categorías sugeridas, de la que tiene más productos a la que menos: [{ id, nombre }]
   categorias: { type: Array, default: () => [] }
 })
 
@@ -118,6 +130,12 @@ const verMas = () => {
   window.scrollTo({ top: el.offsetTop + el.offsetHeight - HEADER_OFFSET, behavior: 'smooth' })
 }
 
+const media = (q) => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(q) : null)
+const mqChips = media('(max-width: 600px)')
+const mqMovil = media('(max-width: 900px)')
+const reducirMovimiento = !!media('(prefers-reduced-motion: reduce)')?.matches
+
+const buscador = ref(null)
 const campo = ref(null)
 const consulta = ref('')
 const resultados = ref([])
@@ -171,6 +189,18 @@ const abrirProducto = (prod) => {
   router.push(`/producto/${prod.id}`)
 }
 
+// En móvil el teclado tapa media pantalla: subimos el buscador hasta el encabezado
+const onFoco = () => {
+  enfocado.value = true
+  if (!mqMovil?.matches) return
+  setTimeout(() => {
+    const el = buscador.value
+    if (!el || !enfocado.value) return
+    const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET - 8
+    window.scrollTo({ top, behavior: reducirMovimiento ? 'instant' : 'smooth' })
+  }, 300)
+}
+
 const limpiar = () => {
   consulta.value = ''
   campo.value?.focus()
@@ -192,7 +222,93 @@ const onTecla = (e) => {
   }
 }
 
-onUnmounted(() => clearTimeout(temporizador))
+/* ===== Categorías populares: 4 en escritorio, 2 en móvil ===== */
+const limiteChips = ref(mqChips?.matches ? 2 : 4)
+const onCambioChips = (e) => { limiteChips.value = e.matches ? 2 : 4 }
+const chips = computed(() => props.categorias.slice(0, limiteChips.value))
+
+/* ===== Ejemplos: se resalta una categoría y se escribe uno de sus productos ===== */
+const ejemplos = ref({}) // { categoriaId: [nombres] }
+const ejemploTexto = ref('')
+const ejemploChip = ref(-1)
+const heroVisible = ref(true)
+let ciclo = 0
+
+const cargarEjemplos = async (categorias) => {
+  if (reducirMovimiento || !categorias.length) return
+  const pares = await Promise.all(
+    categorias.map((c) =>
+      axios
+        .get(`${API_URL}/productos`, { params: { categoria_id: c.id, limit: 4 } })
+        .then((res) => [c.id, (res.data?.productos || []).map((p) => p.nombre)])
+        .catch(() => [c.id, []])
+    )
+  )
+  ejemplos.value = Object.fromEntries(pares.filter(([, nombres]) => nombres.length))
+}
+
+watch(() => props.categorias.map((c) => c.id).join(','), () => cargarEjemplos(props.categorias), { immediate: true })
+
+const animando = computed(() =>
+  !reducirMovimiento &&
+  heroVisible.value &&
+  !enfocado.value &&
+  !consulta.value &&
+  chips.value.some((c) => ejemplos.value[c.id])
+)
+
+const pausa = (ms) => new Promise((r) => setTimeout(r, ms))
+
+const animar = async () => {
+  const id = ++ciclo
+  const sigue = () => id === ciclo
+  for (let paso = 0; sigue(); paso++) {
+    const conEjemplos = chips.value
+      .map((c, indice) => ({ indice, nombres: ejemplos.value[c.id] }))
+      .filter((c) => c.nombres)
+    if (!conEjemplos.length) return
+    const { indice, nombres } = conEjemplos[paso % conEjemplos.length]
+    const nombre = nombres[Math.floor(paso / conEjemplos.length) % nombres.length]
+
+    ejemploChip.value = indice
+    await pausa(450)
+    for (let k = 1; k <= nombre.length && sigue(); k++) {
+      ejemploTexto.value = nombre.slice(0, k)
+      await pausa(60)
+    }
+    if (!sigue()) return
+    await pausa(1700)
+    for (let k = nombre.length - 1; k >= 0 && sigue(); k--) {
+      ejemploTexto.value = nombre.slice(0, k)
+      await pausa(25)
+    }
+  }
+}
+
+const detener = () => {
+  ciclo++
+  ejemploTexto.value = ''
+  ejemploChip.value = -1
+}
+
+watch(animando, (si) => (si ? animar() : detener()), { immediate: true })
+
+// Pausa la animación cuando el inicio no está en pantalla
+let observador = null
+onMounted(() => {
+  mqChips?.addEventListener?.('change', onCambioChips)
+  if (typeof IntersectionObserver !== 'undefined' && seccion.value) {
+    observador = new IntersectionObserver(([e]) => { heroVisible.value = e.isIntersecting })
+    observador.observe(seccion.value)
+  }
+})
+
+onUnmounted(() => {
+  clearTimeout(temporizador)
+  detener()
+  observador?.disconnect()
+  mqChips?.removeEventListener?.('change', onCambioChips)
+})
 </script>
 
 <style scoped>
@@ -210,8 +326,8 @@ onUnmounted(() => clearTimeout(temporizador))
   flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
+  z-index: 1; /* la lista de resultados queda sobre la sección siguiente */
   padding-top: var(--hero-header);
-  overflow: hidden;
   color: #FFFFFF;
   background: var(--hero-fondo);
 }
@@ -317,12 +433,23 @@ onUnmounted(() => clearTimeout(temporizador))
 }
 
 /* ===== Buscador ===== */
+.hero__buscador-titulo {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hero-oro);
+}
+
 .hero__buscador {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   margin-top: var(--space-2);
+}
+
+.hero__caja {
+  position: relative;
 }
 
 .hero__campo {
@@ -356,9 +483,15 @@ onUnmounted(() => clearTimeout(temporizador))
   color: var(--hero-oro);
 }
 
-.hero__campo input {
+.hero__entrada {
+  position: relative;
   flex: 1;
   min-width: 0;
+  height: 100%;
+}
+
+.hero__campo input {
+  width: 100%;
   height: 100%;
   border: none;
   outline: none;
@@ -380,6 +513,34 @@ onUnmounted(() => clearTimeout(temporizador))
 
 .hero__campo input::-webkit-search-cancel-button {
   display: none;
+}
+
+.hero__ejemplo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  font-size: var(--text-lg);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hero__cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.18em;
+  background: var(--hero-oro);
+  animation: heroCursor 1s steps(1) infinite;
+}
+
+@keyframes heroCursor {
+  50% { opacity: 0; }
 }
 
 .hero__limpiar {
@@ -499,7 +660,13 @@ onUnmounted(() => clearTimeout(temporizador))
   border-radius: var(--radius-full);
   background: var(--hero-vidrio);
   color: #FFFFFF;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.hero__chip--ejemplo {
+  border-color: var(--hero-oro);
+  background: rgba(232, 195, 140, 0.18);
+  color: var(--hero-oro);
 }
 
 .hero__chip:hover,
@@ -573,7 +740,8 @@ onUnmounted(() => clearTimeout(temporizador))
 }
 
 @media (max-width: 560px) {
-  .hero__campo input {
+  .hero__campo input,
+  .hero__ejemplo {
     font-size: var(--text-base);
   }
 }

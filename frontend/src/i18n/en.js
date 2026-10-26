@@ -15,7 +15,7 @@ export default {
     descripcion: 'We share Ecuador\'s cultural identity through unique pieces, handmade with traditional knowledge and authentic materials.',
     verMas: 'See more',
     altDiablo: 'Dancer wearing a Diablo Huma mask at a traditional festival',
-    buscarLabel: 'Search crafts',
+    buscarLabel: 'Find your product',
     buscarPlaceholder: 'Search masks, ceramics, carvings…',
     buscando: 'Searching…',
     limpiarBusqueda: 'Clear search',
