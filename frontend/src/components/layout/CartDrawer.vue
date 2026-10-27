@@ -1,26 +1,12 @@
 <template>
-  <div
-    :class="['carrito-overlay', `carrito-overlay--${variante}`, { visible: carritoAbierto }]"
-    aria-hidden="true"
-    @click="cerrar"
-  ></div>
+  <div :class="['carrito-overlay', { visible: carritoAbierto }]" aria-hidden="true" @click="cerrar"></div>
   <aside
-    :class="['carrito-sidebar', `carrito--${variante}`, { open: carritoAbierto }]"
+    :class="['carrito-sidebar', { open: carritoAbierto }]"
     role="dialog"
     aria-modal="true"
     aria-labelledby="carrito-titulo"
     :inert="carritoAbierto ? undefined : true"
   >
-    <!-- Asa de la hoja inferior (tocarla cierra) -->
-    <button
-      v-if="variante === 'hoja'"
-      type="button"
-      class="carrito-asa"
-      :aria-label="t('cart.cerrar')"
-      tabindex="-1"
-      @click="cerrar"
-    ></button>
-
     <header class="carrito-header">
       <div>
         <p class="carrito-etiqueta">{{ t('cart.tuPedido') }}</p>
@@ -34,16 +20,16 @@
       </button>
     </header>
 
-    <!-- Pasos (solo en la opción "pasos") -->
-    <ol v-if="variante === 'pasos' && carrito.length" class="carrito-pasos">
-      <li v-for="n in [1, 2]" :key="n">
+    <!-- Pasos: revisar → entrega → pago -->
+    <ol v-if="carrito.length" class="carrito-pasos">
+      <li v-for="n in PASOS" :key="n">
         <button
           type="button"
           :class="{ activo: paso === n }"
           :aria-current="paso === n ? 'step' : undefined"
           @click="paso = n"
         >
-          <span>{{ n }}</span>{{ t(`cart.paso${n}`) }}
+          <span>{{ n }}</span><b class="carrito-paso-texto">{{ t(`cart.paso${n}`) }}</b>
         </button>
       </li>
     </ol>
@@ -59,8 +45,8 @@
     </div>
 
     <template v-else>
-      <!-- Lista de piezas -->
-      <ul v-if="!(variante === 'pasos' && paso === 2)" class="carrito-items">
+      <!-- 1. Revisar piezas -->
+      <ul v-if="paso === 1" class="carrito-items">
         <li v-for="item in carrito" :key="item.id" class="carrito-item">
           <router-link :to="`/producto/${item.id}`" class="carrito-item-link" tabindex="-1" @click="cerrar">
             <img :src="item.imagen" :alt="item.nombre" class="carrito-item-img" @error="imagenFallback" />
@@ -90,8 +76,8 @@
         </li>
       </ul>
 
-      <!-- Paso 2: entrega (solo en la opción "pasos") -->
-      <form v-else class="carrito-entrega" @submit.prevent="enviar">
+      <!-- 2. Entrega -->
+      <form v-else-if="paso === 2" class="carrito-formulario" @submit.prevent="paso = 3">
         <fieldset>
           <legend>{{ t('cart.entregaTitulo') }}</legend>
           <label v-for="op in ['retiro', 'envio']" :key="op" :class="['carrito-opcion', { elegida: entrega === op }]">
@@ -112,27 +98,50 @@
         </label>
       </form>
 
+      <!-- 3. Pago -->
+      <form v-else class="carrito-formulario" @submit.prevent="confirmar">
+        <fieldset>
+          <legend>{{ t('cart.pagoTitulo') }}</legend>
+          <label v-for="op in METODOS_PAGO" :key="op" :class="['carrito-opcion', { elegida: pago === op }]">
+            <input v-model="pago" type="radio" name="pago" :value="op" />
+            <span>
+              <strong>{{ t(`cart.${op}`) }}</strong>
+              <small>{{ t(`cart.${op}Desc`) }}</small>
+            </span>
+            <span class="carrito-opcion-icono" aria-hidden="true">
+              <svg v-if="op === 'pagoWhatsApp'" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path :d="WHATSAPP_ICON_PATH"/></svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+            </span>
+          </label>
+        </fieldset>
+        <p class="carrito-resumen-entrega">
+          <span>{{ t('cart.paso2') }}</span>
+          <strong>{{ t(`cart.${entrega}`) }}</strong>
+          <span v-if="nombre.trim()">· {{ nombre.trim() }}</span>
+          <button type="button" class="carrito-enlace" @click="paso = 2">{{ t('cart.cambiar') }}</button>
+        </p>
+      </form>
+
       <!-- Resumen -->
       <div class="carrito-footer">
         <div class="carrito-total">
           <span>{{ t('cart.total') }} <small>· {{ textoPiezas }}</small></span>
           <strong>${{ carritoTotal.toFixed(2) }}</strong>
         </div>
-        <p v-if="variante !== 'ventana'" class="carrito-nota">{{ t('cart.notaEnvio') }}</p>
+        <p v-if="!(paso === 3 && pago === 'pagoEnLinea')" class="carrito-nota">{{ t('cart.notaEnvio') }}</p>
 
-        <button
-          v-if="variante === 'pasos' && paso === 1"
-          class="carrito-btn carrito-btn--principal"
-          @click="paso = 2"
-        >
+        <button v-if="paso < 3" class="carrito-btn carrito-btn--principal" @click="paso++">
           {{ t('cart.continuar') }} →
         </button>
-        <button v-else class="carrito-btn carrito-btn--whatsapp" @click="enviar">
+        <button v-else-if="pago === 'pagoEnLinea'" class="carrito-btn carrito-btn--principal" @click="confirmar">
+          {{ t('cart.pagar', { p: `$${carritoTotal.toFixed(2)}` }) }}
+        </button>
+        <button v-else class="carrito-btn carrito-btn--whatsapp" @click="confirmar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path :d="WHATSAPP_ICON_PATH"/></svg>
           {{ t('cart.enviarWhatsApp') }}
         </button>
 
-        <button v-if="variante === 'pasos' && paso === 2" class="carrito-enlace" @click="paso = 1">← {{ t('cart.volver') }}</button>
+        <button v-if="paso > 1" class="carrito-enlace" @click="paso--">← {{ t('cart.volver') }}</button>
         <button v-else class="carrito-enlace" @click="vaciarCarrito">{{ t('cart.vaciar') }}</button>
       </div>
     </template>
@@ -141,25 +150,25 @@
 
 <script setup>
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
 import { useCarrito } from '../../composables/useCarrito'
 import { useIrASeccion } from '../../composables/useSecciones'
+import { useToast } from '../../composables/useToast'
 import { useLanguageStore } from '../../stores/language'
-import { CARRITO_VARIANTES, CARRITO_VARIANTE_POR_DEFECTO } from '../../config/carrito'
+import { PAGO_EN_LINEA_ACTIVO } from '../../config/carrito'
+import { iniciarPagoEnLinea } from '../../services/pagoEnLinea'
 import { WHATSAPP_ICON_PATH } from './whatsappIcon'
 
+const PASOS = [1, 2, 3]
+// Formas de pago que ve el cliente en el paso 3
+const METODOS_PAGO = PAGO_EN_LINEA_ACTIVO ? ['pagoEnLinea', 'pagoWhatsApp'] : ['pagoWhatsApp']
+
 const { t } = useLanguageStore()
+const { error: toastError } = useToast()
 const {
   carrito, carritoAbierto, carritoCount, carritoTotal,
   toggleCarrito, actualizarCantidad, quitarDelCarrito, vaciarCarrito, enviarPedidoWhatsApp
 } = useCarrito()
 const irASeccion = useIrASeccion()
-const route = useRoute()
-
-// Diseño del carrito; ?carrito=<opción> permite comparar en el navegador
-const variante = computed(() =>
-  CARRITO_VARIANTES.includes(route.query.carrito) ? route.query.carrito : CARRITO_VARIANTE_POR_DEFECTO
-)
 
 const botonCerrar = ref(null)
 
@@ -187,13 +196,19 @@ const paso = ref(1)
 const entrega = ref('retiro')
 const nombre = ref('')
 const nota = ref('')
+const pago = ref(METODOS_PAGO[0])
 
-const enviar = () => {
-  if (variante.value === 'pasos') {
-    enviarPedidoWhatsApp({ entrega: t(`cart.${entrega.value}`), nombre: nombre.value, nota: nota.value })
-  } else {
-    enviarPedidoWhatsApp()
+const confirmar = async () => {
+  const detalles = { entrega: t(`cart.${entrega.value}`), nombre: nombre.value, nota: nota.value }
+  if (pago.value === 'pagoEnLinea') {
+    try {
+      await iniciarPagoEnLinea({ items: carrito.value, total: carritoTotal.value, ...detalles })
+    } catch {
+      toastError(t('cart.pagoNoDisponible'))
+    }
+    return
   }
+  enviarPedidoWhatsApp(detalles)
 }
 
 watch(() => carrito.value.length, (n) => { if (!n) paso.value = 1 })
@@ -235,93 +250,29 @@ onUnmounted(() => {
   visibility: visible;
 }
 
-/* En la ventana, la navbar queda visible por encima del fondo */
-.carrito-overlay--ventana {
-  z-index: 998;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-/* ===== Contenedor (común) ===== */
+/* ===== Panel lateral flotante ===== */
 .carrito-sidebar {
   position: fixed;
   z-index: 1200;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(440px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-gray-light);
   background: var(--color-surface);
   color: var(--color-text);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   visibility: hidden;
+  transform: translateX(calc(100% + 24px));
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, visibility 0.35s;
 }
 
 .carrito-sidebar.open {
   visibility: visible;
-}
-
-/* 1. Ventana flotante bajo el carrito */
-.carrito--ventana {
-  z-index: 1001;
-  top: calc(var(--header-alto) + var(--space-2));
-  right: max(12px, calc((100vw - 1280px) / 2 + 12px));
-  width: min(400px, calc(100vw - 24px));
-  max-height: calc(100svh - var(--header-alto) - var(--space-6));
-  border-radius: var(--radius-lg);
-  opacity: 0;
-  transform: translateY(-8px) scale(0.97);
-  transform-origin: top right;
-}
-
-.carrito--ventana.open {
-  opacity: 1;
   transform: none;
-}
-
-/* 2 y 4. Panel lateral flotante */
-.carrito--panel,
-.carrito--pasos {
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
-  width: min(420px, calc(100vw - 24px));
-  border-radius: var(--radius-lg);
-  transform: translateX(calc(100% + 24px));
-}
-
-.carrito--pasos {
-  width: min(440px, calc(100vw - 24px));
-}
-
-.carrito--panel.open,
-.carrito--pasos.open {
-  transform: none;
-}
-
-/* 3. Hoja inferior */
-.carrito--hoja {
-  left: 50%;
-  bottom: 0;
-  width: min(820px, 100vw);
-  max-height: 86svh;
-  border-bottom: none;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  transform: translate(-50%, 100%);
-}
-
-.carrito--hoja.open {
-  transform: translate(-50%, 0);
-}
-
-.carrito-asa {
-  align-self: center;
-  width: 44px;
-  height: 5px;
-  margin-top: var(--space-3);
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: var(--color-gray-light);
-  cursor: pointer;
 }
 
 /* ===== Cabecera ===== */
@@ -422,6 +373,10 @@ onUnmounted(() => {
   letter-spacing: 0;
 }
 
+.carrito-paso-texto {
+  font-weight: inherit;
+}
+
 .carrito-pasos button::after {
   content: '';
   position: absolute;
@@ -517,12 +472,6 @@ onUnmounted(() => {
   background: var(--color-bg-warm);
 }
 
-.carrito--panel .carrito-item-img,
-.carrito--hoja .carrito-item-img {
-  width: 80px;
-  height: 80px;
-}
-
 .carrito-item-info {
   flex: 1;
   min-width: 0;
@@ -616,8 +565,8 @@ onUnmounted(() => {
   color: var(--color-text);
 }
 
-/* ===== Entrega (pasos) ===== */
-.carrito-entrega {
+/* ===== Formularios: entrega y pago ===== */
+.carrito-formulario {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -627,14 +576,14 @@ onUnmounted(() => {
   padding: var(--space-4) var(--space-5);
 }
 
-.carrito-entrega fieldset {
+.carrito-formulario fieldset {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   border: none;
 }
 
-.carrito-entrega legend {
+.carrito-formulario legend {
   margin-bottom: var(--space-2);
   font-family: var(--font-serif);
   font-size: var(--text-lg);
@@ -667,9 +616,53 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.carrito-opcion-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--color-bg-warm);
+  color: var(--color-secondary);
+}
+
+.carrito-opcion.elegida .carrito-opcion-icono {
+  background: var(--color-surface);
+}
+
 .carrito-opcion small {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+}
+
+.carrito-resumen-entrega {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-warm);
+  font-size: var(--text-sm);
+}
+
+.carrito-resumen-entrega > span:first-child {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.carrito-resumen-entrega .carrito-enlace {
+  margin-left: auto;
+  padding: 0;
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .carrito-campo {
@@ -787,30 +780,20 @@ onUnmounted(() => {
   text-underline-offset: 3px;
 }
 
-/* Hoja en escritorio: lista a la izquierda y resumen a la derecha */
-@media (min-width: 720px) {
-  .carrito--hoja {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    grid-template-rows: auto auto 1fr;
-    grid-template-areas:
-      'asa asa'
-      'cabecera cabecera'
-      'lista resumen';
+/* Pantallas angostas: los pasos inactivos muestran solo el número */
+@media (max-width: 420px) {
+  .carrito-pasos {
+    gap: var(--space-3);
   }
 
-  .carrito--hoja .carrito-asa { grid-area: asa; justify-self: center; }
-  .carrito--hoja .carrito-header { grid-area: cabecera; }
-  .carrito--hoja .carrito-items,
-  .carrito--hoja .carrito-empty { grid-area: lista; }
-  .carrito--hoja .carrito-footer {
-    grid-area: resumen;
-    justify-content: flex-end;
-    border-top: none;
-    border-left: 1px solid var(--color-gray-light);
-    background: var(--color-bg-warm);
+  .carrito-pasos button:not(.activo) .carrito-paso-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
-  .carrito--hoja .carrito-empty { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -168,40 +168,64 @@ describe('Títulos de sección', () => {
   })
 })
 
-describe('Carrito (opciones de diseño)', () => {
+describe('Carrito en pasos', () => {
   const conPiezas = () =>
     localStorage.setItem('ideancestral_carrito', JSON.stringify([
       { id: 7, nombre: 'Máscara de prueba', precio: 20, imagen: '/x.jpg', cantidad: 2, stock: 5 },
       { id: 8, nombre: 'Sol de prueba', precio: 15, imagen: '/y.jpg', cantidad: 1, stock: null }
     ]))
 
-  it.each(['ventana', 'panel', 'hoja', 'pasos'])('opción %s: muestra las piezas y el total', async (opcion) => {
+  const abrirCarrito = async () => {
     conPiezas()
-    await montarEn(`/?carrito=${opcion}`)
+    await montarEn('/')
     root.querySelector('.cart-toggle').click()
     await esperar()
-    const carrito = root.querySelector('.carrito-sidebar')
-    expect(carrito.classList).toContain(`carrito--${opcion}`)
+    return root.querySelector('.carrito-sidebar')
+  }
+
+  const continuar = async (carrito) => {
+    carrito.querySelector('.carrito-btn--principal').click()
+    await esperar()
+  }
+
+  it('paso 1: muestra las piezas y el total', async () => {
+    const carrito = await abrirCarrito()
     expect(carrito.classList).toContain('open')
+    expect(carrito.querySelectorAll('.carrito-pasos li')).toHaveLength(3)
     expect(carrito.querySelectorAll('.carrito-item')).toHaveLength(2)
     expect(carrito.querySelector('.carrito-total strong').textContent).toBe('$55.00')
     expect(carrito.textContent).toContain('3 piezas')
   })
 
-  it('pasos: la entrega, el nombre y la nota van en el mensaje de WhatsApp', async () => {
-    conPiezas()
+  it('Continuar lleva a la entrega y luego al pago', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    expect(carrito.querySelector('input[name="entrega"]')).not.toBeNull()
+    await continuar(carrito)
+    expect(carrito.querySelector('input[name="pago"]')).not.toBeNull()
+    expect(carrito.querySelector('[aria-current="step"]').textContent).toContain('Pago')
+  })
+
+  it('sin pasarela activa, el pago se coordina solo por WhatsApp', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    await continuar(carrito)
+    expect(carrito.querySelectorAll('input[name="pago"]')).toHaveLength(1)
+    expect(carrito.textContent).toContain('Coordinar por WhatsApp')
+    expect(carrito.textContent).not.toContain('Pagar en línea')
+  })
+
+  it('la entrega, el nombre y la nota van en el mensaje de WhatsApp', async () => {
     const abrir = vi.spyOn(window, 'open').mockImplementation(() => null)
-    await montarEn('/?carrito=pasos')
-    root.querySelector('.cart-toggle').click()
-    await esperar()
-    const carrito = root.querySelector('.carrito-sidebar')
-    carrito.querySelector('.carrito-btn--principal').click()
-    await esperar()
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
     carrito.querySelector('input[value="envio"]').click()
     const nombre = carrito.querySelector('.carrito-campo input')
     nombre.value = 'Ana'
     nombre.dispatchEvent(new Event('input'))
     await esperar()
+    await continuar(carrito)
+    expect(carrito.querySelector('.carrito-resumen-entrega').textContent).toContain('Envío a domicilio')
     carrito.querySelector('.carrito-btn--whatsapp').click()
     const mensaje = decodeURIComponent(abrir.mock.calls[0][0])
     expect(mensaje).toContain('Máscara de prueba x2')
@@ -210,9 +234,13 @@ describe('Carrito (opciones de diseño)', () => {
     abrir.mockRestore()
   })
 
-  it('una opción desconocida usa la de por defecto', async () => {
-    await montarEn('/?carrito=no-existe')
-    expect(root.querySelector('.carrito-sidebar').classList).toContain('carrito--ventana')
+  it('Volver regresa al paso anterior', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    await continuar(carrito)
+    ;[...carrito.querySelectorAll('.carrito-enlace')].find((b) => b.textContent.includes('Volver')).click()
+    await esperar()
+    expect(carrito.querySelector('input[name="entrega"]')).not.toBeNull()
   })
 })
 

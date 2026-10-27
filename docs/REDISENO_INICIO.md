@@ -13,8 +13,8 @@ Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo,
 | Rama de trabajo | `feat/hero-rediseno` |
 | PR abierto | #7 «feat(inicio): rediseño del hero con buscador en vivo» → base `refactor/layout-compartido` |
 | PRs ya fusionados | #4 cierre de git, #5 bugs de productos/stock/uploads, #6 layout compartido |
-| Commits locales sin subir | 6 (desde `0bcc935` hasta `3dc6018`) — se suben al PR #7 cuando se decida |
-| Pruebas | 31 del frontend (Vitest) y 21 del backend, todas pasan |
+| Commits locales sin subir | 8 (desde `0bcc935` hasta el del carrito en pasos) — se suben al PR #7 cuando se decida |
+| Pruebas | 30 del frontend (Vitest) y 21 del backend, todas pasan |
 | Compilación | `npx vite build` funciona |
 
 > El PR #7 apunta a `refactor/layout-compartido`, que ya está fusionada en `main`. Antes de fusionar el #7 conviene cambiar su base a `main`.
@@ -71,17 +71,16 @@ Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo,
 - Un solo componente para los títulos de Destacados, Categorías, Promociones y Nosotros. Lleva la etiqueta en mayúsculas entre líneas finas, el título en serif y una parte en cursiva de acento.
 - El título de Destacados estaba fijo en español; ahora se traduce (`featured.*`).
 
-### 2.5 Carrito — `components/layout/CartDrawer.vue` (**pendiente de elegir**)
-Las 4 opciones comparten el estilo de la navbar:
+### 2.5 Carrito — `components/layout/CartDrawer.vue` (**elegido: pasos**)
+Se compararon 4 diseños (ventana, panel, hoja y pasos) y el 27 de octubre de 2026 se eligió **pasos**. Se borró el código de los otros tres y el parámetro `?carrito=`.
 
-| Opción | Descripción |
-|---|---|
-| `ventana` (actual por defecto) | Ventana flotante bajo el ícono del carrito; la navbar sigue visible |
-| `panel` | Panel lateral flotante a toda la altura, con fotos más grandes |
-| `hoja` | Sube desde abajo; en escritorio, lista y resumen en dos columnas |
-| `pasos` | 1) revisar piezas → 2) elegir retiro o envío, nombre y nota, que van en el mensaje de WhatsApp |
-
-Para probarlas: `http://localhost:5173/?carrito=ventana` (o `panel`, `hoja`, `pasos`) y abrir el carrito. Una vez elegida, se borra el código de las otras tres, como se hizo con el hero.
+- **Forma:** panel lateral flotante a toda la altura, con el estilo de la navbar.
+- **Paso 1, Revisar:** piezas, cantidades (con tope de stock), quitar y vaciar.
+- **Paso 2, Entrega:** retiro en el local o envío a domicilio, nombre y nota (opcionales).
+- **Paso 3, Pago:** el cliente elige **pagar en línea** (pasarela) o **coordinar por WhatsApp**. Abajo se ve un resumen de la entrega con «Cambiar».
+- **Mensaje de WhatsApp:** lleva las piezas, el total, la entrega, el nombre y la nota.
+- **Pago en línea (preparado, apagado):** `PAGO_EN_LINEA_ACTIVO = false` en `config/carrito.js`. Mientras esté apagado, el paso 3 solo ofrece WhatsApp. El punto de conexión con la pasarela es `services/pagoEnLinea.js` (hoy rechaza y se muestra un aviso).
+- En pantallas de 420px o menos, los pasos inactivos muestran solo el número.
 
 ---
 
@@ -97,7 +96,8 @@ Para probarlas: `http://localhost:5173/?carrito=ventana` (o `panel`, `hoja`, `pa
 | `frontend/src/composables/useEstadoInicio.js` | Estado compartido hero → navbar (transparencia y paleta) |
 | `frontend/src/components/layout/AppHeader.vue` | Navbar y menú móvil |
 | `frontend/src/components/SeccionEncabezado.vue` | Títulos de sección |
-| `frontend/src/config/carrito.js` | Variantes del carrito y la variante por defecto |
+| `frontend/src/config/carrito.js` | Interruptor del pago en línea (`PAGO_EN_LINEA_ACTIVO`) |
+| `frontend/src/services/pagoEnLinea.js` | Punto de conexión con la pasarela de pago (sin proveedor aún) |
 | `frontend/src/composables/useSecciones.js` | Scroll a secciones por id y `HEADER_OFFSET` |
 | `frontend/src/i18n/{es,en,pt}.js` | Textos (`hero.*`, `nav.*`, `featured.*`, `cart.*`, …) |
 | `frontend/src/style.css` | Tokens del tema (`--color-*`) y `--header-alto` (72px / 64px en ≤900px) |
@@ -174,7 +174,7 @@ Orden actual de `CatalogoView.vue`:
 ## 5. Siguientes pasos
 
 ### Decisiones pendientes del dueño
-1. **Elegir el diseño del carrito** (ventana / panel / hoja / pasos) → dejar solo ese y borrar el resto.
+1. **Pasarela de pago:** elegir proveedor (PayPhone, PayPal, Kushki o Datafast) y abrir la cuenta de comercio. Para conectarla: el backend crea el pedido y la transacción (el token nunca va al navegador), se completa `services/pagoEnLinea.js`, se confirma el pago con el aviso (webhook) de la pasarela y se activa `PAGO_EN_LINEA_ACTIVO`.
 2. **Subir los commits locales** al PR #7 y cambiar su base a `main`.
 3. **Límite de peticiones:** hoy el límite global (200 / 15 min) cuenta también imágenes y archivos estáticos. Se recomienda aplicarlo solo a `/api`.
 4. **Scroll automático del buscador en móvil:** confirmar si se mantiene.
@@ -199,5 +199,4 @@ npx vite build      # compilación
 npm run dev         # desde la raíz: frontend 5173 + backend
 ```
 - Revisar cada cambio en escritorio (1440×900) y móvil (390×844), en tema claro y oscuro.
-- Para comparar variantes en el navegador se usan parámetros en la URL (ej. `?carrito=panel`).
 - En capturas automáticas con Chrome sin pantalla, las transiciones, el scroll suave y el IntersectionObserver no avanzan, y el ancho mínimo de la ventana ronda los 500px. Para móvil, usar un iframe de 390px.
