@@ -2,7 +2,7 @@
   <section
     id="inicio"
     ref="seccion"
-    class="hero"
+    :class="['hero', oscuro ? 'hero--oscuro' : 'hero--claro']"
     :style="estiloPaleta"
     aria-labelledby="hero-titulo"
   >
@@ -12,7 +12,7 @@
         v-for="(f, i) in fondos"
         :key="f.id"
         :class="['hero__slide', { 'hero__slide--activa': i === fondo, 'hero__slide--saliente': i === fondoSaliente }]"
-        :style="{ '--slide-fondo': f.fondo, '--pos': f.posicion, '--pos-movil': f.posicionMovil }"
+        :style="{ '--slide-fondo': paletaDe(f, oscuro).fondo, '--pos': f.posicion, '--pos-movil': f.posicionMovil }"
       >
         <img
           v-if="cargados.includes(i)"
@@ -139,10 +139,11 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useLanguageStore } from '../../stores/language'
+import { useThemeStore } from '../../stores/theme'
 import { HEADER_OFFSET } from '../../composables/useSecciones'
 import { whatsappLink } from '../../config/contacto'
 import { imagenPrincipal } from '../../utils/imagenes'
-import { HERO_FONDOS, HERO_SEGUNDOS_POR_FONDO } from '../../config/inicio'
+import { HERO_FONDOS, HERO_SEGUNDOS_POR_FONDO, paletaDe } from '../../config/inicio'
 import { useEstadoInicio } from '../../composables/useEstadoInicio'
 
 const props = defineProps({
@@ -177,12 +178,17 @@ let temporizadorSaliente = null
 
 const srcsetDe = (f) => Object.entries(f.imagenes).map(([w, url]) => `${url} ${w}w`).join(', ')
 
+// Colores de la foto activa en la versión del tema claro u oscuro
+const themeStore = useThemeStore()
+const oscuro = computed(() => themeStore.isDark)
+const paleta = computed(() => paletaDe(fondos[fondo.value], oscuro.value))
+
 const estiloPaleta = computed(() => {
-  const f = fondos[fondo.value]
+  const p = paleta.value
   return {
-    '--hero-acento': f.acento,
-    '--hero-texto': f.texto,
-    '--hero-fondo-rgb': f.fondo,
+    '--hero-acento': p.acento,
+    '--hero-texto': p.texto,
+    '--hero-fondo-rgb': p.fondo,
     '--hero-duracion': `${HERO_SEGUNDOS_POR_FONDO}s`
   }
 })
@@ -370,8 +376,7 @@ watch(animando, (si) => (si ? animar() : detener()), { immediate: true })
 /* ===== Estado compartido con la navbar ===== */
 const estadoInicio = useEstadoInicio()
 
-watch(fondo, (i) => {
-  const { acento, texto, fondo: tono } = fondos[i]
+watch(paleta, ({ acento, texto, fondo: tono }) => {
   estadoInicio.paleta = { acento, texto, fondo: tono }
 }, { immediate: true })
 
@@ -407,9 +412,14 @@ onUnmounted(() => {
   --hero-fondo-rgb: 20, 14, 8;
   --hero-fondo: rgb(var(--hero-fondo-rgb));
   --hero-cambio: 1.2s ease;
+  /* Superficies sobre la foto; cambian con el tema (ver .hero--claro) */
   --hero-vidrio: rgba(255, 255, 255, 0.08);
   --hero-vidrio-hover: rgba(255, 255, 255, 0.16);
-  --hero-borde: rgba(255, 255, 255, 0.18);
+  --hero-campo: rgba(255, 255, 255, 0.1);
+  --hero-campo-foco: rgba(255, 255, 255, 0.14);
+  --hero-borde: color-mix(in srgb, var(--hero-texto) 18%, transparent);
+  --hero-sombra-titulo: 0 2px 24px rgba(0, 0, 0, 0.35);
+  --hero-sombra-lista: 0 24px 50px rgba(0, 0, 0, 0.45);
   position: relative;
   isolation: isolate;
   display: flex;
@@ -423,6 +433,17 @@ onUnmounted(() => {
   color: var(--hero-texto);
   background: var(--hero-fondo);
   transition: background-color var(--hero-cambio), color var(--hero-cambio);
+}
+
+/* Tema claro: velo claro con el tono de la foto y texto oscuro */
+.hero--claro {
+  --hero-vidrio: rgba(255, 255, 255, 0.5);
+  --hero-vidrio-hover: rgba(255, 255, 255, 0.8);
+  --hero-campo: rgba(255, 255, 255, 0.72);
+  --hero-campo-foco: rgba(255, 255, 255, 0.92);
+  --hero-borde: color-mix(in srgb, var(--hero-texto) 22%, transparent);
+  --hero-sombra-titulo: 0 1px 18px rgba(255, 255, 255, 0.45);
+  --hero-sombra-lista: 0 24px 50px rgba(40, 25, 10, 0.2);
 }
 
 .sr-only {
@@ -512,7 +533,7 @@ onUnmounted(() => {
   font-weight: 700;
   line-height: 1.04;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  text-shadow: var(--hero-sombra-titulo);
   text-wrap: balance;
   transition: color var(--hero-cambio);
 }
@@ -579,7 +600,7 @@ onUnmounted(() => {
   height: 60px;
   border: 1px solid var(--hero-borde);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--hero-campo);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -587,7 +608,7 @@ onUnmounted(() => {
 
 .hero__campo:focus-within {
   border-color: var(--hero-acento);
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--hero-campo-foco);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-acento) 18%, transparent);
 }
 
@@ -615,7 +636,7 @@ onUnmounted(() => {
   border: none;
   outline: none;
   background: transparent;
-  color: #FFFFFF;
+  color: var(--hero-texto);
   font: inherit;
   font-size: var(--text-lg);
 }
@@ -627,7 +648,7 @@ onUnmounted(() => {
 }
 
 .hero__campo input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, var(--hero-texto) 60%, transparent);
 }
 
 .hero__campo input::-webkit-search-cancel-button {
@@ -645,7 +666,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   pointer-events: none;
   font-size: var(--text-lg);
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--hero-texto) 75%, transparent);
 }
 
 .hero__cursor {
@@ -670,15 +691,15 @@ onUnmounted(() => {
   height: 32px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
+  background: color-mix(in srgb, var(--hero-texto) 12%, transparent);
+  color: var(--hero-texto);
   cursor: pointer;
 }
 
 .hero__girando {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  border: 2px solid color-mix(in srgb, var(--hero-texto) 25%, transparent);
   border-top-color: var(--hero-acento);
   border-radius: 50%;
   animation: heroGiro 0.7s linear infinite;
@@ -702,7 +723,7 @@ onUnmounted(() => {
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--hero-fondo);
-  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--hero-sombra-lista);
 }
 
 .hero__resultado {
@@ -741,7 +762,7 @@ onUnmounted(() => {
 }
 
 .hero__resultado-texto small {
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, var(--hero-texto) 65%, transparent);
   font-size: var(--text-xs);
 }
 
@@ -754,7 +775,7 @@ onUnmounted(() => {
 .hero__sin-resultados {
   padding: var(--space-3);
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.8);
+  color: color-mix(in srgb, var(--hero-texto) 80%, transparent);
 }
 
 .hero__sin-resultados a {
@@ -770,7 +791,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.7);
+  color: color-mix(in srgb, var(--hero-texto) 75%, transparent);
 }
 
 .hero__chip {
@@ -827,12 +848,12 @@ onUnmounted(() => {
 }
 
 .hero__indicador::before {
-  background: rgba(255, 255, 255, 0.3);
+  background: color-mix(in srgb, var(--hero-texto) 30%, transparent);
   transition: background 0.2s ease;
 }
 
 .hero__indicador:hover::before {
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--hero-texto) 60%, transparent);
 }
 
 .hero__indicador-progreso {
@@ -891,14 +912,17 @@ onUnmounted(() => {
     object-position: var(--pos-movil);
   }
 
+  /* Velo abajo para el texto y otro suave arriba para la navbar y los indicadores */
   .hero__slide::after {
-    background: linear-gradient(
-      0deg,
-      rgba(var(--slide-fondo), 0.97) 0%,
-      rgba(var(--slide-fondo), 0.88) 40%,
-      rgba(var(--slide-fondo), 0.35) 62%,
-      rgba(var(--slide-fondo), 0) 82%
-    );
+    background:
+      linear-gradient(
+        0deg,
+        rgba(var(--slide-fondo), 0.97) 0%,
+        rgba(var(--slide-fondo), 0.88) 40%,
+        rgba(var(--slide-fondo), 0.35) 62%,
+        rgba(var(--slide-fondo), 0) 82%
+      ),
+      linear-gradient(180deg, rgba(var(--slide-fondo), 0.6) 0%, rgba(var(--slide-fondo), 0) 22%);
   }
 
   .hero__inner {

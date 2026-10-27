@@ -1,7 +1,8 @@
-// Fondos de la sección de inicio. Rotan solos y cada uno trae su paleta:
+// Fondos de la sección de inicio. Rotan solos y cada uno trae dos paletas,
+// una para el tema oscuro y otra para el claro, con el tono de la foto:
 //   acento → título en cursiva, etiqueta, lupa, chips y cursor
-//   texto  → título y descripción (un blanco teñido con el tono de la foto)
-//   fondo  → color oscuro del degradado sobre la foto y de la lista de resultados (r, g, b)
+//   texto  → título y descripción
+//   fondo  → color del velo sobre la foto y de la lista de resultados (r, g, b)
 //   posicion / posicionMovil → qué parte de la foto se ve (object-position)
 export const HERO_FONDOS = [
   {
@@ -12,9 +13,8 @@ export const HERO_FONDOS = [
     alt: 'hero.altDiablo',
     posicion: '28% 40%',
     posicionMovil: '16% 50%',
-    acento: '#E8C38C',
-    texto: '#FFF6EC',
-    fondo: '20, 14, 8'
+    oscuro: { acento: '#E8C38C', texto: '#FFF6EC', fondo: '20, 14, 8' },
+    claro: { acento: '#8A4B12', texto: '#2B1A0B', fondo: '250, 243, 233' }
   },
   {
     id: 'diablo-mascara',
@@ -24,9 +24,8 @@ export const HERO_FONDOS = [
     alt: 'hero.altMascara',
     posicion: '20% 35%',
     posicionMovil: '45% 25%',
-    acento: '#FFA25C',
-    texto: '#FFEDE2',
-    fondo: '28, 10, 4'
+    oscuro: { acento: '#FFA25C', texto: '#FFEDE2', fondo: '28, 10, 4' },
+    claro: { acento: '#A63D12', texto: '#2E1207', fondo: '253, 239, 230' }
   },
   {
     id: 'mascaras-mercado',
@@ -36,9 +35,8 @@ export const HERO_FONDOS = [
     alt: 'hero.altMercado',
     posicion: '30% 30%',
     posicionMovil: '40% 20%',
-    acento: '#FFD166',
-    texto: '#FFF8E1',
-    fondo: '10, 12, 30'
+    oscuro: { acento: '#FFD166', texto: '#FFF8E1', fondo: '10, 12, 30' },
+    claro: { acento: '#7F5600', texto: '#151936', fondo: '240, 241, 250' }
   },
   {
     id: 'cuadros',
@@ -48,9 +46,8 @@ export const HERO_FONDOS = [
     alt: 'hero.altCuadros',
     posicion: '25% 50%',
     posicionMovil: '20% 50%',
-    acento: '#6EE7D2',
-    texto: '#E6FBF6',
-    fondo: '6, 22, 22'
+    oscuro: { acento: '#6EE7D2', texto: '#E6FBF6', fondo: '6, 22, 22' },
+    claro: { acento: '#0B6B5F', texto: '#0A2926', fondo: '231, 245, 242' }
   },
   {
     id: 'paisaje-andino',
@@ -60,11 +57,13 @@ export const HERO_FONDOS = [
     alt: 'hero.altPaisaje',
     posicion: '30% 40%',
     posicionMovil: '50% 35%',
-    acento: '#D9B8FF',
-    texto: '#F3EAFF',
-    fondo: '20, 10, 36'
+    oscuro: { acento: '#D9B8FF', texto: '#F3EAFF', fondo: '20, 10, 36' },
+    claro: { acento: '#6232AD', texto: '#20113A', fondo: '243, 237, 252' }
   }
 ]
 
 // Segundos que se muestra cada fondo
 export const HERO_SEGUNDOS_POR_FONDO = 7
+
+// Paleta del fondo según el tema activo
+export const paletaDe = (fondo, oscuro) => (oscuro ? fondo.oscuro : fondo.claro)

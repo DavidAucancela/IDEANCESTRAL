@@ -114,7 +114,8 @@ import { useCarrito } from '../../composables/useCarrito'
 import { useIrASeccion } from '../../composables/useSecciones'
 import { useEstadoInicio } from '../../composables/useEstadoInicio'
 import { useLanguageStore } from '../../stores/language'
-import { HERO_FONDOS } from '../../config/inicio'
+import { useThemeStore } from '../../stores/theme'
+import { HERO_FONDOS, paletaDe } from '../../config/inicio'
 import ThemeToggle from '../ThemeToggle.vue'
 import LanguageSwitcher from '../LanguageSwitcher.vue'
 
@@ -135,11 +136,12 @@ const secciones = [
 ]
 
 /* ===== Modo transparente sobre el inicio ===== */
+const themeStore = useThemeStore()
 const transparente = computed(() => estadoInicio.montado && estadoInicio.bajoHeader)
 
-// Fuera del inicio se usa la paleta del primer fondo
+// Fuera del inicio se usa la paleta del primer fondo, según el tema
 const estiloPaleta = computed(() => {
-  const { acento, texto, fondo } = estadoInicio.montado ? estadoInicio.paleta : HERO_FONDOS[0]
+  const { acento, texto, fondo } = estadoInicio.montado ? estadoInicio.paleta : paletaDe(HERO_FONDOS[0], themeStore.isDark)
   return { '--nav-acento': acento, '--nav-texto': texto, '--nav-fondo': fondo }
 })
 

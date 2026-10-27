@@ -4,8 +4,8 @@ import { HERO_FONDOS } from '../config/inicio'
 // Estado que la sección de inicio comparte con la navbar:
 //   montado    → el inicio está en la página
 //   bajoHeader → el inicio sigue debajo de la navbar (la navbar va transparente)
-//   paleta     → colores del fondo activo, para que la navbar cambie con la imagen
-const { acento, texto, fondo } = HERO_FONDOS[0]
+//   paleta     → colores del fondo activo y del tema, para que la navbar cambie con la imagen
+const { acento, texto, fondo } = HERO_FONDOS[0].claro
 
 const estado = reactive({
   montado: false,

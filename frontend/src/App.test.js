@@ -263,6 +263,23 @@ describe('Sección de inicio (HeroSection)', () => {
     expect(hero.style.getPropertyValue('--hero-acento')).not.toBe(acentoInicial)
   })
 
+  it('el tema claro u oscuro cambia la paleta del inicio y de la navbar', async () => {
+    const { HERO_FONDOS } = await import('./config/inicio')
+    await montarEn('/')
+    const hero = root.querySelector('#inicio')
+    const header = root.querySelector('header.header')
+    expect(hero.classList).toContain('hero--claro')
+    expect(hero.style.getPropertyValue('--hero-texto')).toBe(HERO_FONDOS[0].claro.texto)
+
+    header.querySelector('.theme-toggle').click()
+    await nextTick()
+    expect(hero.classList).toContain('hero--oscuro')
+    expect(hero.style.getPropertyValue('--hero-texto')).toBe(HERO_FONDOS[0].oscuro.texto)
+    expect(header.style.getPropertyValue('--nav-texto')).toBe(HERO_FONDOS[0].oscuro.texto)
+    expect(hero.querySelector('.hero__slide').style.getPropertyValue('--slide-fondo')).toBe(HERO_FONDOS[0].oscuro.fondo)
+    document.documentElement.setAttribute('data-theme', 'light')
+  })
+
   it('buscador: muestra resultados y Enter abre el producto', async () => {
     await montarEn('/')
     const input = root.querySelector('#hero-buscar')
