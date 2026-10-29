@@ -32,7 +32,8 @@
               <li v-for="tel in TELEFONOS" :key="tel">
                 <a :href="`tel:${tel.replace(/[^\d+]/g, '')}`">{{ tel }}</a>
               </li>
-              <li><a :href="`mailto:${EMAIL}`">{{ EMAIL }}</a></li>
+              <!-- <wbr>: si no cabe, el correo se parte después de la @ -->
+              <li><a :href="`mailto:${EMAIL}`">{{ EMAIL.split('@')[0] }}@<wbr />{{ EMAIL.split('@')[1] }}</a></li>
             </ul>
           </div>
         </div>
@@ -174,11 +175,59 @@ const secciones = [
   font-size: var(--text-sm);
 }
 
+/* ===== Móvil: logo y redes en una fila, enlaces en 2 columnas ===== */
 @media (max-width: 768px) {
-  .footer-top { grid-template-columns: 1fr; gap: var(--space-6); }
-}
+  .footer {
+    padding-top: var(--space-7);
+  }
 
-@media (max-width: 480px) {
-  .footer-links-grid { grid-template-columns: 1fr; }
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+
+  .footer-brand {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-4);
+  }
+
+  .footer-brand > p {
+    grid-column: 1 / -1;
+    margin-top: var(--space-3);
+  }
+
+  .footer-social {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+  }
+
+  .footer-links-grid {
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .footer-links-grid h4 {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* El correo es largo: puede partirse para no salirse de su columna */
+  .footer-links-grid a {
+    overflow-wrap: anywhere;
+  }
+
+  /* A la izquierda y sin llegar a la esquina de los botones flotantes */
+  .footer-bottom {
+    padding-right: 72px;
+    text-align: left;
+    font-size: var(--text-xs);
+  }
 }
 </style>

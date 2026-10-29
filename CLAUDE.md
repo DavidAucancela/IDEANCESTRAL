@@ -31,8 +31,8 @@ IDEANCESTRAL/
 │   │   ├── views/           # CatalogoView, CategoriaView, ProductoDetalleView, AdminView, NotFoundView
 │   │   ├── components/      # Base* (librería), ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
 │   │   │   ├── layout/      # AppHeader, AppFooter, CartDrawer, WhatsAppFloat (montados una vez en App.vue)
-│   │   │   └── inicio/      # Secciones de la portada (HeroSection); + SeccionEncabezado para títulos
-│   │   ├── config/          # contacto.js (WhatsApp, teléfonos…), inicio.js (fotos y paletas del hero), carrito.js (interruptor del pago en línea)
+│   │   │   └── inicio/      # Secciones de la portada (HeroSection, DestacadosSection, CategoriasSection, PromocionesSection, NosotrosSection); + SeccionEncabezado para títulos
+│   │   ├── config/          # contacto.js (WhatsApp, teléfonos, dirección, mapa, horario…), inicio.js (fotos y paletas del hero), carrito.js (interruptor del pago en línea)
 │   │   ├── stores/          # carrito.js, language.js (i18n propio, no vue-i18n), theme.js
 │   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones, useEstadoInicio
 │   │   ├── services/        # pagoEnLinea.js (conexión con la pasarela de pago, aún sin proveedor)
@@ -48,9 +48,9 @@ IDEANCESTRAL/
 │   ├── middleware/          # auth.js (JWT), auditLog.js, httpsRedirect.js
 │   ├── database/
 │   │   ├── connection.js    # Pool PostgreSQL (soporta DATABASE_URL o vars individuales)
-│   │   ├── schema.sql       # 7 tablas
+│   │   ├── schema.sql       # 7 tablas (+ datos_iniciales, creada por la migración 005)
 │   │   ├── seed.sql         # Datos de ejemplo
-│   │   └── migrations/      # 002_security.sql, 003_update_product_images.sql
+│   │   └── migrations/      # 002 a 005 (005: meses y categoría de promociones + 8 temporadas iniciales)
 │   ├── utils/               # sanitize.js, validateMime.js
 │   ├── scripts/             # init-db, create-admin, check-env, run-migrations
 │   ├── uploads/             # Imágenes subidas por admin (runtime)
@@ -68,7 +68,7 @@ IDEANCESTRAL/
 2. `productos` — Inventario con precio, stock, descripción, flags de destacado/activo
 3. `imagenes_productos` — Múltiples imágenes por producto
 4. `administradores` — Usuarios admin
-5. `promociones` — Promociones estacionales (Navidad, Día de la Madre, Fiestas de Quito, Inti Raymi)
+5. `promociones` — Promociones por temporada: meses `mes_inicio`/`mes_fin` (se repiten cada año) y `categoria_id` (a dónde lleva en el inicio)
 6. `refresh_tokens` — Gestión de JWT refresh tokens
 7. `admin_audit_log` — Historial de acciones administrativas
 
@@ -141,7 +141,7 @@ Bitácora, guía para agregar/quitar/modificar secciones y siguientes pasos: `do
 
 ## Notas de seguridad
 
-- Rate limiting: 200 req/15min global, 5/15min en login, 20/15min en refresh
+- Rate limiting: 200 req/15min en /api (2000 en desarrollo), 5/15min en login, 20/15min en refresh
 - CORS configurado para FRONTEND_URL + localhost dev ports
 - Sanitización XSS en inputs con la librería `xss`
 - Validación MIME real en uploads (no solo extensión)

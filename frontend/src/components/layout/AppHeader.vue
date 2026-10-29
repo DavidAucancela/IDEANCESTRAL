@@ -142,7 +142,8 @@ const transparente = computed(() => estadoInicio.montado && estadoInicio.bajoHea
 // Fuera del inicio se usa la paleta del primer fondo, según el tema
 const estiloPaleta = computed(() => {
   const { acento, texto, fondo } = estadoInicio.montado ? estadoInicio.paleta : paletaDe(HERO_FONDOS[0], themeStore.isDark)
-  return { '--nav-acento': acento, '--nav-texto': texto, '--nav-fondo': fondo }
+  // En tema claro el velo de arriba es más suave: si no, la foto se ve lavada
+  return { '--nav-acento': acento, '--nav-texto': texto, '--nav-fondo': fondo, '--nav-velo': themeStore.isDark ? 0.6 : 0.4 }
 })
 
 /* ===== Menú móvil ===== */
@@ -282,7 +283,7 @@ onUnmounted(() => {
   inset: 0 0 -32px;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(var(--nav-fondo), 0.6) 0%, rgba(var(--nav-fondo), 0) 100%);
+  background: linear-gradient(180deg, rgba(var(--nav-fondo), var(--nav-velo, 0.6)) 0%, rgba(var(--nav-fondo), 0) 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
 }

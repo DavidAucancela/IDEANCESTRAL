@@ -503,6 +503,37 @@ onUnmounted(() => {
     linear-gradient(0deg, rgba(var(--slide-fondo), 0.7) 0%, transparent 38%);
 }
 
+/* Tema claro en escritorio: sin velo abajo, solo el del lado del texto.
+   El velo de arriba (navbar) lo pone AppHeader. Los indicadores y «Ver más»
+   llevan su propio fondo de vidrio para leerse sobre cualquier foto. */
+@media (min-width: 901px) {
+  .hero--claro .hero__slide::after {
+    background: linear-gradient(
+      270deg,
+      rgba(var(--slide-fondo), 0.92) 0%,
+      rgba(var(--slide-fondo), 0.75) 40%,
+      rgba(var(--slide-fondo), 0.12) 72%,
+      transparent 100%
+    );
+  }
+
+  .hero--claro .hero__fondos,
+  .hero--claro .hero__ver-mas {
+    border-radius: var(--radius-full);
+    background: var(--hero-vidrio);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .hero--claro .hero__fondos {
+    padding: 0 var(--space-3);
+  }
+
+  .hero--claro .hero__ver-mas {
+    color: var(--hero-texto);
+  }
+}
+
 @keyframes heroAcercamiento {
   from { transform: scale(1.08); }
   to { transform: scale(1); }

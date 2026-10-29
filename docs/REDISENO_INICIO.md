@@ -14,7 +14,7 @@ Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo,
 | PR abierto | #7 «feat(inicio): rediseño del hero con buscador en vivo» → base `refactor/layout-compartido` |
 | PRs ya fusionados | #4 cierre de git, #5 bugs de productos/stock/uploads, #6 layout compartido |
 | Commits locales sin subir | 8 (desde `0bcc935` hasta el del carrito en pasos) — se suben al PR #7 cuando se decida |
-| Pruebas | 30 del frontend (Vitest) y 21 del backend, todas pasan |
+| Pruebas | 61 del frontend (Vitest) y 30 del backend, todas pasan |
 | Compilación | `npx vite build` funciona |
 
 > El PR #7 apunta a `refactor/layout-compartido`, que ya está fusionada en `main`. Antes de fusionar el #7 conviene cambiar su base a `main`.
@@ -84,6 +84,78 @@ Se compararon 4 diseños (ventana, panel, hoja y pasos) y el 27 de octubre de 20
 
 ---
 
+### 2.5.1 Ajuste del tema claro en el hero (27 oct 2026)
+- En escritorio y tema claro se quitó el velo de abajo. Queda el del lado del texto y el de arriba para la navbar.
+- El velo de arriba es más suave en tema claro (`--nav-velo`: 0.4; en oscuro sigue 0.6).
+- Los indicadores de fotos y «Ver más» llevan un fondo de vidrio para leerse sin el velo.
+
+### 2.6 Banner central — **quitado**
+- Se borró el carrusel con «ARTESANÍAS»: repetía la rotación de fotos del hero y tenía colores fijos. También su CSS y los textos `banner.*`. Sus fotos se quedan porque son de productos.
+
+### 2.7 Destacados — `components/inicio/DestacadosSection.vue` (**elegido: vitrina**)
+Se compararon 4 diseños (mosaico, galería, carrusel y vitrina) y el 27 de octubre de 2026 se eligió **vitrina**. Se borró el código de los otros tres y el parámetro `?destacados=`.
+
+- Sale de `CatalogoView.vue` a su propio componente con `<script setup>`. Una sola petición: `GET /productos?destacado=true&limit=5`.
+- **Forma:** una pieza en grande con su foto, categoría, nombre, descripción y los botones «Agregar al carrito» y «Ver más». Las miniaturas permiten cambiar de pieza.
+  - **Sin precio** (28 oct 2026): se ve en el carrito y en el detalle.
+  - **Una sola pantalla** en móvil y escritorio: la sección mide `100svh`, deja arriba el alto de la navbar (`--header-alto`) y la foto llena el espacio libre (va con `position: absolute` para no estirar la sección). En pantallas muy bajas, la foto tiene un alto mínimo y la sección crece un poco.
+  - En escritorio: foto a la izquierda; ficha y miniaturas a la derecha.
+  - En móvil (≤900px): foto, ficha (descripción en 2 líneas y sin el subtítulo del encabezado) y miniaturas, una debajo de otra. Las miniaturas van abajo, a la izquierda de los botones flotantes (WhatsApp y volver arriba), y los botones de la ficha quedan por encima de ellos, así que nada queda tapado.
+- **Agotado** (`stock = 0`): etiqueta en la foto, foto apagada y, en lugar del botón, «Agotado».
+- Textos traducidos (`featured.*`, `cart.agregar`, `product.agotado`, `product.artesania`). Esqueleto de carga con la misma forma.
+- Se quitaron el efecto de la foto que seguía al mouse y la etiqueta «✦ Destacado».
+- La ficha no lleva `data-animate`: carga después de montar la página y el observador ya no la vería.
+
+### 2.8 Categorías — `components/inicio/CategoriasSection.vue` (**elegido: paneles**)
+Se compararon 4 diseños (mosaico, paneles, lista y arcos) y el 28 de octubre de 2026 se eligió **paneles**. Se borró el código de los otros tres y el parámetro `?categorias=`.
+
+- Sale de `CatalogoView.vue` a su propio componente. Recibe las categorías por props (`categorias`, `cargando`): la portada las carga una sola vez porque también las usa el buscador del hero.
+- **Solo las que tienen productos**, ordenadas de más a menos piezas. La primera lleva el sello «Más variedad» y es la que está abierta al llegar.
+- **Escritorio:** franjas verticales con foto, una al lado de otra. Cerradas muestran el nombre de lado. La que tiene el mouse o el foco del teclado se abre y muestra nombre, número de piezas, descripción y «Ver colección →». Al sacar el mouse vuelve a abrirse la principal.
+- **Móvil y pantallas táctiles** (`max-width: 768px` o `hover: none`): franjas horizontales una debajo de otra, todas con nombre, piezas y «Ver colección». La primera es más alta. El velo oscurece desde la izquierda, donde va el texto.
+- Velo con tokens: `--cat-velo` y `--cat-velo-suave` salen de `--color-dark`. El enlace usa `--cat-enlace` fijo, porque siempre va sobre el velo oscuro.
+- Textos nuevos en los 3 idiomas: `categories.verColeccion`, `piezas` / `pieza`, `masVariedad`. Subtítulo nuevo: «Elige una colección y descubre sus piezas».
+- Se quitó el mapa fijo de imágenes por nombre: la foto sale de `imagen_url` de la categoría (o el logo si falta).
+
+### 2.9 Promociones — `components/inicio/PromocionesSection.vue` (**elegido: banda**)
+Se compararon 4 diseños (destacada, calendario, carrusel y banda) y el 28 de octubre de 2026 se eligió **banda**. Se borró el código de los otros tres y el parámetro `?promociones=`.
+
+- **Forma:** una foto ancha con la temporada elegida (etiqueta de estado, meses, nombre y «Ver piezas →») y debajo pestañas con todas las temporadas para cambiarla. En escritorio el texto va a la izquierda con velo lateral; en móvil va abajo y las pestañas se deslizan de borde a borde.
+- **Orden por cercanía** (`utils/temporadas.js`, `ordenarPorTemporada`): primero las vigentes y luego las que vienen. Al llegar se ve la primera. Etiquetas: «Temporada actual» si el mes cae en su rango y «Próxima temporada» para la siguiente (si no hay vigentes, o si empieza el mes que viene). Una temporada puede cruzar el año (ej. diciembre → enero).
+- **Al tocar la foto** lleva a la categoría de la promoción, o a la sección Categorías si no tiene.
+- **Sin promociones activas la sección no aparece.** Se quitaron las 4 promociones de ejemplo fijas del código y el enlace a WhatsApp de cada tarjeta.
+- Los meses salen en el idioma elegido con `Intl` («Noviembre», «November», «Novembro»). El nombre de la promoción viene de la base y queda en español.
+- **Base de datos** (migración `005_promociones_temporadas.sql`): columnas `mes_inicio`, `mes_fin` (1–12) y `categoria_id`.
+  - Carga una sola vez 8 temporadas: San Valentín, Carnaval, Día de la Madre, Día del Padre, Inti Raymi, Día de Difuntos, Fiestas de Quito y Navidad.
+  - Lleva una marca en la tabla nueva `datos_iniciales`, así que si el dueño borra una, no vuelve en el siguiente deploy.
+  - A las promociones que ya existían les deduce el mes del texto «temporada» y les asigna categoría por nombre, sin duplicarlas.
+- **API:** crear y editar validan con Zod (`utils/promocionSchema.js`): meses 1–12 y los dos juntos. `GET /promociones` devuelve también `categoria_nombre`.
+- **Panel admin:** el formulario de promoción tiene «Mes de inicio», «Mes de fin» y «Al tocarla lleva a la categoría».
+- **Pendiente del dueño:** reemplazar las fotos de Día de Difuntos y San Valentín (se usaron las más parecidas que había).
+
+### 2.10 Nosotros — `components/inicio/NosotrosSection.vue`
+Diseño pedido directamente (28 de octubre de 2026), sin comparar opciones.
+
+- **Se quitaron teléfonos y correo** de la sección. Siguen en el footer.
+- **Ubicación y mapa en una sola tarjeta que gira.**
+  - El frente tiene la dirección sobre un fondo de plano, el pin y «Toca para ver el mapa».
+  - Al tocarla gira (`rotateY`) y muestra el mapa, con «← Ver dirección» para volver y «Cómo llegar ↗» (ruta en Google Maps).
+  - El mapa se carga recién la primera vez que se gira.
+  - El foco pasa al botón de la otra cara, y la cara oculta queda `inert`.
+  - Con «reducir movimiento» cambia al instante.
+- **Horario de atención** con el indicador «Abierto ahora / Cerrado ahora», calculado con la hora de Quito (`ZONA_HORARIA`) y actualizado cada minuto. Las horas salen en el formato de cada idioma (`utils/horario.js`).
+- **WhatsApp e Instagram destacados:** tarjetas grandes con los colores de cada marca, un ícono en círculo y «Pedidos y consultas» / `@ideancestral`. En escritorio van una debajo de otra; en tablet, lado a lado; en teléfono, apiladas.
+- **Datos en `config/contacto.js`:** `DIRECCION`, `MAPA_EMBED_URL`, `COMO_LLEGAR_URL`, `ZONA_HORARIA`, `INSTAGRAM_USUARIO` y `HORARIO` (cada franja con su clave de texto y sus días, 0 = domingo).
+- Con esto `CatalogoView.vue` solo arma las secciones y carga las categorías (`<script setup>`, ~50 líneas).
+
+### 2.11 Footer en móvil — `components/layout/AppFooter.vue`
+Ocupaba mucho alto en móvil (740px en 390px de ancho) y ahora mide 478px. Escritorio sin cambios.
+
+- Logo y redes (Instagram, WhatsApp) en una misma fila; el lema va debajo.
+- **Navegación | Contacto en 2 columnas**, con títulos en mayúsculas más chicos y una línea que las separa del logo.
+- El correo se parte después de la @ si no cabe (`<wbr>`).
+- El texto de derechos va a la izquierda y deja libre la esquina de los botones flotantes.
+
 ## 3. Cómo está armado
 
 ### 3.1 Mapa de archivos
@@ -92,7 +164,15 @@ Se compararon 4 diseños (ventana, panel, hoja y pasos) y el 27 de octubre de 20
 |---|---|
 | `frontend/src/views/CatalogoView.vue` | Página de inicio: arma todas las secciones en orden |
 | `frontend/src/components/inicio/HeroSection.vue` | Primera sección (fotos, buscador, ejemplos, chips) |
+| `frontend/src/components/inicio/DestacadosSection.vue` | Productos destacados (vitrina) |
+| `frontend/src/components/inicio/CategoriasSection.vue` | Explora por categoría (paneles) |
+| `frontend/src/components/inicio/PromocionesSection.vue` | Promociones por temporada (banda) |
+| `frontend/src/components/inicio/NosotrosSection.vue` | Ubicación que gira al mapa, horario y redes |
+| `frontend/src/utils/horario.js` | Horas en cada idioma y «abierto ahora» con la hora de Quito |
+| `frontend/src/utils/temporadas.js` | Meses en cada idioma y orden de temporadas por cercanía |
+| `backend/database/migrations/005_promociones_temporadas.sql` | Meses y categoría de las promociones; carga las 8 temporadas una vez |
 | `frontend/src/config/inicio.js` | Fotos del hero, sus dos paletas, encuadre y segundos por foto |
+| `frontend/src/config/contacto.js` | Teléfonos, correo, Instagram, WhatsApp y horario de atención (`HORARIO`) |
 | `frontend/src/composables/useEstadoInicio.js` | Estado compartido hero → navbar (transparencia y paleta) |
 | `frontend/src/components/layout/AppHeader.vue` | Navbar y menú móvil |
 | `frontend/src/components/SeccionEncabezado.vue` | Títulos de sección |
@@ -132,11 +212,10 @@ Orden actual de `CatalogoView.vue`:
 | # | Sección | id | En el menú | Estado del diseño |
 |---|---|---|---|---|
 | 1 | Hero (buscador + fotos) | `inicio` | Sí | Rediseñada ✅ |
-| 2 | Destacados (5 productos, mosaico) | `destacados` | No | Solo el título nuevo |
-| 3 | Banner central (carrusel con frase) | — | No | Sin rediseñar |
-| 4 | Categorías (tarjetas con foto) | `categorias` | Sí | Solo el título nuevo |
-| 5 | Promociones por temporada | `promociones` | Sí | Solo el título nuevo |
-| 6 | Nosotros (datos de contacto + mapa) | `nosotros` | Sí | Solo el título nuevo |
+| 2 | Destacados (`DestacadosSection`) | `destacados` | No | Rediseñada ✅ (vitrina) |
+| 3 | Categorías (`CategoriasSection`) | `categorias` | Sí | Rediseñada ✅ (paneles) |
+| 4 | Promociones (`PromocionesSection`) | `promociones` | No (se oculta si no hay promociones) | Rediseñada ✅ (banda) |
+| 5 | Nosotros (`NosotrosSection`) | `nosotros` | Sí | Rediseñada ✅ (tarjeta que gira) |
 
 ### 4.1 Lista de control para cada cambio
 - [ ] **Componente propio:** nuevas secciones (o las que se rediseñen) van en `components/inicio/NombreSeccion.vue` con `<script setup>`, para ir vaciando `CatalogoView.vue` (hoy tiene 980 líneas y usa la Options API).
@@ -169,6 +248,18 @@ Orden actual de `CatalogoView.vue`:
   - Se podría agregar horario de atención, una foto del local y una historia corta.
 - **Nuevas posibles:** testimonios reales, «cómo comprar» (3 pasos: elegir → carrito → WhatsApp), Instagram.
 
+### 4.3 Decisiones tomadas (27 de octubre de 2026)
+
+Orden final: **Hero → Destacados → Categorías → Promociones → Nosotros**. Cada sección pasa a su componente en `components/inicio/`.
+
+| Sección | Decisión | Qué cambia |
+|---|---|---|
+| Destacados | Conservar y arreglar | Traducir «✦ Destacado», «Ver producto →», «Artesanía». Botón «agregar al carrito» en la tarjeta; si `stock = 0`, etiqueta «Agotado» y sin botón. Esqueleto de carga igual al mosaico. Mosaico sin huecos con menos de 5 productos. Quitar el parallax del mouse. |
+| Banner central | **Quitar** (hecho) | Borrar plantilla, carrusel (`bannerIndex`, intervalo), su CSS, textos `banner.*` en los 3 idiomas e imágenes que solo use él. |
+| Categorías | Conservar y arreglar (**hecho**, paneles) | Ocultar categorías vacías. Traducir «Ver colección →» y mostrarlo también en móvil. Mostrar número de productos. Destacar la que tiene más productos. Revisar el mapa fijo de imágenes por nombre. Colores del velo con tokens. |
+| Promociones | Resaltar la temporada vigente (**hecho**, banda) | Ordenar por cercanía al mes actual y marcar la vigente/próxima. Quitar las 4 promociones de ejemplo fijas (si no hay promociones, la sección no se muestra). Colores de etiqueta con tokens. |
+| Nosotros | Enfocar en visitar el local (**hecho**) | Dirección y mapa en una tarjeta que gira, **horario de atención** (lunes a viernes 9:00–18:00, sábados y domingos 10:00–17:00) y WhatsApp e Instagram destacados. Teléfonos y correo quedan solo en el footer. |
+
 ---
 
 ## 5. Siguientes pasos
@@ -176,7 +267,7 @@ Orden actual de `CatalogoView.vue`:
 ### Decisiones pendientes del dueño
 1. **Pasarela de pago:** elegir proveedor (PayPhone, PayPal, Kushki o Datafast) y abrir la cuenta de comercio. Para conectarla: el backend crea el pedido y la transacción (el token nunca va al navegador), se completa `services/pagoEnLinea.js`, se confirma el pago con el aviso (webhook) de la pasarela y se activa `PAGO_EN_LINEA_ACTIVO`.
 2. **Subir los commits locales** al PR #7 y cambiar su base a `main`.
-3. **Límite de peticiones:** hoy el límite global (200 / 15 min) cuenta también imágenes y archivos estáticos. Se recomienda aplicarlo solo a `/api`.
+3. ~~**Límite de peticiones**~~ **Hecho:** el límite global (200 / 15 min) ahora se aplica solo a `/api`. Antes contaba también las imágenes y una visita con muchas fotos lo agotaba. En desarrollo el tope es 2000 (en producción sigue en 200).
 4. **Scroll automático del buscador en móvil:** confirmar si se mantiene.
 5. **Derechos de la foto del Diablo Huma:** confirmar que se puede usar.
 6. **Archivos sin seguimiento en git:** `media/` y `frontend/public/imagenes/categorias/`. Decidir si se agregan o se ignoran (`imanes_general.jpeg` es el origen de la foto «máscaras del mercado»).

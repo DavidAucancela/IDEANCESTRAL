@@ -271,6 +271,21 @@
             </label>
           </div>
         </div>
+        <div class="form-row">
+          <BaseInput as="select" v-model="formPromocion.mes_inicio" :label="t('admin.mesInicio')">
+            <option value="">{{ t('admin.sinMes') }}</option>
+            <option v-for="m in meses" :key="m.valor" :value="m.valor">{{ m.nombre }}</option>
+          </BaseInput>
+          <BaseInput as="select" v-model="formPromocion.mes_fin" :label="t('admin.mesFin')">
+            <option value="">{{ t('admin.sinMes') }}</option>
+            <option v-for="m in meses" :key="m.valor" :value="m.valor">{{ m.nombre }}</option>
+          </BaseInput>
+        </div>
+        <p class="form-ayuda">{{ t('admin.ayudaMeses') }}</p>
+        <BaseInput as="select" v-model="formPromocion.categoria_id" :label="t('admin.categoriaDestino')">
+          <option value="">{{ t('admin.sinCategoria') }}</option>
+          <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
+        </BaseInput>
         <BaseInput v-model="formPromocion.orden" type="number" min="0" :label="t('admin.orden')" />
         <div class="form-group checkbox-group">
           <label>
@@ -326,9 +341,10 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
+import { listaMeses } from '../utils/temporadas'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import BaseModal from '../components/BaseModal.vue'
@@ -395,8 +411,15 @@ export default {
       tema: 'general',
       imagen_url: '',
       orden: 0,
-      activa: true
+      activa: true,
+      mes_inicio: '',
+      mes_fin: '',
+      categoria_id: ''
     })
+
+    // Meses para los selectores de promociones, en el idioma elegido
+    const idioma = useLanguageStore()
+    const meses = computed(() => listaMeses(idioma.locale))
 
     // Renovar token con refresh token
     const tryRefreshToken = async () => {
@@ -701,7 +724,10 @@ export default {
           tema: promo.tema || 'general',
           imagen_url: promo.imagen_url || '',
           orden: promo.orden ?? 0,
-          activa: promo.activa ?? true
+          activa: promo.activa ?? true,
+          mes_inicio: promo.mes_inicio ?? '',
+          mes_fin: promo.mes_fin ?? '',
+          categoria_id: promo.categoria_id ?? ''
         })
       } else {
         Object.assign(formPromocion, {
@@ -710,7 +736,10 @@ export default {
           tema: 'general',
           imagen_url: '',
           orden: 0,
-          activa: true
+          activa: true,
+          mes_inicio: '',
+          mes_fin: '',
+          categoria_id: ''
         })
       }
       mostrarModalPromocion.value = true
@@ -846,6 +875,7 @@ export default {
       mostrarModalPromocion,
       promocionEditar,
       formPromocion,
+      meses,
       abrirModalPromocion,
       cerrarModalPromocion,
       guardarPromocion,
@@ -1173,6 +1203,12 @@ tbody tr:hover {
 .form-group select:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.form-ayuda {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .form-row {
