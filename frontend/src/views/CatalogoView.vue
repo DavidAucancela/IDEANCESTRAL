@@ -1,41 +1,16 @@
 <template>
   <div class="catalogo-view">
-    <!-- Hero Section -->
-    <section id="inicio" class="hero" ref="heroRef">
-      <div class="hero-bg" :style="{ transform: `translateY(${parallaxOffset}px)` }">
-        <img src="/imagenes/hero-cover.jpeg" alt="Ideancestral" />
-      </div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-text" data-animate>
-          <span class="hero-badge">✦ {{ t('hero.bienvenido') }} ✦</span>
-          <h1 class="hero-title">Ideancestral</h1>
-          <p class="hero-description">{{ t('hero.descripcion') }}</p>
-          <div class="hero-actions">
-            <a href="#categorias" @click.prevent="scrollTo('categorias')" class="btn btn-primary btn-lg">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              {{ t('hero.explorar') }}
-            </a>
-            <a :href="whatsappGeneral" target="_blank" class="btn btn-whatsapp btn-lg">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              {{ t('hero.contactanos') }}
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="hero-scroll-indicator">
-        <span></span>
-      </div>
-    </section>
+    <HeroSection :categorias="heroCategorias" />
 
     <!-- Productos Destacados -->
-    <section class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
+    <section id="destacados" class="destacados-section" v-if="loadingDestacados || productosDestacados.length > 0">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">✦ Selección especial</span>
-          <h2>Productos Destacados</h2>
-          <p>Piezas únicas seleccionadas por su calidad artesanal</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('featured.label')"
+          :titulo="t('featured.title')"
+          :acento="t('featured.titleAcento')"
+          :descripcion="t('featured.subtitle')"
+        />
         <div v-if="loadingDestacados" class="destacados-grid">
           <div v-for="i in 5" :key="i" class="skeleton-card" :class="i === 1 ? 'skeleton-card-main' : ''">
             <div class="skeleton-img"></div>
@@ -112,11 +87,12 @@
     <!-- Navegacion de Categorias -->
     <section id="categorias" class="categorias-nav-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('categories.label') }}</span>
-          <h2>{{ t('categories.title') }}</h2>
-          <p>{{ t('categories.subtitle') }}</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('categories.label')"
+          :titulo="t('categories.title')"
+          :acento="t('categories.titleAcento')"
+          :descripcion="t('categories.subtitle')"
+        />
         <div class="categorias-nav-grid">
           <router-link
             v-for="(cat, index) in categoriasParaMostrar"
@@ -140,10 +116,11 @@
     <!-- Promociones por Temporada -->
     <section id="promociones" class="promociones-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('promos.label') }}</span>
-          <h2>{{ t('promos.title') }}</h2>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('promos.label')"
+          :titulo="t('promos.title')"
+          :acento="t('promos.titleAcento')"
+        />
 
         <div class="promos-grid-horizontal">
           <a 
@@ -167,11 +144,12 @@
     <!-- Nosotros / Ubicacion -->
     <section id="nosotros" class="nosotros-section">
       <div class="container">
-        <div class="section-header" data-animate>
-          <span class="section-label">{{ t('about.label') }}</span>
-          <h2>{{ t('about.title') }}</h2>
-          <p>{{ t('about.subtitle') }}</p>
-        </div>
+        <SeccionEncabezado
+          :etiqueta="t('about.label')"
+          :titulo="t('about.title')"
+          :acento="t('about.titleAcento')"
+          :descripcion="t('about.subtitle')"
+        />
         <div class="nosotros-grid">
           <div class="nosotros-info">
             <div class="info-cards">
@@ -242,15 +220,16 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
 import { useScrollAnimation } from '../composables/useScrollAnimation'
-import { scrollASeccion } from '../composables/useSecciones'
+import { imagenPrincipal } from '../utils/imagenes'
+import HeroSection from '../components/inicio/HeroSection.vue'
+import SeccionEncabezado from '../components/SeccionEncabezado.vue'
 import { TELEFONOS, EMAIL, INSTAGRAM_URL, whatsappLink } from '../config/contacto'
 
 export default {
   name: 'CatalogoView',
+  components: { HeroSection, SeccionEncabezado },
   setup() {
     const { t } = useLanguageStore()
-    const heroRef = ref(null)
-    const parallaxOffset = ref(0)
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
     const productosDestacados = ref([])
@@ -330,15 +309,10 @@ export default {
       bannerInterval = setInterval(bannerNext, 5000)
     }
 
-    const handleScroll = () => {
-      parallaxOffset.value = window.scrollY * 0.4
-    }
-
     const handleImageError = (event) => {
       event.target.src = '/imagenes/logo-principal.jpg'
     }
 
-    const scrollTo = (id) => scrollASeccion(id)
 
     // WhatsApp helpers
     const whatsappProducto = (nombre) => {
@@ -362,13 +336,16 @@ export default {
       }
     }
 
-    const obtenerImagenDestacado = (prod) => {
-      if (prod.imagenes && prod.imagenes.length > 0) {
-        const principal = prod.imagenes.find(img => img.es_principal) || prod.imagenes[0]
-        return principal.url?.startsWith('http') ? principal.url : `${API_URL.replace('/api', '')}${principal.url}`
-      }
-      return '/imagenes/logo-principal.jpg'
-    }
+    const obtenerImagenDestacado = imagenPrincipal
+
+    // Categorías sugeridas bajo el buscador del inicio: las que tienen más productos
+    const heroCategorias = computed(() =>
+      categoriasParaMostrar.value
+        .filter((c) => c.total_productos > 0)
+        .sort((a, b) => b.total_productos - a.total_productos)
+        .slice(0, 4)
+        .map((c) => ({ id: c.id, nombre: c.nombre }))
+    )
 
     // Parallax en cards destacados
     const cardParallax = ref({})
@@ -398,18 +375,15 @@ export default {
       cargarCategorias()
       cargarPromociones()
       cargarDestacados()
-      window.addEventListener('scroll', handleScroll, { passive: true })
     })
 
     onUnmounted(() => {
       if (bannerInterval) clearInterval(bannerInterval)
-      window.removeEventListener('scroll', handleScroll)
     })
 
     return {
       t,
-      heroRef,
-      parallaxOffset,
+      heroCategorias,
       whatsappGeneral,
       categoriasParaMostrar,
       imagenCategoria,
@@ -419,7 +393,6 @@ export default {
       bannerPrev,
       bannerNext,
       handleImageError,
-      scrollTo,
       whatsappProducto,
       whatsappPromo,
       productosDestacados,
@@ -447,111 +420,6 @@ export default {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
-}
-
-/* ===== HERO ===== */
-.hero {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: var(--color-dark);
-}
-.hero-bg {
-  position: absolute;
-  inset: -10%;
-  will-change: transform;
-}
-.hero-bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  opacity: 0.55;
-  filter: saturate(0.85);
-  image-rendering: auto;
-}
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    160deg,
-    rgba(44, 34, 24, 0.75) 0%,
-    rgba(123, 63, 0, 0.5) 50%,
-    rgba(44, 34, 24, 0.8) 100%
-  );
-}
-.hero-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 0 24px;
-  max-width: 800px;
-}
-.hero-badge {
-  display: inline-block;
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  margin-bottom: 1.5rem;
-  font-family: var(--font-sans);
-}
-.hero-title {
-  font-family: var(--font-serif);
-  font-size: clamp(3.5rem, 8vw, 7rem);
-  font-weight: 700;
-  color: #fff;
-  line-height: 1;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 4px 30px rgba(0,0,0,0.4);
-  letter-spacing: -0.02em;
-}
-.hero-description {
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  color: rgba(255,255,255,0.85);
-  max-width: 560px;
-  margin: 0 auto 2.5rem;
-  line-height: 1.7;
-}
-.hero-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.hero-scroll-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-}
-.hero-scroll-indicator span {
-  display: block;
-  width: 1.5px;
-  height: 50px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.6), transparent);
-  margin: 0 auto;
-  animation: scrollLine 1.8s ease-in-out infinite;
-}
-@keyframes scrollLine {
-  0% { transform: scaleY(0); transform-origin: top; }
-  50% { transform: scaleY(1); transform-origin: top; }
-  51% { transform: scaleY(1); transform-origin: bottom; }
-  100% { transform: scaleY(0); transform-origin: bottom; }
-}
-
-.btn-lg {
-  padding: 16px 32px;
-  font-size: 16px;
-}
-
-.btn-sm {
-  padding: 10px 20px;
-  font-size: 14px;
 }
 
 /* ===== BANNER CARRUSEL ===== */
@@ -682,36 +550,6 @@ export default {
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-top: 1rem;
-}
-
-/* ===== SECTION HEADER (reutilizable) ===== */
-.section-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.section-label {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: var(--color-secondary);
-  margin-bottom: 0.75rem;
-}
-
-.section-header h2 {
-  font-size: 2.2rem;
-  color: var(--color-text);
-  margin-bottom: 0.75rem;
-}
-
-.section-header p {
-  color: var(--color-text-muted);
-  font-size: 1.05rem;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.7;
 }
 
 /* ===== CATEGORIAS NAV ===== */
@@ -979,9 +817,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .hero-actions { flex-direction: column; align-items: center; }
-  .hero-actions .btn { width: 100%; max-width: 320px; }
-
   .banner-title-main { font-size: 2.5rem; letter-spacing: 3px; }
   .banner-central { padding: 4rem 20px; }
   .banner-carousel-btn { width: 36px; height: 36px; }
@@ -997,8 +832,6 @@ export default {
 
   .nosotros-grid { grid-template-columns: 1fr; }
   .nosotros-mapa { height: 300px; }
-
-  .section-header h2 { font-size: 1.8rem; }
   .categorias-nav-section { padding: 3.5rem 0 2rem; }
   .promociones-section { padding: 3.5rem 0; }
 }

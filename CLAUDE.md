@@ -30,10 +30,12 @@ IDEANCESTRAL/
 │   ├── src/
 │   │   ├── views/           # CatalogoView, CategoriaView, ProductoDetalleView, AdminView, NotFoundView
 │   │   ├── components/      # Base* (librería), ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
-│   │   │   └── layout/      # AppHeader, AppFooter, CartDrawer, WhatsAppFloat (montados una vez en App.vue)
-│   │   ├── config/          # contacto.js: WhatsApp, teléfonos, email, Instagram
+│   │   │   ├── layout/      # AppHeader, AppFooter, CartDrawer, WhatsAppFloat (montados una vez en App.vue)
+│   │   │   └── inicio/      # Secciones de la portada (HeroSection); + SeccionEncabezado para títulos
+│   │   ├── config/          # contacto.js (WhatsApp, teléfonos…), inicio.js (fotos y paletas del hero), carrito.js (interruptor del pago en línea)
 │   │   ├── stores/          # carrito.js, language.js (i18n propio, no vue-i18n), theme.js
-│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones
+│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones, useEstadoInicio
+│   │   ├── services/        # pagoEnLinea.js (conexión con la pasarela de pago, aún sin proveedor)
 │   │   ├── router/index.js  # 4 rutas (lazy salvo la portada) + 404; /admin con meta.layout=false
 │   │   └── i18n/            # es.js, en.js, pt.js
 │   ├── public/imagenes/     # ~40+ imágenes estáticas de productos
@@ -116,10 +118,14 @@ docker-compose up --build               # Entorno completo en contenedores
 npm run db:start                        # Solo la base de datos en Docker
 ```
 
+## Rediseño del inicio (en curso)
+
+Bitácora, guía para agregar/quitar/modificar secciones y siguientes pasos: `docs/REDISENO_INICIO.md`. Leerla antes de tocar la portada, la navbar o el carrito.
+
 ## Funcionalidades clave del frontend
 
 - **Catálogo** con filtros por categoría, búsqueda, ordenamiento y paginación
-- **Carrito de compras** persistido en localStorage + pedido por WhatsApp
+- **Carrito de compras** persistido en localStorage, en 3 pasos: revisar → entrega (retiro o envío, nombre, nota) → pago (pasarela en línea, apagada con `PAGO_EN_LINEA_ACTIVO`, o pedido por WhatsApp)
 - **Tema claro/oscuro** con persistencia en localStorage
 - **Multi-idioma**: Español, Inglés, Portugués
 - **Panel Admin** (`/admin`) protegido con JWT: CRUD productos/categorías, upload imágenes, gestión de promociones

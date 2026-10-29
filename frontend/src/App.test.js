@@ -8,11 +8,29 @@ const productoAgotado = {
   categoria_id: 1, categoria_nombre: 'Madera', imagenes: []
 }
 
+const otroDestacado = {
+  id: 8, nombre: 'Sol de madera', precio: '40.00', stock: 3,
+  categoria_id: 1, categoria_nombre: 'Madera', imagenes: []
+}
+
 vi.mock('axios', () => ({
   default: {
-    get: vi.fn(async (url) => {
+    get: vi.fn(async (url, config = {}) => {
+      const params = config.params || {}
       if (url.includes('/productos/7')) return { data: productoAgotado }
-      if (url.includes('/productos')) return { data: { productos: [productoAgotado], paginacion: {} } }
+      if (url.includes('/productos')) {
+        const lista = params.destacado ? [productoAgotado, otroDestacado] : [productoAgotado]
+        return { data: { productos: lista, paginacion: {} } }
+      }
+      if (url.endsWith('/categorias')) {
+        return {
+          data: [
+            { id: 2, nombre: 'Cerámica', imagen_url: null, total_productos: 3 },
+            { id: 1, nombre: 'Madera', imagen_url: null, total_productos: 10 },
+            { id: 5, nombre: 'Vacía', imagen_url: null, total_productos: 0 }
+          ]
+        }
+      }
       if (url.includes('/categorias/')) return { data: { id: 1, nombre: 'Madera' } }
       return { data: [] }
     }),
@@ -88,6 +106,144 @@ describe('Layout compartido', () => {
   })
 })
 
+describe('Navbar', () => {
+  it('sobre el inicio va transparente y toma el acento del fondo activo', async () => {
+    await montarEn('/')
+    const header = root.querySelector('header.header')
+    const hero = root.querySelector('#inicio')
+    expect(header.classList).toContain('header--transparente')
+    expect(header.style.getPropertyValue('--nav-acento')).toBe(hero.style.getPropertyValue('--hero-acento'))
+
+    hero.querySelectorAll('.hero__indicador')[1].click()
+    await nextTick()
+    expect(header.style.getPropertyValue('--nav-acento')).toBe(hero.style.getPropertyValue('--hero-acento'))
+  })
+
+  it('en otras páginas es sólida', async () => {
+    await montarEn('/producto/7')
+    expect(root.querySelector('header.header').classList).not.toContain('header--transparente')
+  })
+
+  it('el menú móvil es una ventana con las 4 secciones y se cierra con un enlace, fuera o con Escape', async () => {
+    await montarEn('/')
+    const boton = root.querySelector('.menu-toggle')
+    boton.click()
+    await esperar()
+    let menu = document.getElementById('nav-menu')
+    expect(menu.getAttribute('role')).toBe('dialog')
+    expect(boton.getAttribute('aria-expanded')).toBe('true')
+    const titulos = [...menu.querySelectorAll('.menu-movil__enlace strong')].map((n) => n.textContent)
+    expect(titulos).toEqual(['Inicio', 'Categorías', 'Promociones', 'Nosotros'])
+    expect(menu.textContent).not.toMatch(/0[1-4]/)
+    expect(menu.textContent).not.toContain('WhatsApp')
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    menu.querySelectorAll('.menu-movil__enlace')[1].click()
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
+    expect(document.documentElement.style.overflow).toBe('')
+
+    boton.click()
+    await esperar()
+    document.querySelector('.menu-fondo').click()
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
+
+    boton.click()
+    await esperar()
+    menu = document.getElementById('nav-menu')
+    menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await esperar()
+    expect(document.getElementById('nav-menu')).toBeNull()
+  })
+})
+
+describe('Títulos de sección', () => {
+  it('el título de destacados está traducido', async () => {
+    localStorage.setItem('ideancestral_lang', 'en')
+    await montarEn('/')
+    const titulos = [...root.querySelectorAll('.seccion-encabezado__titulo')].map((h) => h.textContent.trim())
+    expect(titulos).toContain('Featured pieces')
+    expect(root.textContent).not.toContain('Selección especial')
+  })
+})
+
+describe('Carrito en pasos', () => {
+  const conPiezas = () =>
+    localStorage.setItem('ideancestral_carrito', JSON.stringify([
+      { id: 7, nombre: 'Máscara de prueba', precio: 20, imagen: '/x.jpg', cantidad: 2, stock: 5 },
+      { id: 8, nombre: 'Sol de prueba', precio: 15, imagen: '/y.jpg', cantidad: 1, stock: null }
+    ]))
+
+  const abrirCarrito = async () => {
+    conPiezas()
+    await montarEn('/')
+    root.querySelector('.cart-toggle').click()
+    await esperar()
+    return root.querySelector('.carrito-sidebar')
+  }
+
+  const continuar = async (carrito) => {
+    carrito.querySelector('.carrito-btn--principal').click()
+    await esperar()
+  }
+
+  it('paso 1: muestra las piezas y el total', async () => {
+    const carrito = await abrirCarrito()
+    expect(carrito.classList).toContain('open')
+    expect(carrito.querySelectorAll('.carrito-pasos li')).toHaveLength(3)
+    expect(carrito.querySelectorAll('.carrito-item')).toHaveLength(2)
+    expect(carrito.querySelector('.carrito-total strong').textContent).toBe('$55.00')
+    expect(carrito.textContent).toContain('3 piezas')
+  })
+
+  it('Continuar lleva a la entrega y luego al pago', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    expect(carrito.querySelector('input[name="entrega"]')).not.toBeNull()
+    await continuar(carrito)
+    expect(carrito.querySelector('input[name="pago"]')).not.toBeNull()
+    expect(carrito.querySelector('[aria-current="step"]').textContent).toContain('Pago')
+  })
+
+  it('sin pasarela activa, el pago se coordina solo por WhatsApp', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    await continuar(carrito)
+    expect(carrito.querySelectorAll('input[name="pago"]')).toHaveLength(1)
+    expect(carrito.textContent).toContain('Coordinar por WhatsApp')
+    expect(carrito.textContent).not.toContain('Pagar en línea')
+  })
+
+  it('la entrega, el nombre y la nota van en el mensaje de WhatsApp', async () => {
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    carrito.querySelector('input[value="envio"]').click()
+    const nombre = carrito.querySelector('.carrito-campo input')
+    nombre.value = 'Ana'
+    nombre.dispatchEvent(new Event('input'))
+    await esperar()
+    await continuar(carrito)
+    expect(carrito.querySelector('.carrito-resumen-entrega').textContent).toContain('Envío a domicilio')
+    carrito.querySelector('.carrito-btn--whatsapp').click()
+    const mensaje = decodeURIComponent(abrir.mock.calls[0][0])
+    expect(mensaje).toContain('Máscara de prueba x2')
+    expect(mensaje).toContain('Entrega: Envío a domicilio')
+    expect(mensaje).toContain('Nombre: Ana')
+    abrir.mockRestore()
+  })
+
+  it('Volver regresa al paso anterior', async () => {
+    const carrito = await abrirCarrito()
+    await continuar(carrito)
+    await continuar(carrito)
+    ;[...carrito.querySelectorAll('.carrito-enlace')].find((b) => b.textContent.includes('Volver')).click()
+    await esperar()
+    expect(carrito.querySelector('input[name="entrega"]')).not.toBeNull()
+  })
+})
+
 describe('Stock en la tienda', () => {
   it('la página de un producto agotado bloquea el botón de agregar', async () => {
     await montarEn('/producto/7')
@@ -99,5 +255,75 @@ describe('Stock en la tienda', () => {
   it('la tarjeta de categoría muestra la insignia de agotado', async () => {
     await montarEn('/categoria/1')
     expect(root.querySelector('.badge-agotado-card')?.textContent).toContain('Agotado')
+  })
+})
+
+describe('Sección de inicio (HeroSection)', () => {
+  it('muestra un solo h1 y el buscador, sin botones ni la ubicación', async () => {
+    await montarEn('/')
+    const hero = root.querySelector('#inicio')
+    expect(root.querySelectorAll('h1')).toHaveLength(1)
+    expect(hero.querySelector('#hero-buscar')).not.toBeNull()
+    expect(hero.querySelector('.btn')).toBeNull()
+    expect(hero.textContent).not.toContain('Mariscal')
+  })
+
+  it('sugiere primero las categorías con más productos y omite las vacías', async () => {
+    await montarEn('/')
+    const chips = [...root.querySelectorAll('.hero__chip')]
+    expect(chips.map((c) => c.textContent.trim())).toEqual(['Madera', 'Cerámica'])
+    expect(chips[0].getAttribute('href')).toBe('/categoria/1')
+    expect(root.querySelector('label[for="hero-buscar"]').textContent).toBe('Busca tu producto')
+  })
+
+  it('los indicadores cambian el fondo y la paleta de colores', async () => {
+    await montarEn('/')
+    const hero = root.querySelector('#inicio')
+    const indicadores = hero.querySelectorAll('.hero__indicador')
+    expect(indicadores.length).toBeGreaterThan(1)
+    expect(indicadores[0].getAttribute('aria-current')).toBe('true')
+    const acentoInicial = hero.style.getPropertyValue('--hero-acento')
+
+    indicadores[1].click()
+    await nextTick()
+    expect(indicadores[1].getAttribute('aria-current')).toBe('true')
+    expect(hero.querySelectorAll('.hero__slide')[1].classList).toContain('hero__slide--activa')
+    expect(hero.style.getPropertyValue('--hero-acento')).not.toBe(acentoInicial)
+  })
+
+  it('el tema claro u oscuro cambia la paleta del inicio y de la navbar', async () => {
+    const { HERO_FONDOS } = await import('./config/inicio')
+    await montarEn('/')
+    const hero = root.querySelector('#inicio')
+    const header = root.querySelector('header.header')
+    expect(hero.classList).toContain('hero--claro')
+    expect(hero.style.getPropertyValue('--hero-texto')).toBe(HERO_FONDOS[0].claro.texto)
+
+    header.querySelector('.theme-toggle').click()
+    await nextTick()
+    expect(hero.classList).toContain('hero--oscuro')
+    expect(hero.style.getPropertyValue('--hero-texto')).toBe(HERO_FONDOS[0].oscuro.texto)
+    expect(header.style.getPropertyValue('--nav-texto')).toBe(HERO_FONDOS[0].oscuro.texto)
+    expect(hero.querySelector('.hero__slide').style.getPropertyValue('--slide-fondo')).toBe(HERO_FONDOS[0].oscuro.fondo)
+    document.documentElement.setAttribute('data-theme', 'light')
+  })
+
+  it('buscador: muestra resultados y Enter abre el producto', async () => {
+    await montarEn('/')
+    const input = root.querySelector('#hero-buscar')
+    input.dispatchEvent(new Event('focus'))
+    input.value = 'más'
+    input.dispatchEvent(new Event('input'))
+    await new Promise((r) => setTimeout(r, 400))
+    await esperar()
+    const opciones = root.querySelectorAll('[role="option"]')
+    expect(opciones).toHaveLength(1)
+    expect(opciones[0].textContent).toContain('Máscara de prueba')
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }))
+    await nextTick()
+    expect(input.getAttribute('aria-activedescendant')).toBe('hero-resultado-0')
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))
+    await esperar()
+    expect(router.currentRoute.value.path).toBe('/producto/7')
   })
 })

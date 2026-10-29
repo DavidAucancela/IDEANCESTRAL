@@ -13,13 +13,18 @@ const pideInactivas = (req) => req.query.incluir_inactivas === 'true';
 router.get('/', authenticateIf(pideInactivas), async (req, res) => {
   try {
     const { incluir_inactivas } = req.query;
-    let query = 'SELECT * FROM categorias';
-    
+    // total_productos: productos publicados de la categoría (para ordenar por popularidad)
+    let query = `
+      SELECT c.*,
+        (SELECT COUNT(*)::int FROM productos p
+          WHERE p.categoria_id = c.id AND p.publicado = true) AS total_productos
+      FROM categorias c`;
+
     if (incluir_inactivas !== 'true') {
-      query += ' WHERE activa = true';
+      query += ' WHERE c.activa = true';
     }
-    
-    query += ' ORDER BY nombre';
+
+    query += ' ORDER BY c.nombre';
 
     const result = await pool.query(query);
     res.json(result.rows);
