@@ -86,12 +86,15 @@ app.use(helmet({
 // --- RATE LIMITING global ---
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  // En desarrollo cada recarga del inicio hace varias consultas; 200 se agotaba enseguida
+  max: process.env.NODE_ENV === 'production' ? 200 : 2000,
   message: { error: 'Demasiadas solicitudes. Intente más tarde.' },
   standardHeaders: true,
   legacyHeaders: false
 });
-app.use(globalLimiter);
+// Solo el API: las imágenes y archivos estáticos no cuentan para el límite,
+// si no una sola visita con muchas fotos lo agotaba.
+app.use('/api', globalLimiter);
 
 // --- Protección CSRF: validación de Origin para operaciones de escritura ---
 const csrfOriginCheck = (req, res, next) => {
