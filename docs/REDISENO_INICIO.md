@@ -1,8 +1,8 @@
 # Rediseño del inicio — bitácora y guía
 
-Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo, cómo está armado y qué sigue. El inicio se va a seguir mejorando sección por sección (agregar, quitar o modificar secciones), así que la guía de la sección 4 es la receta para cada cambio.
+Bitácora del rediseño visual de Ideancestral: qué se hizo, cómo está armado y cómo seguir. **El rediseño del inicio está terminado** y fusionado en `main` (PR #8). Para cambios futuros, la guía de la sección 4 es la receta; lo que queda pendiente está en [`docs/PENDIENTES.md`](PENDIENTES.md).
 
-**Última actualización:** 27 de octubre de 2026
+**Última actualización:** 29 de octubre de 2026
 
 ---
 
@@ -10,14 +10,12 @@ Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo,
 
 | | |
 |---|---|
-| Rama de trabajo | `feat/hero-rediseno` |
-| PR abierto | #7 «feat(inicio): rediseño del hero con buscador en vivo» → base `refactor/layout-compartido` |
-| PRs ya fusionados | #4 cierre de git, #5 bugs de productos/stock/uploads, #6 layout compartido |
-| Commits locales sin subir | 8 (desde `0bcc935` hasta el del carrito en pasos) — se suben al PR #7 cuando se decida |
+| Rama | `main` — todo el rediseño entró con el **PR #8** «Feat/inicio secciones» (29 oct 2026) |
+| PRs fusionados | #4 cierre de git, #5 bugs de productos/stock/uploads, #6 layout compartido, #8 rediseño del inicio |
+| PR por cerrar | #7 (hero): quedó abierto, pero su contenido ya está en `main` por el #8 |
 | Pruebas | 67 del frontend (Vitest) y 30 del backend, todas pasan |
 | Compilación | `npx vite build` funciona |
-
-> El PR #7 apunta a `refactor/layout-compartido`, que ya está fusionada en `main`. Antes de fusionar el #7 conviene cambiar su base a `main`.
+| Dependencias | 0 vulnerabilidades (`npm audit`, 29 oct 2026) |
 
 ---
 
@@ -185,7 +183,7 @@ Ocupaba mucho alto en móvil (740px en 390px de ancho) y ahora mide 478px. Escri
 | `frontend/src/utils/temporadas.js` | Meses en cada idioma y orden de temporadas por cercanía |
 | `backend/database/migrations/005_promociones_temporadas.sql` | Meses y categoría de las promociones; carga las 8 temporadas una vez |
 | `frontend/src/config/inicio.js` | Fotos del hero, sus dos paletas, encuadre y segundos por foto |
-| `frontend/src/config/contacto.js` | Teléfonos, correo, Instagram, WhatsApp y horario de atención (`HORARIO`) |
+| `frontend/src/config/contacto.js` | Teléfonos, correo, Instagram, WhatsApp, dirección, mapa, zona horaria y horario de atención (`HORARIO`) |
 | `frontend/src/composables/useEstadoInicio.js` | Estado compartido hero → navbar (transparencia y paleta) |
 | `frontend/src/components/layout/AppHeader.vue` | Navbar y menú móvil |
 | `frontend/src/components/SeccionEncabezado.vue` | Títulos de sección |
@@ -195,7 +193,8 @@ Ocupaba mucho alto en móvil (740px en 390px de ancho) y ahora mide 478px. Escri
 | `frontend/src/i18n/{es,en,pt}.js` | Textos (`hero.*`, `nav.*`, `featured.*`, `cart.*`, …) |
 | `frontend/src/style.css` | Tokens del tema (`--color-*`) y `--header-alto` (72px / 64px en ≤900px) |
 | `frontend/public/imagenes/inicio/` | Fotos del hero en 900px y 1440–1600px |
-| `frontend/src/App.test.js` | Pruebas de layout, hero, navbar, tema y carrito |
+| `frontend/src/App.test.js` | Pruebas de layout, hero, navbar, tema, carrito, cada sección del inicio y páginas traducidas |
+| `frontend/src/i18n/i18n.test.js` | Falla si los 3 idiomas no tienen las mismas claves o si hay textos vacíos |
 
 ### 3.2 Cómo viajan los colores
 ```
@@ -231,18 +230,18 @@ Orden actual de `CatalogoView.vue`:
 | 5 | Nosotros (`NosotrosSection`) | `nosotros` | Sí | Rediseñada ✅ (tarjeta que gira) |
 
 ### 4.1 Lista de control para cada cambio
-- [ ] **Componente propio:** nuevas secciones (o las que se rediseñen) van en `components/inicio/NombreSeccion.vue` con `<script setup>`, para ir vaciando `CatalogoView.vue` (hoy tiene 980 líneas y usa la Options API).
+- [ ] **Componente propio:** cada sección va en `components/inicio/NombreSeccion.vue` con `<script setup>`. `CatalogoView.vue` solo las ordena y carga las categorías (~60 líneas).
 - [ ] **Título:** usar `<SeccionEncabezado etiqueta titulo acento descripcion />`.
 - [ ] **Textos:** nada fijo en el template; claves nuevas en `es.js`, `en.js` y `pt.js`.
 - [ ] **Tema:** solo tokens `--color-*`, sin colores fijos. Revisar en claro y en oscuro.
 - [ ] **Móvil:** probar a 360px y 390px de ancho, sin scroll horizontal.
-- [ ] **Animación de entrada:** `data-animate` en los bloques (la usa `useScrollAnimation`) y respeto a «reducir movimiento».
+- [ ] **Animación de entrada:** `data-animate` solo en lo que existe al montar la página (el observador no ve lo que llega después del API: quedaría invisible). Respetar «reducir movimiento».
 - [ ] **Navegación:** si la sección debe aparecer en el menú, darle `id` y agregarla a `secciones` en `AppHeader.vue`, con `label` y `descripcion` en i18n. Si se quita una sección del menú, quitarla de ahí también.
-- [ ] **Datos:** si consulta el API, una sola petición si es posible (hay límite de 200 peticiones / 15 min por IP), con estado de carga y estado vacío.
+- [ ] **Datos:** si consulta el API, una sola petición si es posible (límite de 200 peticiones / 15 min por IP en producción), con estado de carga y estado vacío (si no hay datos, la sección no se muestra).
 - [ ] **Pruebas:** agregar o ajustar casos en `App.test.js`; correr `npx vitest run` y `npx vite build`.
 - [ ] **Limpieza:** al quitar una sección, borrar también su CSS, sus textos i18n, sus imágenes y la lógica de `CatalogoView.vue` que ya no se use.
 
-### 4.2 Ideas por sección (para decidir)
+### 4.2 Ideas por sección (histórico: ya se decidieron, ver 4.3)
 - **Destacados:**
   - Textos fijos por traducir («✦ Destacado», «Ver producto →», «Artesanía»).
   - Botón «agregar al carrito» directo en la tarjeta.
@@ -277,30 +276,33 @@ Orden final: **Hero → Destacados → Categorías → Promociones → Nosotros*
 
 ## 5. Siguientes pasos
 
-### Decisiones pendientes del dueño
-1. **Pasarela de pago:** elegir proveedor (PayPhone, PayPal, Kushki o Datafast) y abrir la cuenta de comercio. Para conectarla: el backend crea el pedido y la transacción (el token nunca va al navegador), se completa `services/pagoEnLinea.js`, se confirma el pago con el aviso (webhook) de la pasarela y se activa `PAGO_EN_LINEA_ACTIVO`.
-2. **Subir los commits locales** al PR #7 y cambiar su base a `main`.
-3. ~~**Límite de peticiones**~~ **Hecho:** el límite global (200 / 15 min) ahora se aplica solo a `/api`. Antes contaba también las imágenes y una visita con muchas fotos lo agotaba. En desarrollo el tope es 2000 (en producción sigue en 200).
-4. **Scroll automático del buscador en móvil:** confirmar si se mantiene.
-5. **Derechos de la foto del Diablo Huma:** confirmar que se puede usar.
-6. **Archivos sin seguimiento en git:** `media/` y `frontend/public/imagenes/categorias/`. Decidir si se agregan o se ignoran (`imanes_general.jpeg` es el origen de la foto «máscaras del mercado»).
+La lista completa y priorizada está en [`docs/PENDIENTES.md`](PENDIENTES.md). Resumen de lo que ya se cerró en este rediseño:
 
-### Trabajo técnico sugerido
-1. Rediseñar las secciones 2 a 6 una por una con la guía de la sección 4, empezando por **Destacados** y el **Banner central**.
-2. Pasar cada sección de `CatalogoView.vue` a su propio componente en `components/inicio/`.
-3. ~~Traducir los textos que siguen fijos en español~~ **Hecho** (ver 2.12).
-4. Llevar el mismo estilo a las páginas de categoría y de producto.
-5. Revisar rendimiento (peso de imágenes, Lighthouse) cuando el inicio esté completo.
+- ~~Límite de peticiones~~: el global ahora se aplica solo a `/api` (2000 en desarrollo, 200 en producción).
+- ~~Rediseñar las secciones 2 a 6 y pasarlas a componentes~~: hecho (§ 2.6–2.10).
+- ~~Traducir los textos fijos~~: hecho en todo el sitio (§ 2.12).
+- ~~Subir los commits y fusionar~~: PR #8 en `main`.
+
+### Cómo conectar la pasarela de pago (cuando el dueño elija proveedor)
+1. El backend crea el pedido y la transacción con la pasarela (el token del comercio nunca va al navegador).
+2. Completar `frontend/src/services/pagoEnLinea.js` para redirigir o abrir el formulario de pago.
+3. Confirmar el pago con el aviso (webhook) de la pasarela, no con la vuelta del navegador.
+4. Activar `PAGO_EN_LINEA_ACTIVO` en `frontend/src/config/carrito.js`.
 
 ---
 
 ## 6. Cómo verificar
 
 ```bash
-cd frontend
-npx vitest run      # pruebas
-npx vite build      # compilación
-npm run dev         # desde la raíz: frontend 5173 + backend
+docker start ideancestral-db-1   # la base local vive en Docker (Docker Desktop abierto)
+cd frontend && npx vitest run    # pruebas del frontend
+cd frontend && npx vite build    # compilación
+cd backend && npx vitest run     # pruebas del backend
+npm run dev                      # desde la raíz: frontend 5173 + backend (3002 en local)
 ```
-- Revisar cada cambio en escritorio (1440×900) y móvil (390×844), en tema claro y oscuro.
-- En capturas automáticas con Chrome sin pantalla, las transiciones, el scroll suave y el IntersectionObserver no avanzan, y el ancho mínimo de la ventana ronda los 500px. Para móvil, usar un iframe de 390px.
+- Revisar cada cambio en escritorio (1440×900) y móvil (390×844 y 360px), en tema claro y oscuro, y en los 3 idiomas.
+- **Capturas automáticas** con Chrome sin pantalla (protocolo CDP):
+  - Para móvil, `Emulation.setDeviceMetricsOverride` con `mobile: true`, y `Emulation.setTouchEmulationEnabled` para simular pantalla táctil (`hover: none`).
+  - Las transiciones, el scroll suave y el IntersectionObserver no avanzan solos: marcar `[data-animate]` con `.animate-in` antes de capturar.
+  - Si se apagan las animaciones con CSS, algo que dependa de una animación para verse saldrá invisible en la captura aunque en el navegador se vea bien. Confirmar con las animaciones encendidas antes de darlo por error.
+  - Correr un Chrome a la vez: varios en paralelo pierden la conexión.

@@ -7,20 +7,20 @@ Sistema web para exhibir y gestionar el catálogo de productos artesanales de **
 ## Características
 
 ### Para visitantes
-- Catálogo completo de productos con filtros por categoría
-- Vista de detalle con galería de imágenes por producto
-- Carrito de compras con envío de pedidos por WhatsApp
-- Promociones por temporada (Navidad, Día de la Madre, Fiestas de Quito, Inti Raymi)
-- Internacionalización: Español, Inglés y Portugués
+- **Inicio:** fotos a pantalla completa con buscador en vivo, vitrina de productos destacados, categorías en paneles, promociones por temporada y sección para visitar el local
+- **Promociones por temporada** (San Valentín, Carnaval, Día de la Madre, Día del Padre, Inti Raymi, Difuntos, Fiestas de Quito, Navidad): se resalta la vigente o la próxima según el mes
+- **Visítanos:** tarjeta de ubicación que gira y muestra el mapa, horario con «abierto ahora» (hora de Quito), WhatsApp e Instagram
+- Catálogo por categoría con búsqueda, filtro de precio y orden
+- Detalle de producto con galería, zoom (o «toca para ampliar» en pantallas táctiles) y stock
+- Carrito en 3 pasos (revisar → entrega → pago) con pedido por WhatsApp; pago en línea preparado, aún sin pasarela
+- Español, inglés y portugués en todo el sitio
 - Modo oscuro / claro
-- Carrusel animado en el banner principal
 - Diseño responsive (móvil, tablet y escritorio)
-- Botón flotante de contacto por WhatsApp
 
 ### Para administradores
 - Panel de administración con acceso protegido
 - CRUD completo de productos, categorías e imágenes
-- Gestión de promociones por temporada
+- Gestión de promociones por temporada: meses en que van (se repiten cada año) y categoría a la que llevan
 - Subida de múltiples imágenes por producto
 - Control de visibilidad y productos destacados
 - Autenticación segura con JWT y refresh tokens
@@ -32,11 +32,12 @@ Sistema web para exhibir y gestionar el catálogo de productos artesanales de **
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | Vue 3 (Composition API), Vite, Pinia, Vue Router, Axios, vue-i18n |
+| Frontend | Vue 3 (Composition API), Vite, Pinia, Vue Router, Axios, i18n propio (store Pinia) |
 | Backend | Node.js, Express, Multer, JWT, bcryptjs, Zod, Pino |
 | Base de datos | PostgreSQL |
 | Seguridad | Helmet, express-rate-limit, sanitización XSS, validación MIME |
-| Infraestructura | Docker Compose, Render |
+| Pruebas | Vitest (frontend con jsdom, backend) |
+| Infraestructura | Docker Compose (local), Railway (producción) |
 
 ---
 
@@ -46,10 +47,15 @@ Sistema web para exhibir y gestionar el catálogo de productos artesanales de **
 IdeAncestral/
 ├── frontend/
 │   └── src/
-│       ├── views/          # CatalogoView, CategoriaView, ProductoDetalleView, AdminView
-│       ├── components/     # ThemeToggle, LanguageSwitcher, ToastContainer
+│       ├── views/          # CatalogoView (inicio), CategoriaView, ProductoDetalleView, AdminView, NotFoundView
+│       ├── components/
+│       │   ├── inicio/     # Secciones del inicio: Hero, Destacados, Categorías, Promociones, Nosotros
+│       │   ├── layout/     # Header, footer, carrito y botón de WhatsApp (montados una vez)
+│       │   └── Base*.vue   # Librería de componentes (botón, modal, tarjeta, campos…)
+│       ├── config/         # contacto.js (WhatsApp, dirección, horario…), inicio.js, carrito.js
 │       ├── stores/         # carrito, theme, language (Pinia)
-│       ├── composables/    # useCarrito, useToast
+│       ├── composables/    # useCarrito, useToast, useScrollAnimation, useSecciones…
+│       ├── utils/          # imágenes, temporadas, horario
 │       ├── i18n/           # Traducciones: es, en, pt
 │       └── router/
 │
@@ -61,7 +67,7 @@ IdeAncestral/
 │   ├── utils/              # Sanitización, validaciones
 │   └── server.js
 │
-├── docs/                   # Guías de despliegue, seguridad y devops
+├── docs/                   # Bitácora del rediseño, pendientes, guías de despliegue, seguridad y datos
 ├── docker-compose.yml
 └── package.json
 ```
@@ -130,9 +136,9 @@ Acceso local tras levantar los contenedores: `http://localhost:5173`
 
 ---
 
-## Despliegue en producción (Render)
+## Despliegue en producción (Railway)
 
-Consulta [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) para la guía completa.
+Railway construye con `backend/Dockerfile` (configurado en `railway.toml`): compila el frontend y lo sirve junto con el API desde un solo contenedor. Al arrancar en producción se aplican el esquema y las migraciones. Guía completa: [`docs/RAILWAY_DEPLOY.md`](docs/RAILWAY_DEPLOY.md). También hay una guía para Render: [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md).
 
 **Variables de entorno requeridas en producción:**
 - `NODE_ENV`
@@ -168,6 +174,8 @@ Consulta [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) para la guía completa
 | `npm run install:all` | Instala dependencias de todos los módulos |
 | `npm run db:start` | Inicia solo la base de datos con Docker |
 | `npm run db:stop` | Detiene el contenedor de la base de datos |
+| `cd frontend && npx vitest run` | Pruebas del frontend |
+| `cd backend && npx vitest run` | Pruebas del backend |
 
 ---
 
@@ -175,6 +183,10 @@ Consulta [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) para la guía completa
 
 | Documento | Contenido |
 |-----------|-----------|
+| [`docs/PENDIENTES.md`](docs/PENDIENTES.md) | **Lo que queda por hacer**: decisiones del dueño, despliegue y trabajo técnico |
+| [`docs/REDISENO_INICIO.md`](docs/REDISENO_INICIO.md) | Bitácora del rediseño y guía para cambiar secciones del inicio |
+| [`docs/CARGA_DATOS.md`](docs/CARGA_DATOS.md) | Datos de ejemplo, promociones e imágenes |
+| [`docs/RAILWAY_DEPLOY.md`](docs/RAILWAY_DEPLOY.md) | Guía de despliegue en Railway |
 | [`docs/RENDER_DEPLOY.md`](docs/RENDER_DEPLOY.md) | Guía de despliegue en Render |
 | [`docs/SEGURIDAD-IMPLEMENTADA.md`](docs/SEGURIDAD-IMPLEMENTADA.md) | Detalle de medidas de seguridad |
 | [`docs/DEVOPS_GUIA.md`](docs/DEVOPS_GUIA.md) | Guía de operaciones y Docker |

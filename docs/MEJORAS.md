@@ -1,5 +1,7 @@
 # INFORME DE MEJORAS - IdeAncestral
 
+> **Documento histórico** (informe inicial). Gran parte ya se hizo: rate limiting, CORS, validación con Zod, paginación, búsqueda, migraciones, logging con Pino, Pinia, componentes reutilizables, Docker y pruebas. La lista vigente de lo que falta está en [`docs/PENDIENTES.md`](PENDIENTES.md).
+
 ## Estado Actual del Sistema
 
 El sistema es un **catálogo de artesanías** con:

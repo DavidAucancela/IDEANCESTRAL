@@ -14,7 +14,8 @@
 -- -----------------------------------------------------------------------------
 DELETE FROM imagenes_productos;
 DELETE FROM productos;
-DELETE FROM promociones;
+-- Las promociones NO se borran: las 8 temporadas las carga una sola vez la
+-- migración 005 (marca en datos_iniciales) y no volverían a crearse.
 
 -- -----------------------------------------------------------------------------
 -- 2. CATEGORÍAS: Garantizar que existen antes de insertar productos

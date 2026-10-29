@@ -14,16 +14,29 @@ Las pruebas automatizadas verifican que tu código funciona correctamente. Hay v
 ## Estructura actual
 
 ```
-backend/
+backend/                                 # 30 pruebas
 ├── vitest.config.js
-├── utils/sanitize.test.js    # Tests de sanitización XSS
-└── package.json              # npm run test
+├── middleware/auth.test.js              # JWT y permisos
+└── utils/
+    ├── sanitize.test.js                 # Sanitización XSS
+    ├── productoSchema.test.js           # Validación de productos (Zod)
+    └── promocionSchema.test.js          # Validación de promociones: meses 1–12, ambos juntos
 
-frontend/
-├── vitest.config.js
-├── src/stores/carrito.test.js # Tests del store de carrito
-└── package.json              # npm run test
+frontend/                                # 67 pruebas
+├── vitest.config.js                     # jsdom
+└── src/
+    ├── App.test.js                      # La app completa montada: layout, hero, navbar, tema,
+    │                                    # carrito, cada sección del inicio, páginas traducidas
+    ├── stores/carrito.test.js           # Store del carrito
+    ├── utils/temporadas.test.js         # Orden de promociones por cercanía al mes
+    ├── utils/horario.test.js            # «Abierto ahora» con la hora de Quito
+    └── i18n/i18n.test.js                # es, en y pt con las mismas claves y sin textos vacíos
 ```
+
+### Cómo están armadas las pruebas de `App.test.js`
+- `axios` está simulado (`vi.mock`) con productos, categorías y promociones de prueba. Las promociones se cambian por prueba con `globalThis.__promos`.
+- Para probar algo que depende de la fecha (temporada vigente, abierto/cerrado) se fija la hora con `vi.useFakeTimers({ toFake: ['Date'] })` y `vi.setSystemTime(...)`; solo se simula `Date` para que los `setTimeout` sigan funcionando.
+- Para probar otro idioma: `localStorage.setItem('ideancestral_lang', 'en')` antes de montar.
 
 ## Ejecutar pruebas
 
@@ -106,6 +119,6 @@ it('actualiza estado correctamente', () => {
 
 ## Próximos pasos recomendados
 
-1. Añadir tests para más rutas del backend (productos, categorías)
-2. Tests de componentes clave (AdminView login, CatalogoView)
-3. Configurar tests E2E con Playwright para flujo completo
+1. Pruebas de las rutas del backend contra una base de prueba (supertest): productos, categorías, promociones.
+2. Pruebas de extremo a extremo con Playwright: buscar → agregar al carrito → pedir por WhatsApp; panel admin.
+3. Correr las pruebas en GitHub Actions en cada PR (ver `docs/PENDIENTES.md`).

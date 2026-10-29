@@ -12,7 +12,7 @@
 | Estado | Pinia |
 | Routing | Vue Router 4 |
 | HTTP | Axios (con interceptor para refresh de tokens) |
-| i18n | vue-i18n (es, en, pt) |
+| i18n | Propio: store Pinia `language.js` con `t(clave, params)` (es, en, pt) |
 | Backend | Node.js 20 + Express 4 |
 | Base de datos | PostgreSQL 16 |
 | Auth | JWT + bcryptjs + refresh tokens |
@@ -36,8 +36,9 @@ IDEANCESTRAL/
 │   │   ├── stores/          # carrito.js, language.js (i18n propio, no vue-i18n), theme.js
 │   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones, useEstadoInicio
 │   │   ├── services/        # pagoEnLinea.js (conexión con la pasarela de pago, aún sin proveedor)
+│   │   ├── utils/           # imagenes.js (URLs), temporadas.js (orden de promociones), horario.js (abierto ahora)
 │   │   ├── router/index.js  # 4 rutas (lazy salvo la portada) + 404; /admin con meta.layout=false
-│   │   └── i18n/            # es.js, en.js, pt.js
+│   │   └── i18n/            # es.js, en.js, pt.js (+ i18n.test.js: los 3 con las mismas claves)
 │   ├── public/imagenes/     # ~40+ imágenes estáticas de productos
 │   ├── nginx.conf           # Config Nginx para Docker
 │   └── Dockerfile           # Multi-stage: Vite build + Nginx
@@ -71,6 +72,7 @@ IDEANCESTRAL/
 5. `promociones` — Promociones por temporada: meses `mes_inicio`/`mes_fin` (se repiten cada año) y `categoria_id` (a dónde lleva en el inicio)
 6. `refresh_tokens` — Gestión de JWT refresh tokens
 7. `admin_audit_log` — Historial de acciones administrativas
+8. `datos_iniciales` — Marca de datos que se cargan una sola vez (ej. las 8 temporadas de promociones)
 
 ## API endpoints
 
@@ -82,7 +84,8 @@ POST/DELETE /api/categorias      # Gestión (requiere auth)
 POST /api/imagenes               # Upload de imágenes (Multer, requiere auth)
 POST /api/auth/login             # Login (rate-limited: 5 req/15min)
 POST /api/auth/refresh           # Refresh JWT token
-GET  /api/promociones            # Listado de promociones
+GET  /api/promociones            # Promociones activas (+ categoria_nombre); el inicio las ordena por cercanía al mes
+POST/PUT/DELETE /api/promociones # Gestión (requiere auth, validación Zod: meses 1–12)
 GET  /api/health                 # Health check
 GET  /uploads/*                  # Archivos estáticos (verificados contra DB)
 ```
@@ -113,18 +116,27 @@ npm run dev                             # Frontend (5173) + Backend (3000) en pa
 node backend/scripts/init-db.js --seed  # Inicializar DB con datos de prueba
 node backend/scripts/create-admin.js    # Crear primer admin
 
+# Pruebas
+cd frontend && npx vitest run           # 67 pruebas
+cd backend && npx vitest run            # 30 pruebas
+
 # Docker
 docker-compose up --build               # Entorno completo en contenedores
 npm run db:start                        # Solo la base de datos en Docker
 ```
 
-## Rediseño del inicio (en curso)
+> Local: la base (`ideancestral-db-1`, puerto 5435) necesita Docker Desktop abierto; si no, el API responde 500. El backend local corre en el puerto 3002 (`VITE_API_URL` en `frontend/.env`).
 
-Bitácora, guía para agregar/quitar/modificar secciones y siguientes pasos: `docs/REDISENO_INICIO.md`. Leerla antes de tocar la portada, la navbar o el carrito.
+## Rediseño del inicio (terminado, PR #8)
+
+Portada: Hero → Destacados → Categorías → Promociones → Nosotros, cada una en `components/inicio/`. Bitácora y guía para agregar/quitar/modificar secciones: `docs/REDISENO_INICIO.md`. Leerla antes de tocar la portada, la navbar o el carrito.
+
+**Pendientes** (decisiones del dueño, despliegue y trabajo técnico): `docs/PENDIENTES.md`.
 
 ## Funcionalidades clave del frontend
 
 - **Catálogo** con filtros por categoría, búsqueda, ordenamiento y paginación
+- **Inicio:** buscador en vivo, vitrina de destacados, categorías en paneles, promociones por temporada (vigente/próxima según el mes), ubicación con mapa, horario con «abierto ahora» (hora de Quito)
 - **Carrito de compras** persistido en localStorage, en 3 pasos: revisar → entrega (retiro o envío, nombre, nota) → pago (pasarela en línea, apagada con `PAGO_EN_LINEA_ACTIVO`, o pedido por WhatsApp)
 - **Tema claro/oscuro** con persistencia en localStorage
 - **Multi-idioma**: Español, Inglés, Portugués
@@ -137,7 +149,6 @@ Bitácora, guía para agregar/quitar/modificar secciones y siguientes pasos: `do
 - Usa `backend/Dockerfile` (multi-stage: compila el frontend con Vite y lo sirve junto con el backend Express)
 - Configurado en `railway.toml`
 - El `docker-entrypoint.sh` ejecuta migraciones de DB al arrancar en producción
-- Commits recientes: correcciones de puerto, healthcheck removido para fix del deploy
 
 ## Notas de seguridad
 
