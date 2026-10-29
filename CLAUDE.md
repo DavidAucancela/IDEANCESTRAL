@@ -29,10 +29,14 @@ IDEANCESTRAL/
 ├── frontend/
 │   ├── src/
 │   │   ├── views/           # CatalogoView, CategoriaView, ProductoDetalleView, AdminView, NotFoundView
-│   │   ├── components/      # ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
-│   │   ├── stores/          # carrito.js, language.js, theme.js
-│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation
-│   │   ├── router/index.js  # 4 rutas + fallback 404
+│   │   ├── components/      # Base* (librería), ThemeToggle, LanguageSwitcher, ToastContainer, LightboxModal, BackToTop
+│   │   │   ├── layout/      # AppHeader, AppFooter, CartDrawer, WhatsAppFloat (montados una vez en App.vue)
+│   │   │   └── inicio/      # Secciones de la portada (HeroSection, DestacadosSection, CategoriasSection, PromocionesSection, NosotrosSection); + SeccionEncabezado para títulos
+│   │   ├── config/          # contacto.js (WhatsApp, teléfonos, dirección, mapa, horario…), inicio.js (fotos y paletas del hero), carrito.js (interruptor del pago en línea)
+│   │   ├── stores/          # carrito.js, language.js (i18n propio, no vue-i18n), theme.js
+│   │   ├── composables/     # useCarrito, useToast, useScrollAnimation, useSecciones, useEstadoInicio
+│   │   ├── services/        # pagoEnLinea.js (conexión con la pasarela de pago, aún sin proveedor)
+│   │   ├── router/index.js  # 4 rutas (lazy salvo la portada) + 404; /admin con meta.layout=false
 │   │   └── i18n/            # es.js, en.js, pt.js
 │   ├── public/imagenes/     # ~40+ imágenes estáticas de productos
 │   ├── nginx.conf           # Config Nginx para Docker
@@ -44,9 +48,9 @@ IDEANCESTRAL/
 │   ├── middleware/          # auth.js (JWT), auditLog.js, httpsRedirect.js
 │   ├── database/
 │   │   ├── connection.js    # Pool PostgreSQL (soporta DATABASE_URL o vars individuales)
-│   │   ├── schema.sql       # 7 tablas
+│   │   ├── schema.sql       # 7 tablas (+ datos_iniciales, creada por la migración 005)
 │   │   ├── seed.sql         # Datos de ejemplo
-│   │   └── migrations/      # 002_security.sql, 003_update_product_images.sql
+│   │   └── migrations/      # 002 a 005 (005: meses y categoría de promociones + 8 temporadas iniciales)
 │   ├── utils/               # sanitize.js, validateMime.js
 │   ├── scripts/             # init-db, create-admin, check-env, run-migrations
 │   ├── uploads/             # Imágenes subidas por admin (runtime)
@@ -64,7 +68,7 @@ IDEANCESTRAL/
 2. `productos` — Inventario con precio, stock, descripción, flags de destacado/activo
 3. `imagenes_productos` — Múltiples imágenes por producto
 4. `administradores` — Usuarios admin
-5. `promociones` — Promociones estacionales (Navidad, Día de la Madre, Fiestas de Quito, Inti Raymi)
+5. `promociones` — Promociones por temporada: meses `mes_inicio`/`mes_fin` (se repiten cada año) y `categoria_id` (a dónde lleva en el inicio)
 6. `refresh_tokens` — Gestión de JWT refresh tokens
 7. `admin_audit_log` — Historial de acciones administrativas
 
@@ -114,10 +118,14 @@ docker-compose up --build               # Entorno completo en contenedores
 npm run db:start                        # Solo la base de datos en Docker
 ```
 
+## Rediseño del inicio (en curso)
+
+Bitácora, guía para agregar/quitar/modificar secciones y siguientes pasos: `docs/REDISENO_INICIO.md`. Leerla antes de tocar la portada, la navbar o el carrito.
+
 ## Funcionalidades clave del frontend
 
 - **Catálogo** con filtros por categoría, búsqueda, ordenamiento y paginación
-- **Carrito de compras** persistido en localStorage + pedido por WhatsApp
+- **Carrito de compras** persistido en localStorage, en 3 pasos: revisar → entrega (retiro o envío, nombre, nota) → pago (pasarela en línea, apagada con `PAGO_EN_LINEA_ACTIVO`, o pedido por WhatsApp)
 - **Tema claro/oscuro** con persistencia en localStorage
 - **Multi-idioma**: Español, Inglés, Portugués
 - **Panel Admin** (`/admin`) protegido con JWT: CRUD productos/categorías, upload imágenes, gestión de promociones
@@ -133,7 +141,7 @@ npm run db:start                        # Solo la base de datos en Docker
 
 ## Notas de seguridad
 
-- Rate limiting: 200 req/15min global, 5/15min en login, 20/15min en refresh
+- Rate limiting: 200 req/15min en /api (2000 en desarrollo), 5/15min en login, 20/15min en refresh
 - CORS configurado para FRONTEND_URL + localhost dev ports
 - Sanitización XSS en inputs con la librería `xss`
 - Validación MIME real en uploads (no solo extensión)

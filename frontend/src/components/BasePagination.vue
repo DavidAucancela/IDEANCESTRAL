@@ -1,10 +1,10 @@
 <template>
-  <nav v-if="totalPages > 1" class="base-pagination" aria-label="Paginación">
+  <nav v-if="totalPages > 1" class="base-pagination" :aria-label="t('comun.paginacion')">
     <button
       type="button"
       class="base-pagination-btn"
       :disabled="currentPage <= 1"
-      aria-label="Página anterior"
+      :aria-label="t('comun.paginaAnterior')"
       @click="$emit('change', currentPage - 1)"
     >
       &laquo;
@@ -28,7 +28,7 @@
       type="button"
       class="base-pagination-btn"
       :disabled="currentPage >= totalPages"
-      aria-label="Página siguiente"
+      :aria-label="t('comun.paginaSiguiente')"
       @click="$emit('change', currentPage + 1)"
     >
       &raquo;
@@ -38,6 +38,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useLanguageStore } from '../stores/language'
+
+const { t } = useLanguageStore()
 
 const props = defineProps({
   currentPage: { type: Number, required: true },

@@ -6,7 +6,7 @@
           <slot name="header">
             <h3>{{ title }}</h3>
           </slot>
-          <button type="button" class="base-modal-close" aria-label="Cerrar" @click="close">
+          <button type="button" class="base-modal-close" :aria-label="t('comun.cerrar')" @click="close">
             &times;
           </button>
         </div>
@@ -23,6 +23,9 @@
 
 <script setup>
 import { watch, onUnmounted } from 'vue'
+import { useLanguageStore } from '../stores/language'
+
+const { t } = useLanguageStore()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

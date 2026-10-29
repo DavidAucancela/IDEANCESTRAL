@@ -5,15 +5,17 @@
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
       </div>
       <h1>404</h1>
-      <h2>Página no encontrada</h2>
-      <p>La página que buscas no existe o fue movida.</p>
-      <router-link to="/" class="btn btn-primary">Volver al catálogo</router-link>
+      <h2>{{ t('notFound.titulo') }}</h2>
+      <p>{{ t('notFound.texto') }}</p>
+      <router-link to="/" class="btn btn-primary">{{ t('notFound.volver') }}</router-link>
     </div>
   </div>
 </template>
 
-<script>
-export default { name: 'NotFoundView' }
+<script setup>
+import { useLanguageStore } from '../stores/language'
+
+const { t } = useLanguageStore()
 </script>
 
 <style scoped>

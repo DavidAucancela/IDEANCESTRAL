@@ -1,25 +1,32 @@
 import express from 'express';
-import { z } from 'zod';
 import pool from '../database/connection.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authenticateIf, optionalAuth } from '../middleware/auth.js';
 import { sanitizeString } from '../utils/sanitize.js';
 import { logAudit } from '../middleware/auditLog.js';
+import { productoSchema, productoUpdateSchema, sanitizarProducto } from '../utils/productoSchema.js';
 
 const router = express.Router();
 
-const productoSchema = z.object({
-  nombre: z.string().min(1).max(200),
-  precio: z.number().positive(),
-  descripcion: z.string().optional(),
-  material: z.string().max(200).optional(),
-  peso: z.string().max(50).optional(),
-  categoria_id: z.number().int().positive().optional().nullable(),
-  publicado: z.boolean().optional(),
-  destacado: z.boolean().optional()
-});
+const esIdValido = (id) => /^\d+$/.test(id) && Number(id) <= 2147483647;
+
+// Errores de BD que son culpa de los datos enviados, no del servidor
+const errorDeDatos = (error, res) => {
+  if (error.code === '23503') {
+    res.status(400).json({ error: 'La categoría indicada no existe' });
+    return true;
+  }
+  if (error.code === '23514') {
+    res.status(400).json({ error: 'Datos inválidos' });
+    return true;
+  }
+  return false;
+};
 
 // GET /api/productos - Obtener productos (paginación, búsqueda, filtros, ordenamiento)
-router.get('/', async (req, res) => {
+// incluir_ocultos y publicado=false solo para admins autenticados
+const pideOcultos = (req) => req.query.incluir_ocultos === 'true' || req.query.publicado === 'false';
+
+router.get('/', authenticateIf(pideOcultos), async (req, res) => {
   try {
     const { categoria_id, destacado, publicado, buscar, ordenar, page = 1, limit = 12, incluir_ocultos } = req.query;
     const limitNum = incluir_ocultos === 'true' ? 9999 : Math.min(50, Math.max(1, parseInt(limit) || 12));
@@ -40,6 +47,9 @@ router.get('/', async (req, res) => {
     }
 
     if (categoria_id) {
+      if (!esIdValido(String(categoria_id))) {
+        return res.status(400).json({ error: 'categoria_id inválido' });
+      }
       whereClause += ` AND p.categoria_id = $${paramCount}`;
       params.push(categoria_id);
       paramCount++;
@@ -100,9 +110,12 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/productos/:id - Obtener un producto por ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    if (!esIdValido(id)) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
     const result = await pool.query(`
       SELECT 
         p.*,
@@ -122,8 +135,8 @@ router.get('/:id', async (req, res) => {
         ) as imagenes
       FROM productos p
       LEFT JOIN categorias c ON p.categoria_id = c.id
-      WHERE p.id = $1
-    `, [id]);
+      WHERE p.id = $1 AND (p.publicado = true OR $2)
+    `, [id, Boolean(req.user)]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Producto no encontrado' });
@@ -139,30 +152,28 @@ router.get('/:id', async (req, res) => {
 // POST /api/productos - Crear nuevo producto (requiere autenticación)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const parsed = productoSchema.safeParse({
-      ...req.body,
-      precio: typeof req.body.precio === 'string' ? parseFloat(req.body.precio) : req.body.precio,
-      categoria_id: req.body.categoria_id ? parseInt(req.body.categoria_id) : null
-    });
+    const parsed = productoSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
     }
-    const data = parsed.data;
-    const nombre = sanitizeString(data.nombre);
-    const descripcion = data.descripcion ? sanitizeString(data.descripcion) : null;
-    const material = data.material ? sanitizeString(data.material) : null;
-    const peso = data.peso ? sanitizeString(data.peso) : null;
-    const { precio, categoria_id, publicado, destacado } = data;
+    const data = sanitizarProducto(parsed.data);
+    if (!data.nombre) {
+      return res.status(400).json({ error: 'El nombre es obligatorio' });
+    }
 
     const result = await pool.query(`
-      INSERT INTO productos (nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO productos (nombre, descripcion, precio, material, peso, categoria_id, stock, publicado, destacado)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
-    `, [nombre, descripcion ?? null, precio, material ?? null, peso ?? null, categoria_id || null, publicado ?? true, destacado ?? false]);
+    `, [
+      data.nombre, data.descripcion ?? null, data.precio, data.material ?? null, data.peso ?? null,
+      data.categoria_id ?? null, data.stock ?? null, data.publicado ?? true, data.destacado ?? false
+    ]);
 
     await logAudit({ adminId: req.user.id, action: 'create', entity: 'productos', entityId: result.rows[0].id, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    if (errorDeDatos(error, res)) return;
     console.error('Error creando producto:', error);
     res.status(500).json({ error: 'Error al crear producto' });
   }
@@ -172,26 +183,33 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const nombre = req.body.nombre != null ? sanitizeString(req.body.nombre) : null;
-    const descripcion = req.body.descripcion != null ? sanitizeString(req.body.descripcion) : null;
-    const material = req.body.material != null ? sanitizeString(req.body.material) : null;
-    const peso = req.body.peso != null ? sanitizeString(req.body.peso) : null;
-    const { precio, categoria_id, publicado, destacado } = req.body;
+    if (!esIdValido(id)) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    const parsed = productoUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
+    }
+    const data = sanitizarProducto(parsed.data);
+    if ('nombre' in data && !data.nombre) {
+      return res.status(400).json({ error: 'El nombre es obligatorio' });
+    }
+
+    // Solo se actualizan los campos enviados; las columnas salen del schema (lista cerrada)
+    const campos = Object.entries(data).filter(([, valor]) => valor !== undefined);
+    if (campos.length === 0) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+    const sets = campos.map(([campo], i) => `${campo} = $${i + 1}`);
+    const valores = campos.map(([, valor]) => valor);
 
     const result = await pool.query(`
       UPDATE productos
-      SET nombre = COALESCE($1, nombre),
-          descripcion = COALESCE($2, descripcion),
-          precio = COALESCE($3, precio),
-          material = COALESCE($4, material),
-          peso = COALESCE($5, peso),
-          categoria_id = COALESCE($6, categoria_id),
-          publicado = COALESCE($7, publicado),
-          destacado = COALESCE($8, destacado),
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
+      SET ${sets.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $${valores.length + 1}
       RETURNING *
-    `, [nombre, descripcion, precio, material, peso, categoria_id, publicado, destacado, id]);
+    `, [...valores, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Producto no encontrado' });
@@ -200,6 +218,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     await logAudit({ adminId: req.user.id, action: 'update', entity: 'productos', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
+    if (errorDeDatos(error, res)) return;
     console.error('Error actualizando producto:', error);
     res.status(500).json({ error: 'Error al actualizar producto' });
   }
@@ -209,6 +228,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    if (!esIdValido(id)) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
     const result = await pool.query('DELETE FROM productos WHERE id = $1 RETURNING *', [id]);
 
     if (result.rows.length === 0) {

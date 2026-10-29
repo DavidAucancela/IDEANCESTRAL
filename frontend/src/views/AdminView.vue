@@ -81,6 +81,7 @@
                     <th>{{ t('admin.nombre') }}</th>
                     <th>{{ t('admin.categorias') }}</th>
                     <th>{{ t('admin.precio') }}</th>
+                    <th>{{ t('admin.stock') }}</th>
                     <th>{{ t('admin.estado') }}</th>
                     <th>{{ t('admin.acciones') }}</th>
                   </tr>
@@ -97,6 +98,7 @@
                     <td>{{ producto.nombre }}</td>
                     <td>{{ producto.categoria_nombre || t('admin.sinCategoria') }}</td>
                     <td>${{ producto.precio }}</td>
+                    <td>{{ producto.stock ?? t('admin.sinControlStock') }}</td>
                     <td>
                       <span :class="['badge', producto.publicado ? 'badge-success' : 'badge-warning']">
                         {{ producto.publicado ? t('admin.publicado') : t('admin.oculto') }}
@@ -178,6 +180,14 @@
           <BaseInput v-model="formProducto.material" :label="t('admin.material')" />
           <BaseInput v-model="formProducto.peso" :label="t('admin.peso')" />
         </div>
+        <BaseInput
+          v-model="formProducto.stock"
+          type="number"
+          min="0"
+          step="1"
+          :label="t('admin.stock')"
+          :hint="t('admin.stockHint')"
+        />
         <BaseInput as="select" v-model="formProducto.categoria_id" :label="t('admin.categorias')">
           <option :value="null">{{ t('admin.sinCategoria') }}</option>
           <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
@@ -261,6 +271,21 @@
             </label>
           </div>
         </div>
+        <div class="form-row">
+          <BaseInput as="select" v-model="formPromocion.mes_inicio" :label="t('admin.mesInicio')">
+            <option value="">{{ t('admin.sinMes') }}</option>
+            <option v-for="m in meses" :key="m.valor" :value="m.valor">{{ m.nombre }}</option>
+          </BaseInput>
+          <BaseInput as="select" v-model="formPromocion.mes_fin" :label="t('admin.mesFin')">
+            <option value="">{{ t('admin.sinMes') }}</option>
+            <option v-for="m in meses" :key="m.valor" :value="m.valor">{{ m.nombre }}</option>
+          </BaseInput>
+        </div>
+        <p class="form-ayuda">{{ t('admin.ayudaMeses') }}</p>
+        <BaseInput as="select" v-model="formPromocion.categoria_id" :label="t('admin.categoriaDestino')">
+          <option value="">{{ t('admin.sinCategoria') }}</option>
+          <option v-for="cat in categorias" :key="cat.id" :value="cat.id">{{ cat.nombre }}</option>
+        </BaseInput>
         <BaseInput v-model="formPromocion.orden" type="number" min="0" :label="t('admin.orden')" />
         <div class="form-group checkbox-group">
           <label>
@@ -316,9 +341,10 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import axios from 'axios'
 import { useLanguageStore } from '../stores/language'
+import { listaMeses } from '../utils/temporadas'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import BaseModal from '../components/BaseModal.vue'
@@ -367,6 +393,7 @@ export default {
       material: '',
       peso: '',
       categoria_id: null,
+      stock: '',
       publicado: true,
       destacado: false
     })
@@ -384,8 +411,15 @@ export default {
       tema: 'general',
       imagen_url: '',
       orden: 0,
-      activa: true
+      activa: true,
+      mes_inicio: '',
+      mes_fin: '',
+      categoria_id: ''
     })
+
+    // Meses para los selectores de promociones, en el idioma elegido
+    const idioma = useLanguageStore()
+    const meses = computed(() => listaMeses(idioma.locale))
 
     // Renovar token con refresh token
     const tryRefreshToken = async () => {
@@ -518,6 +552,7 @@ export default {
           material: producto.material || '',
           peso: producto.peso || '',
           categoria_id: producto.categoria_id,
+          stock: producto.stock ?? '',
           publicado: producto.publicado,
           destacado: producto.destacado || false
         })
@@ -530,6 +565,7 @@ export default {
           material: '',
           peso: '',
           categoria_id: null,
+          stock: '',
           publicado: true,
           destacado: false
         })
@@ -555,7 +591,13 @@ export default {
         cerrarModalProducto()
       } catch (error) {
         console.error('Error guardando producto:', error)
-        alert(t('admin.errorGuardarProducto'))
+        if (error.response?.status === 400) {
+          const { detalles, error: mensaje } = error.response.data || {}
+          const campos = Object.keys(detalles?.fieldErrors || {}).join(', ')
+          alert(t('admin.errorDatosProducto', { detalle: campos || mensaje || '' }))
+        } else {
+          alert(t('admin.errorGuardarProducto'))
+        }
       } finally {
         guardando.value = false
       }
@@ -682,7 +724,10 @@ export default {
           tema: promo.tema || 'general',
           imagen_url: promo.imagen_url || '',
           orden: promo.orden ?? 0,
-          activa: promo.activa ?? true
+          activa: promo.activa ?? true,
+          mes_inicio: promo.mes_inicio ?? '',
+          mes_fin: promo.mes_fin ?? '',
+          categoria_id: promo.categoria_id ?? ''
         })
       } else {
         Object.assign(formPromocion, {
@@ -691,7 +736,10 @@ export default {
           tema: 'general',
           imagen_url: '',
           orden: 0,
-          activa: true
+          activa: true,
+          mes_inicio: '',
+          mes_fin: '',
+          categoria_id: ''
         })
       }
       mostrarModalPromocion.value = true
@@ -827,6 +875,7 @@ export default {
       mostrarModalPromocion,
       promocionEditar,
       formPromocion,
+      meses,
       abrirModalPromocion,
       cerrarModalPromocion,
       guardarPromocion,
@@ -1154,6 +1203,12 @@ tbody tr:hover {
 .form-group select:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.form-ayuda {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .form-row {

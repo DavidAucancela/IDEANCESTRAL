@@ -1,16 +1,16 @@
 <template>
   <teleport to="body">
     <div v-if="visible" class="lightbox-backdrop" @click.self="close">
-      <button class="lightbox-close" @click="close">
+      <button class="lightbox-close" :aria-label="t('comun.cerrar')" @click="close">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <button v-if="images.length > 1" class="lightbox-nav lightbox-prev" @click="prev">
+      <button v-if="images.length > 1" class="lightbox-nav lightbox-prev" :aria-label="t('comun.anterior')" @click="prev">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="lightbox-img-wrap">
-        <img :src="images[currentIndex]" :alt="`Imagen ${currentIndex + 1}`" class="lightbox-img" />
+        <img :src="images[currentIndex]" :alt="t('comun.imagen', { n: currentIndex + 1 })" class="lightbox-img" />
       </div>
-      <button v-if="images.length > 1" class="lightbox-nav lightbox-next" @click="next">
+      <button v-if="images.length > 1" class="lightbox-nav lightbox-next" :aria-label="t('comun.siguiente')" @click="next">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
       <div v-if="images.length > 1" class="lightbox-dots">
@@ -22,6 +22,7 @@
 
 <script>
 import { ref, watch } from 'vue'
+import { useLanguageStore } from '../stores/language'
 export default {
   name: 'LightboxModal',
   props: {
@@ -31,6 +32,7 @@ export default {
   },
   emits: ['close'],
   setup(props, { emit }) {
+    const { t } = useLanguageStore()
     const currentIndex = ref(props.startIndex)
     watch(() => props.startIndex, v => { currentIndex.value = v })
     watch(() => props.visible, v => {
@@ -40,7 +42,7 @@ export default {
     const close = () => emit('close')
     const prev = () => { currentIndex.value = (currentIndex.value - 1 + props.images.length) % props.images.length }
     const next = () => { currentIndex.value = (currentIndex.value + 1) % props.images.length }
-    return { currentIndex, close, prev, next }
+    return { t, currentIndex, close, prev, next }
   }
 }
 </script>

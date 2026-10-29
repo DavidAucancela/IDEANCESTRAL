@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import pino from 'pino';
 import PinoPretty from 'pino-pretty';
 import pool from './database/connection.js';
+import { UPLOAD_DIR, uploadPathFromUrl } from './utils/uploadDir.js';
 import { httpsRedirect } from './middleware/httpsRedirect.js';
 import productosRoutes from './routes/productos.js';
 import categoriasRoutes from './routes/categorias.js';
@@ -70,10 +71,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],   // Vue genera estilos inline
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],   // Vue genera estilos inline
       imgSrc: ["'self'", 'data:', 'blob:'],
       connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       objectSrc: ["'none'"],
       frameSrc: ["https://maps.google.com", "https://www.google.com"],
       frameAncestors: ["'none'"],
@@ -85,12 +86,15 @@ app.use(helmet({
 // --- RATE LIMITING global ---
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  // En desarrollo cada recarga del inicio hace varias consultas; 200 se agotaba enseguida
+  max: process.env.NODE_ENV === 'production' ? 200 : 2000,
   message: { error: 'Demasiadas solicitudes. Intente más tarde.' },
   standardHeaders: true,
   legacyHeaders: false
 });
-app.use(globalLimiter);
+// Solo el API: las imágenes y archivos estáticos no cuentan para el límite,
+// si no una sola visita con muchas fotos lo agotaba.
+app.use('/api', globalLimiter);
 
 // --- Protección CSRF: validación de Origin para operaciones de escritura ---
 const csrfOriginCheck = (req, res, next) => {
@@ -127,7 +131,7 @@ app.use('/uploads', async (req, res, next) => {
       pool.query('SELECT 1 FROM categorias WHERE imagen_url = $1', [urlPath])
     ]);
     if (img.rows.length > 0 || promo.rows.length > 0 || cat.rows.length > 0) {
-      const filePath = path.join(__dirname, 'uploads', path.basename(urlPath));
+      const filePath = uploadPathFromUrl(urlPath);
       if (fs.existsSync(filePath)) {
         return res.sendFile(filePath);
       }
@@ -183,6 +187,11 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   logger.info(`Servidor corriendo en http://localhost:${PORT}`);
   logger.info(`Entorno: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Uploads en: ${UPLOAD_DIR}`);
+  // Railway define RAILWAY_VOLUME_MOUNT_PATH solo si el servicio tiene un Volume
+  if (process.env.RAILWAY_ENVIRONMENT && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    logger.warn('Sin Railway Volume: las imágenes subidas se perderán en el próximo deploy. Ver docs/RAILWAY_DEPLOY.md');
+  }
 });
 
 server.on('error', (err) => {
