@@ -552,3 +552,32 @@ describe('Nosotros', () => {
     expect(seccion().querySelector('.horario__fila dt').textContent).toBe('Monday to Friday')
   })
 })
+
+describe('Páginas de categoría, producto y 404 traducidas', () => {
+  beforeEach(() => localStorage.setItem('ideancestral_lang', 'en'))
+
+  it('categoría: contador, filtros y orden en inglés', async () => {
+    await montarEn('/categoria/1')
+    const texto = root.textContent
+    expect(texto).toContain('1 product found')
+    expect(texto).toContain('Price:')
+    const opciones = [...root.querySelectorAll('.sort-select option')].map((o) => o.textContent)
+    expect(opciones).toEqual(['Sort', 'Price: low to high', 'Price: high to low', 'Name: A-Z', 'Featured first'])
+    expect(texto).not.toMatch(/encontrad|Ordenar|Ver detalle/)
+  })
+
+  it('producto: ficha, compartir y proceso en inglés', async () => {
+    await montarEn('/producto/7')
+    const texto = root.textContent
+    expect(texto).toContain('Handmade')
+    expect(texto).toContain('Share:')
+    expect(texto).toContain('Handmade with tradition')
+    expect(texto).not.toMatch(/Hecho a mano|Compartir:|Nuestro proceso|Pasa el cursor/)
+  })
+
+  it('404 en inglés', async () => {
+    await montarEn('/no-existe')
+    expect(root.textContent).toContain('Page not found')
+    expect(root.textContent).toContain('Back to the catalog')
+  })
+})

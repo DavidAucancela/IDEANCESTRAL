@@ -47,23 +47,23 @@
             </div>
             <div class="filtros-right">
               <div class="filtro-precio">
-                <span class="filtro-label">Precio:</span>
-                <input v-model.number="precioMin" type="number" placeholder="Min" class="precio-input" min="0" />
-                <span>—</span>
-                <input v-model.number="precioMax" type="number" placeholder="Max" class="precio-input" min="0" />
+                <span class="filtro-label">{{ t('categoryView.precio') }}</span>
+                <input v-model.number="precioMin" type="number" :placeholder="t('categoryView.min')" :aria-label="t('categoryView.precioMin')" class="precio-input" min="0" />
+                <span aria-hidden="true">—</span>
+                <input v-model.number="precioMax" type="number" :placeholder="t('categoryView.max')" :aria-label="t('categoryView.precioMax')" class="precio-input" min="0" />
               </div>
-              <select v-model="ordenamiento" class="sort-select">
-                <option value="">Ordenar</option>
-                <option value="precio_asc">Precio: menor a mayor</option>
-                <option value="precio_desc">Precio: mayor a menor</option>
-                <option value="nombre_asc">Nombre: A-Z</option>
-                <option value="destacados">Destacados primero</option>
+              <select v-model="ordenamiento" class="sort-select" :aria-label="t('categoryView.ordenar')">
+                <option value="">{{ t('categoryView.ordenar') }}</option>
+                <option value="precio_asc">{{ t('categoryView.ordenPrecioAsc') }}</option>
+                <option value="precio_desc">{{ t('categoryView.ordenPrecioDesc') }}</option>
+                <option value="nombre_asc">{{ t('categoryView.ordenNombre') }}</option>
+                <option value="destacados">{{ t('categoryView.ordenDestacados') }}</option>
               </select>
             </div>
           </div>
 
           <p class="resultados-contador">
-            {{ productosFiltrados.length }} {{ productosFiltrados.length === 1 ? 'producto' : 'productos' }} encontrados
+            {{ productosFiltrados.length === 1 ? t('categoryView.encontradoUno') : t('categoryView.encontrados', { n: productosFiltrados.length }) }}
           </p>
           <div class="productos-grid">
             <BaseCard
@@ -71,7 +71,6 @@
               :key="producto.id"
               class="producto-card"
               :style="{ animationDelay: `${index * 0.05}s` }"
-              data-animate
             >
               <template #image>
                 <router-link v-if="producto.id" :to="`/producto/${producto.id}`" class="producto-image">
@@ -82,9 +81,9 @@
                     loading="lazy"
                   />
                   <span v-if="producto.stock === 0" class="badge-card badge-agotado-card">{{ t('product.agotado') }}</span>
-                  <span v-else-if="producto.destacado" class="badge-card badge-destacado-card">✦ Destacado</span>
+                  <span v-else-if="producto.destacado" class="badge-card badge-destacado-card">✦ {{ t('product.destacado') }}</span>
                   <div class="producto-overlay">
-                    <span class="producto-overlay-btn">Ver detalle</span>
+                    <span class="producto-overlay-btn">{{ t('featured.verMas') }}</span>
                   </div>
                 </router-link>
               </template>
@@ -294,8 +293,9 @@ export default {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
-  animation: fadeInUp 0.5s ease forwards;
-  opacity: 0;
+  /* «both»: arranca invisible durante su retraso, pero si las animaciones
+     están apagadas la tarjeta se ve igual (no depende de la animación) */
+  animation: fadeInUp 0.5s ease both;
 }
 .producto-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 

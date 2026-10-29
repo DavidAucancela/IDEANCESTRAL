@@ -3,7 +3,7 @@
     v-show="visible"
     class="back-to-top"
     @click="scrollToTop"
-    aria-label="Volver arriba"
+    :aria-label="t('comun.volverArriba')"
   >
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
   </button>
@@ -11,15 +11,17 @@
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useLanguageStore } from '../stores/language'
 export default {
   name: 'BackToTop',
   setup() {
+    const { t } = useLanguageStore()
     const visible = ref(false)
     const handleScroll = () => { visible.value = window.scrollY > 400 }
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
     onMounted(() => window.addEventListener('scroll', handleScroll))
     onUnmounted(() => window.removeEventListener('scroll', handleScroll))
-    return { visible, scrollToTop }
+    return { t, visible, scrollToTop }
   }
 }
 </script>

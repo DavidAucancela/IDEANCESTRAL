@@ -14,7 +14,7 @@ Documento vivo del rediseño visual de Ideancestral. Registra lo que ya se hizo,
 | PR abierto | #7 «feat(inicio): rediseño del hero con buscador en vivo» → base `refactor/layout-compartido` |
 | PRs ya fusionados | #4 cierre de git, #5 bugs de productos/stock/uploads, #6 layout compartido |
 | Commits locales sin subir | 8 (desde `0bcc935` hasta el del carrito en pasos) — se suben al PR #7 cuando se decida |
-| Pruebas | 61 del frontend (Vitest) y 30 del backend, todas pasan |
+| Pruebas | 67 del frontend (Vitest) y 30 del backend, todas pasan |
 | Compilación | `npx vite build` funciona |
 
 > El PR #7 apunta a `refactor/layout-compartido`, que ya está fusionada en `main`. Antes de fusionar el #7 conviene cambiar su base a `main`.
@@ -156,6 +156,19 @@ Ocupaba mucho alto en móvil (740px en 390px de ancho) y ahora mide 478px. Escri
 - El correo se parte después de la @ si no cabe (`<wbr>`).
 - El texto de derechos va a la izquierda y deja libre la esquina de los botones flotantes.
 
+### 2.12 Últimos cambios antes de las pruebas (29 oct 2026)
+- **Textos traducidos en todo el sitio** (es, en, pt):
+  - Página de categoría: filtros, orden, contador con singular/plural, «Destacado», «Ver más».
+  - Página de producto: ficha, compartir, mensaje de WhatsApp, sección «Hecho a mano con tradición», avisos de copiar enlace.
+  - Página 404.
+  - Etiquetas de accesibilidad: volver arriba, cerrar, paginación, visor de imágenes.
+  - Textos nuevos en los bloques `proceso`, `notFound` y `comun`.
+- **Prueba de textos completos** (`i18n/i18n.test.js`): falla si a un idioma le falta o le sobra una clave, o si hay un texto vacío.
+- **Zoom en pantallas táctiles:** antes decía «Pasa el cursor para ampliar» y el zoom se quedaba pegado al tocar. Ahora, sin mouse (`hover: none`), dice «Toca para ampliar» y tocar abre la imagen en grande.
+- **Tarjetas de la categoría:** ya no dependen de la animación para verse (`animation-fill-mode: both`, sin `data-animate`).
+- Copiar enlace: si falla, ahora avisa «No se pudo copiar el link» (antes decía que se copió).
+- Lo que viene de la base (nombres de categorías y productos, descripciones) sigue en español.
+
 ## 3. Cómo está armado
 
 ### 3.1 Mapa de archivos
@@ -275,7 +288,7 @@ Orden final: **Hero → Destacados → Categorías → Promociones → Nosotros*
 ### Trabajo técnico sugerido
 1. Rediseñar las secciones 2 a 6 una por una con la guía de la sección 4, empezando por **Destacados** y el **Banner central**.
 2. Pasar cada sección de `CatalogoView.vue` a su propio componente en `components/inicio/`.
-3. Traducir los textos que siguen fijos en español en el inicio.
+3. ~~Traducir los textos que siguen fijos en español~~ **Hecho** (ver 2.12).
 4. Llevar el mismo estilo a las páginas de categoría y de producto.
 5. Revisar rendimiento (peso de imágenes, Lighthouse) cuando el inicio esté completo.
 

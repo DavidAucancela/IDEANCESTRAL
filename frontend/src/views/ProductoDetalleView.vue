@@ -25,9 +25,10 @@
             <div
               class="galeria-principal"
               ref="galeriaRef"
-              @mouseenter="zoomActivo = true"
+              @mouseenter="zoomActivo = puedeHover"
               @mouseleave="zoomActivo = false"
               @mousemove="actualizarZoom"
+              @click="!puedeHover && abrirLightbox(indexImagenActual)"
             >
               <img
                 :src="imagenActual"
@@ -40,19 +41,19 @@
                 {{ t('product.destacado') }}
               </div>
               <!-- Botón lightbox -->
-              <button class="lightbox-btn" @click="abrirLightbox(indexImagenActual)" title="Ampliar imagen">
+              <button class="lightbox-btn" @click="abrirLightbox(indexImagenActual)" :title="t('product.ampliar')" :aria-label="t('product.ampliar')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
               </button>
               <!-- Hint zoom -->
               <div class="zoom-hint" :class="{ hidden: zoomActivo }">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
-                Pasa el cursor para ampliar
+                {{ puedeHover ? t('product.pasaCursor') : t('product.tocaAmpliar') }}
               </div>
             </div>
 
             <!-- Thumbs scrollables -->
             <div v-if="imagenes.length > 1" class="galeria-thumbs-wrap">
-              <button class="thumb-nav" @click="scrollThumbs(-1)" aria-label="Anterior">
+              <button class="thumb-nav" @click="scrollThumbs(-1)" :aria-label="t('product.anterior')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
               <div class="galeria-thumbs" ref="thumbsRef">
@@ -62,10 +63,10 @@
                   @click="cambiarImagen(index)"
                   :class="['thumb', { active: indexImagenActual === index }]"
                 >
-                  <img :src="obtenerUrlImagen(imagen.url)" :alt="`Vista ${index + 1}`" />
+                  <img :src="obtenerUrlImagen(imagen.url)" :alt="t('product.vista', { n: index + 1 })" />
                 </button>
               </div>
-              <button class="thumb-nav" @click="scrollThumbs(1)" aria-label="Siguiente">
+              <button class="thumb-nav" @click="scrollThumbs(1)" :aria-label="t('product.siguiente')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
               </button>
             </div>
@@ -119,11 +120,11 @@
               <div class="spec-row spec-handmade">
                 <span class="spec-label">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-2-2v0a2 2 0 00-2 2v0M14 10V4a2 2 0 00-2-2v0a2 2 0 00-2 2v2M10 10.5V6a2 2 0 00-2-2v0a2 2 0 00-2 2v8M6 14v0a4 4 0 004 4h4a4 4 0 004-4v-3"/></svg>
-                  Elaboración
+                  {{ t('product.elaboracion') }}
                 </span>
                 <span class="spec-value handmade-tag">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  Hecho a mano
+                  {{ t('product.hechoAMano') }}
                 </span>
               </div>
             </div>
@@ -141,12 +142,12 @@
 
             <!-- Compartir -->
             <div class="info-share">
-              <span class="share-label">Compartir:</span>
-              <button class="share-btn" @click="copiarLink" title="Copiar link">
+              <span class="share-label">{{ t('product.compartir') }}</span>
+              <button class="share-btn" @click="copiarLink" :title="t('product.copiarLink')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                Copiar link
+                {{ t('product.copiarLink') }}
               </button>
-              <a :href="compartirWhatsApp" target="_blank" class="share-btn share-btn-wa" title="Compartir por WhatsApp">
+              <a :href="compartirWhatsApp" target="_blank" rel="noopener" class="share-btn share-btn-wa" :title="t('product.compartirWhatsApp')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 WhatsApp
               </a>
@@ -157,9 +158,9 @@
         <!-- Proceso artesanal -->
         <div class="proceso-section">
           <div class="proceso-header">
-            <span class="proceso-eyebrow">Nuestro proceso</span>
-            <h2 class="proceso-titulo">Hecho a mano con tradición</h2>
-            <p class="proceso-desc">Cada pieza es única y refleja siglos de tradición artesanal ecuatoriana</p>
+            <span class="proceso-eyebrow">{{ t('proceso.etiqueta') }}</span>
+            <h2 class="proceso-titulo">{{ t('proceso.titulo') }}</h2>
+            <p class="proceso-desc">{{ t('proceso.descripcion') }}</p>
           </div>
           <div class="proceso-steps">
             <div class="proceso-step">
@@ -167,32 +168,32 @@
               <div class="step-icon-wrap">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
               </div>
-              <h4>Selección de materiales</h4>
-              <p>Elegimos los mejores materiales naturales de la región andina con criterio sostenible.</p>
+              <h4>{{ t('proceso.materialesTitulo') }}</h4>
+              <p>{{ t('proceso.materiales') }}</p>
             </div>
             <div class="proceso-step">
               <div class="step-num">02</div>
               <div class="step-icon-wrap">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
               </div>
-              <h4>Diseño tradicional</h4>
-              <p>Cada diseño rescata patrones y símbolos de la cultura ecuatoriana ancestral.</p>
+              <h4>{{ t('proceso.disenoTitulo') }}</h4>
+              <p>{{ t('proceso.diseno') }}</p>
             </div>
             <div class="proceso-step">
               <div class="step-num">03</div>
               <div class="step-icon-wrap">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 11V6a2 2 0 00-2-2v0a2 2 0 00-2 2v0M14 10V4a2 2 0 00-2-2v0a2 2 0 00-2 2v2M10 10.5V6a2 2 0 00-2-2v0a2 2 0 00-2 2v8M6 14v0a4 4 0 004 4h4a4 4 0 004-4v-3"/></svg>
               </div>
-              <h4>Elaboración artesanal</h4>
-              <p>Nuestros artesanos trabajan con técnicas transmitidas por generaciones de maestros.</p>
+              <h4>{{ t('proceso.elaboracionTitulo') }}</h4>
+              <p>{{ t('proceso.elaboracion') }}</p>
             </div>
             <div class="proceso-step">
               <div class="step-num">04</div>
               <div class="step-icon-wrap">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               </div>
-              <h4>Acabado y calidad</h4>
-              <p>Revisamos cada detalle para garantizar que cada pieza cumpla nuestros estándares.</p>
+              <h4>{{ t('proceso.acabadoTitulo') }}</h4>
+              <p>{{ t('proceso.acabado') }}</p>
             </div>
           </div>
         </div>
@@ -304,6 +305,8 @@ export default {
     // ── Zoom ──────────────────────────────────────────────
     const galeriaRef = ref(null)
     const zoomActivo = ref(false)
+    // Con mouse: zoom al pasar el cursor. En pantallas táctiles: tocar abre la imagen en grande.
+    const puedeHover = typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover)').matches
     const zoomPos = ref({ x: 50, y: 50 })
 
     const actualizarZoom = (e) => {
@@ -415,16 +418,20 @@ export default {
     const compartirWhatsApp = computed(() => {
       if (!producto.value) return '#'
       const url = window.location.href
-      const msg = `¡Mira este producto de Ideancestral! *${producto.value.nombre}* - $${Number(producto.value.precio).toFixed(2)}\n${url}`
+      const msg = t('product.mensajeCompartir', {
+        nombre: producto.value.nombre,
+        precio: `$${Number(producto.value.precio).toFixed(2)}`,
+        url
+      })
       return `https://wa.me/?text=${encodeURIComponent(msg)}`
     })
 
     const copiarLink = async () => {
       try {
         await navigator.clipboard.writeText(window.location.href)
-        toastSuccess('¡Link copiado al portapapeles!')
+        toastSuccess(t('product.linkCopiado'))
       } catch {
-        toastSuccess('¡Link copiado!')
+        toastInfo(t('product.linkNoCopiado'))
       }
     }
 
@@ -451,6 +458,7 @@ export default {
       // Zoom
       galeriaRef,
       zoomActivo,
+      puedeHover,
       actualizarZoom,
       imagenZoomStyle,
       // Thumbs
