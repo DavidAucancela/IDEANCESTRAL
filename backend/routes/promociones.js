@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from '../database/connection.js';
 import { authenticateToken, authenticateIf, optionalAuth } from '../middleware/auth.js';
-import { sanitizeString } from '../utils/sanitize.js';
+import { promocionSchema, promocionUpdateSchema, sanitizarPromocion } from '../utils/promocionSchema.js';
 import { logAudit } from '../middleware/auditLog.js';
 
 const router = express.Router();
@@ -9,17 +9,35 @@ const router = express.Router();
 // incluir_inactivas solo para admins autenticados
 const pideInactivas = (req) => req.query.incluir_inactivas === 'true';
 
+const esIdValido = (id) => /^\d+$/.test(id) && Number(id) <= 2147483647;
+
+// Errores de BD que son culpa de los datos enviados, no del servidor
+const errorDeDatos = (error, res) => {
+  if (error.code === '23503') {
+    res.status(400).json({ error: 'La categoría indicada no existe' });
+    return true;
+  }
+  if (error.code === '23514') {
+    res.status(400).json({ error: 'Datos inválidos' });
+    return true;
+  }
+  return false;
+};
+
 // GET /api/promociones - Obtener todas las promociones activas
 router.get('/', authenticateIf(pideInactivas), async (req, res) => {
   try {
     const { incluir_inactivas } = req.query;
-    let query = 'SELECT * FROM promociones';
-    
+    let query = `
+      SELECT p.*, c.nombre AS categoria_nombre
+      FROM promociones p
+      LEFT JOIN categorias c ON c.id = p.categoria_id`;
+
     if (incluir_inactivas !== 'true') {
-      query += ' WHERE activa = true';
+      query += ' WHERE p.activa = true';
     }
-    
-    query += ' ORDER BY orden ASC, id ASC';
+
+    query += ' ORDER BY p.orden ASC, p.id ASC';
 
     const result = await pool.query(query);
     res.json(result.rows);
@@ -55,25 +73,28 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // POST /api/promociones - Crear nueva promoción (requiere autenticación)
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const nombre = sanitizeString(req.body.nombre || '');
-    const temporada = sanitizeString(req.body.temporada || '');
-    const tema = req.body.tema ? sanitizeString(req.body.tema) : 'general';
-    const imagen_url = req.body.imagen_url ? sanitizeString(req.body.imagen_url) : null;
-    const { orden, activa } = req.body;
-
-    if (!nombre || !temporada) {
+    const parsed = promocionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
+    }
+    const data = sanitizarPromocion(parsed.data);
+    if (!data.nombre || !data.temporada) {
       return res.status(400).json({ error: 'Nombre y temporada son requeridos' });
     }
 
     const result = await pool.query(`
-      INSERT INTO promociones (nombre, temporada, tema, imagen_url, orden, activa)
-      VALUES ($1, $2, COALESCE($3, 'general'), $4, COALESCE($5, 0), COALESCE($6, true))
+      INSERT INTO promociones (nombre, temporada, tema, imagen_url, orden, activa, mes_inicio, mes_fin, categoria_id)
+      VALUES ($1, $2, COALESCE($3, 'general'), $4, COALESCE($5, 0), COALESCE($6, true), $7, $8, $9)
       RETURNING *
-    `, [nombre, temporada, tema, imagen_url, orden ?? 0, activa ?? true]);
+    `, [
+      data.nombre, data.temporada, data.tema ?? null, data.imagen_url ?? null, data.orden ?? null,
+      data.activa ?? null, data.mes_inicio ?? null, data.mes_fin ?? null, data.categoria_id ?? null
+    ]);
 
     await logAudit({ adminId: req.user.id, action: 'create', entity: 'promociones', entityId: result.rows[0].id, req });
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    if (errorDeDatos(error, res)) return;
     console.error('Error creando promoción:', error);
     res.status(500).json({ error: 'Error al crear promoción' });
   }
@@ -83,24 +104,34 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const nombre = req.body.nombre != null ? sanitizeString(req.body.nombre) : null;
-    const temporada = req.body.temporada != null ? sanitizeString(req.body.temporada) : null;
-    const tema = req.body.tema != null ? sanitizeString(req.body.tema) : null;
-    const imagen_url = req.body.imagen_url != null ? sanitizeString(req.body.imagen_url) : null;
-    const { orden, activa } = req.body;
+    if (!esIdValido(id)) {
+      return res.status(404).json({ error: 'Promoción no encontrada' });
+    }
+
+    const parsed = promocionUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Datos inválidos', detalles: parsed.error.flatten() });
+    }
+    const data = sanitizarPromocion(parsed.data);
+    if (('nombre' in data && !data.nombre) || ('temporada' in data && !data.temporada)) {
+      return res.status(400).json({ error: 'Nombre y temporada son requeridos' });
+    }
+
+    // Solo se actualizan los campos enviados; las columnas salen del schema (lista cerrada).
+    // null vacía el campo (por ejemplo, quitar la categoría o los meses).
+    const campos = Object.entries(data).filter(([, valor]) => valor !== undefined);
+    if (campos.length === 0) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+    const sets = campos.map(([campo], i) => `${campo} = $${i + 1}`);
+    const valores = campos.map(([, valor]) => valor);
 
     const result = await pool.query(`
       UPDATE promociones
-      SET nombre = COALESCE($1, nombre),
-          temporada = COALESCE($2, temporada),
-          tema = COALESCE($3, tema),
-          imagen_url = COALESCE($4, imagen_url),
-          orden = COALESCE($5, orden),
-          activa = COALESCE($6, activa),
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
+      SET ${sets.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $${valores.length + 1}
       RETURNING *
-    `, [nombre, temporada, tema, imagen_url, orden, activa, id]);
+    `, [...valores, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Promoción no encontrada' });
@@ -109,6 +140,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     await logAudit({ adminId: req.user.id, action: 'update', entity: 'promociones', entityId: result.rows[0].id, req });
     res.json(result.rows[0]);
   } catch (error) {
+    if (errorDeDatos(error, res)) return;
     console.error('Error actualizando promoción:', error);
     res.status(500).json({ error: 'Error al actualizar promoción' });
   }
@@ -118,6 +150,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    if (!esIdValido(id)) {
+      return res.status(404).json({ error: 'Promoción no encontrada' });
+    }
     const result = await pool.query('DELETE FROM promociones WHERE id = $1 RETURNING *', [id]);
 
     if (result.rows.length === 0) {
